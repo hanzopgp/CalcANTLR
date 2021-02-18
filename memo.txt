@@ -1,0 +1,4 @@
+antrl4 Calculette.g4 // build
+javac *.java //compile files
+grun Calculette calcul -gui //GUI test for Calculette and calcul rule
+grun Calculette "tokens" -tokens //To see tokens generated after writing use CTRL+D
