@@ -1,3 +1,5 @@
+grammar skeleton;
+
 calcul returns [ String code ]
 @init{ $code = new String(); }   
 @after{ System.out.println($code); }
@@ -13,14 +15,9 @@ calcul returns [ String code ]
 
 
 instruction returns [ String code ] 
-    : expression finInstruction 
-        { 
-            $code += $expression.code + "\n";
-        }
-   | finInstruction
-        {
-            $code="";
-        }
+    : 
+        expression finInstruction { $code = $expression.code; }
+        | finInstruction { $code=""; }
     ;
 
 
@@ -28,11 +25,7 @@ instruction returns [ String code ]
 
 expression returns [ String code ]
     : 
-        PUSHI ENTIER*
-        | ADD
-        | SUB
-        | MUL
-        | DIV
+        OP ENTIER* { $code = $OP.text + $ENTIER.text; }
     ;
 
 
@@ -44,11 +37,11 @@ finInstruction
     ;
 
 
-
-
 NEWLINE: '\r'? '\n' -> skip;
 
 WS: (' ' | '\t')+ -> skip;
+
+OP : ('PUSHI' | 'ADD' | 'SUB' | 'MUL' | 'DIV');
 
 ENTIER: ('0' ..'9')+;
 

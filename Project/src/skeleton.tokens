@@ -1,0 +1,7 @@
+T__0=1
+NEWLINE=2
+WS=3
+OP=4
+ENTIER=5
+UNMATCH=6
+';'=1
