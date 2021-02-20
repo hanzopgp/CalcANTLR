@@ -1,5 +1,6 @@
 export CLASSPATH=".:/usr/local/lib/antlr-4.9-complete.jar:$CLASSPATH"
 java org.antlr.v4.Tool ma_grammaire.g4 //Make sure we are on same antlr version
 javac *.java //compile files
+java org.antlr.v4.runtime.misc.TestRig Calculette start -gui //shows tree
 grun Calculette calcul -gui //GUI test for Calculette and calcul rule
 grun Calculette "tokens" -tokens //To see tokens generated after writing use CTRL+D
