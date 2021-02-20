@@ -1,5 +1,5 @@
 calcul returns [ String code ]
-@init{ $code = new String(); }   // On initialise code, pour ensuite l'utiliser comme accumulateur
+@init{ $code = new String(); }   
 @after{ System.out.println($code); }
     : 
         NEWLINE*
@@ -9,45 +9,13 @@ calcul returns [ String code ]
         { $code += "  HALT\n"; }
     ;
 
+
+
+
 instruction returns [ String code ] 
     : expression finInstruction 
         { 
-            String instr = $expression.code.split(" ")[0];
-            switch(instr){
-                case "PUSHI" :
-                    $code += "stack.push($expression.code.split(" ")[1]);"
-                    break;
-                case "ADD" :
-                    $code += "int tmp = stack.pop() + stack.pop();"
-                    break;
-                case "SUB" :
-                    $code += "int tmp = - stack.pop() + stack.pop();"
-                    break;
-                case "MUL" :
-                    $code += "int tmp = stack.pop() * stack.pop();"
-                    break;
-                case "DIV" :
-                    $code += "int tmp = ( 1 / stack.pop()) * stack.pop();"
-                    break;
-                case "INF" :
-                    $code += "boolean tmp = stack.pop() > stack.pop();"
-                    break;
-                case "INFEQ" :
-                    $code += "boolean tmp = stack.pop() >= stack.pop();"
-                    break;
-                case "SUP" :
-                    "boolean tmp = stack.pop() < stack.pop();"
-                    break;
-                case "SUPEQ" :
-                    "boolean tmp = stack.pop() <= stack.pop();"
-                    break;
-                case "EQUAL" :
-                    "boolean tmp = stack.pop() == stack.pop();"
-                    break;
-                case "NEQ" :
-                    "boolean tmp = stack.pop() != stack.pop();"
-                    break;
-            }
+            $code += $expression.code + "\n";
         }
    | finInstruction
         {
@@ -55,19 +23,33 @@ instruction returns [ String code ]
         }
     ;
 
+
+
+
 expression returns [ String code ]
     : 
-      PUSHI ENTIER
-    | ADD ENTIER ENTIER
-    | SUB ENTIER ENTIER
-    | MUL ENTIER ENTIER
-    | DIV ENTIER ENTIER
-    | INF ENTIER ENTIER
-    | INFEQ ENTIER ENTIER
-    | SUP ENTIER ENTIER
-    | SUPEQ ENTIER ENTIER
-    | EQUAL ENTIER ENTIER
-    | NEQ ENTIER ENTIER
+        PUSHI ENTIER*
+        | ADD
+        | SUB
+        | MUL
+        | DIV
     ;
 
-finInstruction : ( NEWLINE | ';' )+ ;
+
+
+
+finInstruction 
+    :
+        ( NEWLINE | ';' )+ 
+    ;
+
+
+
+
+NEWLINE: '\r'? '\n' -> skip;
+
+WS: (' ' | '\t')+ -> skip;
+
+ENTIER: ('0' ..'9')+;
+
+UNMATCH: . -> skip;
