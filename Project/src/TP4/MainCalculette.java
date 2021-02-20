@@ -1,5 +1,3 @@
-package TP4;
-
 import java.io.*;
 import org.antlr.v4.runtime.*;
 
