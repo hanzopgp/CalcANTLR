@@ -1,22 +1,5 @@
 grammar skeleton;
 
-@parser::members {
-    private int evalexpr (int x, String op, int y) {
-        if ( op.equals("*") ){
-            return x * y;
-        } else if ( op.equals("/") ){
-            return x / y;
-        }  else if ( op.equals("+") ){
-            return x + y;
-        }  else if ( op.equals("-") ){
-            return x - y;
-        } else {
-           System.err.println("Opérateur arithmétique incorrect : '" + op + "'");
-           throw new IllegalArgumentException("Opérateur arithmétique incorrect : '" + op + "'");
-        }
-    }
-}
-
 
 
 
@@ -45,25 +28,23 @@ instruction returns [ String code ]
 
 expression returns [ String code ]
     : 
-        | a = ENTIER
-          +
-          b = ENTIER
-          { $code = "PUSHI $a.text \nPUSHI $b.text \nADD \n"; }
+          '(' x = expression ')'
+          {$code = $x.code;}
 
-        | c = ENTIER
-          '-'
-          d = ENTIER
-          { $code = "PUSHI $c.text \nPUSHI $d.text \nSUB \n"; }
+        | '+'
+          { $code = "\nADD \n"; }
 
-        | e = ENTIER
-          '*'
-          f = ENTIER
-          { $code = "PUSHI $e.text \nPUSHI $f.text \nMUL \n"; }
+        | '-'
+          { $code = "\nSUB \n"; }
 
-        | g = ENTIER
-          '/'
-          h = ENTIER
-          { $code = "PUSHI $g.text \nPUSHI $h.text \nDIV \n"; }
+        | '*'
+          { $code = "\nMUL \n"; }
+
+        | '/'
+          { $code = "\nDIV \n"; }
+
+        | n = ENTIER
+          { $code = "PUSHI" + $n.text; }
     ;
 
 
