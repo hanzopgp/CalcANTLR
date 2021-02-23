@@ -1,21 +1,17 @@
 grammar Calculette;
 
-
-
-
 calcul returns [ String code ]
 @init{ $code = new String(); }   
 @after{ System.out.println($code); }
     : 
+        (decl { $code += $decl.code; })*
+
         NEWLINE*
 
         (instruction { $code += $instruction.code; })*
 
         { $code += "\nHALT \n"; }
     ;
-
-
-
 
 instruction returns [ String code ] 
     : 
@@ -25,9 +21,6 @@ instruction returns [ String code ]
         | finInstruction 
           { $code=""; }
     ;
-
-
-
 
 expression returns [ String code ]
     : 
@@ -57,16 +50,30 @@ expression returns [ String code ]
           { $code = "STORE " + $f.text + "\n"; }
     ;
 
-
-
-
 finInstruction 
     :
         ( NEWLINE | ';' )+ 
     ;
 
+decl returns [ String code ] 
+    :
+        TYPE IDENTIFIANT finInstruction
+        {
+            // à compléter
+        }
+    ; 
+
+assignation returns [ String code ] 
+    : IDENTIFIANT '=' expression
+        {  
+            // à compléter
+        }
+    ;
 
 
+
+
+TYPE : 'int' | 'float' ;
 
 ID: ('a'..'z' | 'A'..'Z')+;
 
