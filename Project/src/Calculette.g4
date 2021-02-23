@@ -3,6 +3,26 @@ grammar Calculette;
 
 
 
+@parser::members {
+    private String buildString (String x, String op, String y) {
+        if ( op.equals("*") ){
+            return "\nPUSHI " + x + "\nPUSHI " + y + "\nMUL";
+        } else if ( op.equals("/") ){
+            return "\nPUSHI " + x + "\nPUSHI " + y + "\nDIV";
+        }  else if ( op.equals("+") ){
+            return "\nPUSHI " + x + "\nPUSHI " + y + "\nADD";
+        }  else if ( op.equals("-") ){
+            return "\nPUSHI " + x + "\nPUSHI " + y + "\nSUB";
+        } else {
+           System.err.println("Opérateur arithmétique incorrect : '" + op + "'");
+           throw new IllegalArgumentException("Opérateur arithmétique incorrect : '" + op + "'");
+        }
+    }
+}
+
+
+
+
 calcul returns [ String code ]
 @init{ $code = new String(); }   
 @after{ System.out.println($code); }
@@ -31,24 +51,22 @@ expression returns [ String code ]
           '(' x = expression ')'
           { $code = $x.code; }
 
-        | '+'
-          a = ENTIER
-          { $code = "\nPUSHI " + $a.text + "\nADD"; }
+        | a = expression
+          op1 = ('*' | '/')
+          b = expression
+          { $code = buildString($a.code, $op1.text, $b.code); }
 
-        | '-'
-          b = ENTIER
-          { $code = "\nPUSHI " + $b.text + "\nSUB"; }
+        | c = expression
+          op2 = ('+' | '-')
+          d = expression
+          { $code = buildString($c.code, $op2.text, $d.code); }
 
-        | '*'
-          c = ENTIER
-          { $code = "\nPUSHI " + $c.text + "\nMUL"; }
-
-        | '/'
-          d = ENTIER
-          { $code = "\nPUSHI " + $d.text + "\nDIV"; }
+        | op3 = ('-' | '+')
+          e = expression
+          { $code = buildString("0", $op3.text, $e.code); }
 
         | n = ENTIER
-          { $code = "\nPUSHI " + $n.text; }
+          { $code = $n.text; }
     ;
 
 
@@ -59,8 +77,6 @@ finInstruction
         ( NEWLINE | ';' )+ 
     ;
 
-
-OPERATOR: ('+' | '-' | '*' | '/');
 
 NEWLINE: '\r'? '\n' -> skip;
 
