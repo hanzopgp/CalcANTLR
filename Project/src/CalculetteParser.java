@@ -88,16 +88,18 @@ public class CalculetteParser extends Parser {
 
 	    private String buildString (String x, String op, String y) {
 	        if ( op.equals("*") ){
-	            return "\nPUSHI " + x + "\nPUSHI " + y + "\nMUL";
+	          System.out.println("X="+x+"Y="+y);
+	          return "\nPUSHI " + x + "\nPUSHI " + y + "\nMUL";
 	        } else if ( op.equals("/") ){
-	            return "\nPUSHI " + x + "\nPUSHI " + y + "\nDIV";
+	          return "\nPUSHI " + x + "\nPUSHI " + y + "\nDIV";
 	        }  else if ( op.equals("+") ){
-	            return "\nPUSHI " + x + "\nPUSHI " + y + "\nADD";
+	          System.out.println("X="+x+"Y="+y);
+	          return "\nPUSHI " + x + "\nPUSHI " + y + "\nADD";
 	        }  else if ( op.equals("-") ){
-	            return "\nPUSHI " + x + "\nPUSHI " + y + "\nSUB";
+	          return "\nPUSHI " + x + "\nPUSHI " + y + "\nSUB";
 	        } else {
-	           System.err.println("Opérateur arithmétique incorrect : '" + op + "'");
-	           throw new IllegalArgumentException("Opérateur arithmétique incorrect : '" + op + "'");
+	          System.err.println("Opérateur arithmétique incorrect : '" + op + "'");
+	          throw new IllegalArgumentException("Opérateur arithmétique incorrect : '" + op + "'");
 	        }
 	    }
 
