@@ -20,6 +20,11 @@ instruction returns [ String code ]
 
         | finInstruction 
           { $code=""; }
+
+        | assignation finInstruction
+          { 
+            // à compléter
+          }
     ;
 
 expression returns [ String code ]
@@ -75,12 +80,12 @@ assignation returns [ String code ]
 
 TYPE : 'int' | 'float' ;
 
-ID: ('a'..'z' | 'A'..'Z')+;
-
 NEWLINE: '\r'? '\n' -> skip;
 
 WS: (' ' | '\t')+ -> skip;
 
 ENTIER: ('0' ..'9')+;
+
+ID: ('a'..'z' | 'A'..'Z')+;
 
 UNMATCH: . -> skip;
