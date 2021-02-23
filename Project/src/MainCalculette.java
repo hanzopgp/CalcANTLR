@@ -10,9 +10,7 @@ public class MainCalculette {
             lex = new CalculetteLexer(CharStreams.fromStream(System.in));
         else 
             lex = new CalculetteLexer(CharStreams.fromFileName(args[0]));
-            
         CommonTokenStream tokens = new CommonTokenStream(lex);
-        
         CalculetteParser parser = new CalculetteParser(tokens);
         try {
             parser.calcul();
