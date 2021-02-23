@@ -85,24 +85,6 @@ public class CalculetteParser extends Parser {
 	@Override
 	public ATN getATN() { return _ATN; }
 
-
-	    private String buildString (String x, String op, String y) {
-	        if ( op.equals("*") ){
-	          System.out.println("X="+x+"Y="+y);
-	          return "\nPUSHI " + x + "\nPUSHI " + y + "\nMUL";
-	        } else if ( op.equals("/") ){
-	          return "\nPUSHI " + x + "\nPUSHI " + y + "\nDIV";
-	        }  else if ( op.equals("+") ){
-	          System.out.println("X="+x+"Y="+y);
-	          return "\nPUSHI " + x + "\nPUSHI " + y + "\nADD";
-	        }  else if ( op.equals("-") ){
-	          return "\nPUSHI " + x + "\nPUSHI " + y + "\nSUB";
-	        } else {
-	          System.err.println("Opérateur arithmétique incorrect : '" + op + "'");
-	          throw new IllegalArgumentException("Opérateur arithmétique incorrect : '" + op + "'");
-	        }
-	    }
-
 	public CalculetteParser(TokenStream input) {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
@@ -337,14 +319,20 @@ public class CalculetteParser extends Parser {
 				}
 				setState(40);
 				((ExpressionContext)_localctx).e = expression(2);
-				 ((ExpressionContext)_localctx).code =  buildString("0", (((ExpressionContext)_localctx).op3!=null?((ExpressionContext)_localctx).op3.getText():null), ((ExpressionContext)_localctx).e.code); 
+				 
+				            if((((ExpressionContext)_localctx).op3!=null?((ExpressionContext)_localctx).op3.getText():null).equals("-")){
+				              ((ExpressionContext)_localctx).code =  ((ExpressionContext)_localctx).c.code + ((ExpressionContext)_localctx).d.code + "ADD\n";
+				            }else{
+				              ((ExpressionContext)_localctx).code =  ((ExpressionContext)_localctx).c.code + ((ExpressionContext)_localctx).d.code + "SUB\n"; 
+				            }
+				          
 				}
 				break;
 			case ENTIER:
 				{
 				setState(43);
 				((ExpressionContext)_localctx).n = match(ENTIER);
-				 ((ExpressionContext)_localctx).code =  (((ExpressionContext)_localctx).n!=null?((ExpressionContext)_localctx).n.getText():null); 
+				 ((ExpressionContext)_localctx).code =  "PUSHI " + (((ExpressionContext)_localctx).n!=null?((ExpressionContext)_localctx).n.getText():null) + "\n"; 
 				}
 				break;
 			default:
@@ -383,7 +371,13 @@ public class CalculetteParser extends Parser {
 						}
 						setState(49);
 						((ExpressionContext)_localctx).b = expression(5);
-						 ((ExpressionContext)_localctx).code =  buildString(((ExpressionContext)_localctx).a.code, (((ExpressionContext)_localctx).op1!=null?((ExpressionContext)_localctx).op1.getText():null), ((ExpressionContext)_localctx).b.code); 
+						 
+						                      if((((ExpressionContext)_localctx).op1!=null?((ExpressionContext)_localctx).op1.getText():null).equals("*")){
+						                        ((ExpressionContext)_localctx).code =  ((ExpressionContext)_localctx).a.code + ((ExpressionContext)_localctx).b.code + "MUL\n";
+						                      }else{
+						                        ((ExpressionContext)_localctx).code =  ((ExpressionContext)_localctx).a.code + ((ExpressionContext)_localctx).b.code + "DIV\n"; 
+						                      }
+						                    
 						}
 						break;
 					case 2:
@@ -407,7 +401,13 @@ public class CalculetteParser extends Parser {
 						}
 						setState(54);
 						((ExpressionContext)_localctx).d = expression(4);
-						 ((ExpressionContext)_localctx).code =  buildString(((ExpressionContext)_localctx).c.code, (((ExpressionContext)_localctx).op2!=null?((ExpressionContext)_localctx).op2.getText():null), ((ExpressionContext)_localctx).d.code); 
+						 
+						                      if((((ExpressionContext)_localctx).op2!=null?((ExpressionContext)_localctx).op2.getText():null).equals("+")){
+						                        ((ExpressionContext)_localctx).code =  ((ExpressionContext)_localctx).c.code + ((ExpressionContext)_localctx).d.code + "ADD\n";
+						                      }else{
+						                        ((ExpressionContext)_localctx).code =  ((ExpressionContext)_localctx).c.code + ((ExpressionContext)_localctx).d.code + "SUB\n"; 
+						                      }
+						                    
 						}
 						break;
 					}

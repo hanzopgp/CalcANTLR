@@ -3,28 +3,6 @@ grammar Calculette;
 
 
 
-@parser::members {
-    private String buildString (String x, String op, String y) {
-        if ( op.equals("*") ){
-          System.out.println("X="+x+"Y="+y);
-          return "\nPUSHI " + x + "\nPUSHI " + y + "\nMUL";
-        } else if ( op.equals("/") ){
-          return "\nPUSHI " + x + "\nPUSHI " + y + "\nDIV";
-        }  else if ( op.equals("+") ){
-          System.out.println("X="+x+"Y="+y);
-          return "\nPUSHI " + x + "\nPUSHI " + y + "\nADD";
-        }  else if ( op.equals("-") ){
-          return "\nPUSHI " + x + "\nPUSHI " + y + "\nSUB";
-        } else {
-          System.err.println("Opérateur arithmétique incorrect : '" + op + "'");
-          throw new IllegalArgumentException("Opérateur arithmétique incorrect : '" + op + "'");
-        }
-    }
-}
-
-
-
-
 calcul returns [ String code ]
 @init{ $code = new String(); }   
 @after{ System.out.println($code); }
@@ -50,25 +28,43 @@ instruction returns [ String code ]
 
 expression returns [ String code ]
     : 
-          '(' x = expression ')'
+          '(' x = expression ')' 
           { $code = $x.code; }
 
         | a = expression
           op1 = ('*' | '/')
           b = expression
-          { $code = buildString($a.code, $op1.text, $b.code); }
+          { 
+            if($op1.text.equals("*")){
+              $code = $a.code + $b.code + "MUL\n";
+            }else{
+              $code = $a.code + $b.code + "DIV\n"; 
+            }
+          }
 
         | c = expression
           op2 = ('+' | '-')
           d = expression
-          { $code = buildString($c.code, $op2.text, $d.code); }
+          { 
+            if($op2.text.equals("+")){
+              $code = $c.code + $d.code + "ADD\n";
+            }else{
+              $code = $c.code + $d.code + "SUB\n"; 
+            }
+          }
 
         | op3 = ('-' | '+')
           e = expression
-          { $code = buildString("0", $op3.text, $e.code); }
+          { 
+            if($op3.text.equals("-")){
+              $code = $c.code + $d.code + "ADD\n";
+            }else{
+              $code = $c.code + $d.code + "SUB\n"; 
+            }
+          }
 
         | n = ENTIER
-          { $code = $n.text; }
+          { $code = "PUSHI " + $n.text + "\n"; }
     ;
 
 
