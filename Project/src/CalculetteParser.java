@@ -1,4 +1,4 @@
-// Generated from skeleton.g4 by ANTLR 4.9
+// Generated from Calculette.g4 by ANTLR 4.9
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
-public class skeletonParser extends Parser {
+public class CalculetteParser extends Parser {
 	static { RuntimeMetaData.checkVersion("4.9", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
@@ -74,7 +74,7 @@ public class skeletonParser extends Parser {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "skeleton.g4"; }
+	public String getGrammarFileName() { return "Calculette.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -85,7 +85,7 @@ public class skeletonParser extends Parser {
 	@Override
 	public ATN getATN() { return _ATN; }
 
-	public skeletonParser(TokenStream input) {
+	public CalculetteParser(TokenStream input) {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
@@ -93,9 +93,9 @@ public class skeletonParser extends Parser {
 	public static class CalculContext extends ParserRuleContext {
 		public String code;
 		public InstructionContext instruction;
-		public List<TerminalNode> NEWLINE() { return getTokens(skeletonParser.NEWLINE); }
+		public List<TerminalNode> NEWLINE() { return getTokens(CalculetteParser.NEWLINE); }
 		public TerminalNode NEWLINE(int i) {
-			return getToken(skeletonParser.NEWLINE, i);
+			return getToken(CalculetteParser.NEWLINE, i);
 		}
 		public List<InstructionContext> instruction() {
 			return getRuleContexts(InstructionContext.class);
@@ -109,11 +109,11 @@ public class skeletonParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_calcul; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof skeletonListener ) ((skeletonListener)listener).enterCalcul(this);
+			if ( listener instanceof CalculetteListener ) ((CalculetteListener)listener).enterCalcul(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof skeletonListener ) ((skeletonListener)listener).exitCalcul(this);
+			if ( listener instanceof CalculetteListener ) ((CalculetteListener)listener).exitCalcul(this);
 		}
 	}
 
@@ -188,11 +188,11 @@ public class skeletonParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_instruction; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof skeletonListener ) ((skeletonListener)listener).enterInstruction(this);
+			if ( listener instanceof CalculetteListener ) ((CalculetteListener)listener).enterInstruction(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof skeletonListener ) ((skeletonListener)listener).exitInstruction(this);
+			if ( listener instanceof CalculetteListener ) ((CalculetteListener)listener).exitInstruction(this);
 		}
 	}
 
@@ -253,18 +253,18 @@ public class skeletonParser extends Parser {
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
-		public TerminalNode ENTIER() { return getToken(skeletonParser.ENTIER, 0); }
+		public TerminalNode ENTIER() { return getToken(CalculetteParser.ENTIER, 0); }
 		public ExpressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_expression; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof skeletonListener ) ((skeletonListener)listener).enterExpression(this);
+			if ( listener instanceof CalculetteListener ) ((CalculetteListener)listener).enterExpression(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof skeletonListener ) ((skeletonListener)listener).exitExpression(this);
+			if ( listener instanceof CalculetteListener ) ((CalculetteListener)listener).exitExpression(this);
 		}
 	}
 
@@ -351,9 +351,9 @@ public class skeletonParser extends Parser {
 	}
 
 	public static class FinInstructionContext extends ParserRuleContext {
-		public List<TerminalNode> NEWLINE() { return getTokens(skeletonParser.NEWLINE); }
+		public List<TerminalNode> NEWLINE() { return getTokens(CalculetteParser.NEWLINE); }
 		public TerminalNode NEWLINE(int i) {
-			return getToken(skeletonParser.NEWLINE, i);
+			return getToken(CalculetteParser.NEWLINE, i);
 		}
 		public FinInstructionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -361,11 +361,11 @@ public class skeletonParser extends Parser {
 		@Override public int getRuleIndex() { return RULE_finInstruction; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof skeletonListener ) ((skeletonListener)listener).enterFinInstruction(this);
+			if ( listener instanceof CalculetteListener ) ((CalculetteListener)listener).enterFinInstruction(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof skeletonListener ) ((skeletonListener)listener).exitFinInstruction(this);
+			if ( listener instanceof CalculetteListener ) ((CalculetteListener)listener).exitFinInstruction(this);
 		}
 	}
 

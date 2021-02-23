@@ -1,4 +1,4 @@
-grammar skeleton;
+grammar Calculette;
 
 
 
