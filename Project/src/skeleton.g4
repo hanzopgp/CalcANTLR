@@ -19,7 +19,7 @@ calcul returns [ String code ]
 
 instruction returns [ String code ] 
     : 
-        expression finInstruction { $code = $expression.code; }
+          expression finInstruction { $code = $expression.code; }
         | finInstruction { $code=""; }
     ;
 
@@ -29,22 +29,26 @@ instruction returns [ String code ]
 expression returns [ String code ]
     : 
           '(' x = expression ')'
-          {$code = $x.code;}
+          { $code = $x.code; }
 
         | '+'
-          { $code = "\nADD \n"; }
+          a = ENTIER
+          { $code = "\nPUSHI " + $a.text + "\nADD"; }
 
         | '-'
-          { $code = "\nSUB \n"; }
+          b = ENTIER
+          { $code = "\nPUSHI " + $b.text + "\nSUB"; }
 
         | '*'
-          { $code = "\nMUL \n"; }
+          c = ENTIER
+          { $code = "\nPUSHI " + $c.text + "\nMUL"; }
 
         | '/'
-          { $code = "\nDIV \n"; }
+          d = ENTIER
+          { $code = "\nPUSHI " + $d.text + "\nDIV"; }
 
         | n = ENTIER
-          { $code = "PUSHI" + $n.text; }
+          { $code = "\nPUSHI " + $n.text; }
     ;
 
 
@@ -56,7 +60,7 @@ finInstruction
     ;
 
 
-
+OPERATOR: ('+' | '-' | '*' | '/');
 
 NEWLINE: '\r'? '\n' -> skip;
 
