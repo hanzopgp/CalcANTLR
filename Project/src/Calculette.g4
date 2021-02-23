@@ -19,8 +19,11 @@ calcul returns [ String code ]
 
 instruction returns [ String code ] 
     : 
-          expression finInstruction { $code = $expression.code; }
-        | finInstruction { $code=""; }
+          expression finInstruction 
+          { $code = $expression.code; }
+
+        | finInstruction 
+          { $code=""; }
     ;
 
 
@@ -28,43 +31,30 @@ instruction returns [ String code ]
 
 expression returns [ String code ]
     : 
-          '(' x = expression ')' 
+          '(' x = expression ')'                                                                     //Prise en charge de la priorite des parentheses
           { $code = $x.code; }
 
-        | a = expression
-          op1 = ('*' | '/')
-          b = expression
-          { 
-            if($op1.text.equals("*")){
-              $code = $a.code + $b.code + "MUL\n";
-            }else{
-              $code = $a.code + $b.code + "DIV\n"; 
-            }
-          }
+        | a = expression                                                                             //Priorite de la multiplication
+          op1 = ('*' | '/')                                                                          //et de la divison grace
+          b = expression                                                                             //a l'ordre de la grammaire
+          { $code = $a.code + $b.code + ($op1.text.equals("*") ? "MUL" : "DIV") + "\n"; }
 
         | c = expression
           op2 = ('+' | '-')
           d = expression
-          { 
-            if($op2.text.equals("+")){
-              $code = $c.code + $d.code + "ADD\n";
-            }else{
-              $code = $c.code + $d.code + "SUB\n"; 
-            }
-          }
+          { $code = $c.code + $d.code + ($op2.text.equals("+") ? "ADD" : "SUB") + "\n"; }
 
-        | op3 = ('-' | '+')
-          e = expression
-          { 
-            if($op3.text.equals("-")){
-              $code = $c.code + $d.code + "ADD\n";
-            }else{
-              $code = $c.code + $d.code + "SUB\n"; 
-            }
-          }
+        | op3 = ('-' | '+')                                                                          //Prise en charge d'expression commencant
+          e = ENTIER                                                                                 //par le signe moins et plus
+          { $code = "PUSHI 0\n" + "PUSHI " + $e.text + "\n" + ($op3.text.equals("+") ? "ADD" : "SUB") + "\n"; }
 
-        | n = ENTIER
+        | n = ENTIER                                            
           { $code = "PUSHI " + $n.text + "\n"; }
+
+        | ID                                                                                          //Prise en charge des identifiants permettant
+          '='                                                                                         //de stocker un element dans une variable
+          f = expression
+          { $code = "STORE " + $f.text + "\n"; }
     ;
 
 
@@ -75,6 +65,10 @@ finInstruction
         ( NEWLINE | ';' )+ 
     ;
 
+
+
+
+ID: ('a'..'z' | 'A'..'Z')+;
 
 NEWLINE: '\r'? '\n' -> skip;
 
