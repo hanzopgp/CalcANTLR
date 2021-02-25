@@ -57,3 +57,7 @@
 
 - Run .mvap file :
 `bash test_mvap.sh`
+
+## Links
+
+-  [Wikipedia language theory](https://en.wikipedia.org/wiki/Theory_of_language#:~:text=Theory%20of%20language%20is%20a,linguistics%20and%20philosophy%20of%20language.&text=Even%20though%20much%20of%20the,the%20researcher's%20opinion%20of%20language)
