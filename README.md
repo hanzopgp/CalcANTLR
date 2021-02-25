@@ -13,47 +13,47 @@
 ### General commands :
 
 - Export classpath :
->export CLASSPATH=".:/usr/local/lib/antlr-4.9-complete.jar:$CLASSPATH"
+`export CLASSPATH=".:/usr/local/lib/antlr-4.9-complete.jar:$CLASSPATH"`
 - Use ANTRL to generate lexer and parser java files :
->java org.antlr.v4.Tool <your_grammar>.g4 
+`java org.antlr.v4.Tool <your_grammar>.g4`
 - Build all the java files :
->javac \*.java 
+`javac \*.java` 
 - Run java program if you use a main instead of TestRig or grun :
-> java <your_main_class>
+`java <your_main_class>`
 - Test your grammar quickly : 
->java org.antlr.v4.runtime.misc.TestRig <your_grammar> <start_rule>
+`java org.antlr.v4.runtime.misc.TestRig <your_grammar> <start_rule>`
 - Test it and show tree :
->java org.antlr.v4.runtime.misc.TestRig <your_grammar> <start_rule> -gui
+`java org.antlr.v4.runtime.misc.TestRig <your_grammar> <start_rule> -gui`
 - Test it and show tokens :
->java org.antlr.v4.runtime.misc.TestRig <your_grammar> "tokens" -tokens
+`java org.antlr.v4.runtime.misc.TestRig <your_grammar> "tokens" -tokens`
 - Test the grammar and put the output in a file :
->java org.antlr.v4.runtime.misc.TestRig <your_grammar> <start_rule> > <file_name>.mvap
+`java org.antlr.v4.runtime.misc.TestRig <your_grammar> <start_rule> > <file_name>.mvap`
 - Signal you are done writing your test :
->CTRL+D
+`CTRL+D`
 
 ### Stack machine commands :
 
 - Build stack machine code :
-> java MVAPAssembler -d <your_stackmachine_file>.mvap
+`java MVAPAssembler -d <your_stackmachine_file>.mvap`
 - Run stack machine code :  
-> java CBaP <your_stackmachine_file>.mvap.cbap
+`java CBaP <your_stackmachine_file>.mvap.cbap`
 
 ### Scripts :
 
 #### src folder :
 
 - Does basicaly everything from building to test :
-> bash build_all_and_test.sh
+`bash build_all_and_test.sh`
 - Reset everything :
-> bash reset.sh
+`bash reset.sh`
 - Build new grammar :
-> bash build_grammar.sh
+`bash build_grammar.sh`
 - Build all util java files :
-> bash build_util.sh
+`bash build_util.sh`
 - Run a test, display the result and put the output in a mvap file :
-> bash test_grammar.sh
+`bash test_grammar.sh`
 
 #### stackmachine folder :
 
 - Run .mvap file :
-> bash test_mvap.sh
+`bash test_mvap.sh`
