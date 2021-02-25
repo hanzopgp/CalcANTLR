@@ -35,7 +35,7 @@
 
 - Build stack machine code :
 `java MVAPAssembler -d <your_stackmachine_file>.mvap`
-- Run stack machine code :  
+- Run stack machine code :
 `java CBaP <your_stackmachine_file>.mvap.cbap`
 
 ### Scripts :
