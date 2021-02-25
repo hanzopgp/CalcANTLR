@@ -66,6 +66,19 @@ decl returns [ String code ]
           $code = "PUSHI " + "0.0" + "\nSTORE " + $id.text + "\n";
         }
       }
+
+      | type = TYPE
+        id = IDENTIFIANT
+        '='
+        expression
+        finInstruction
+        {
+          if($type.text.equals("int")){
+            $code = "PUSHI " + $expression.code + "\nSTORE " + $id.text + "\n"; 
+          }else if($type.text.equals("float")){
+            $code = "PUSHI " + $expression.code + "\nSTORE " + $id.text + "\n";
+          }
+        }
     ; 
 
 assignation returns [ String code ] 

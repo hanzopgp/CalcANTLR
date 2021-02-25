@@ -1,0 +1,8 @@
+PUSHI 3
+PUSHI 3
+ADD
+PUSHI 4
+ADD
+
+HALT 
+
