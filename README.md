@@ -40,12 +40,20 @@
 
 ### Scripts :
 
-If you want to easily test, go into Project/src and use the 2 first scripts.
-Then go in Project/stackmachine and use the test_mvap.sh script.
+#### src folder :
 
+- Does basicaly everything from building to test :
+> bash build_all_and_test.sh
+- Reset everything :
+> bash reset.sh
 - Build new grammar :
 > bash build_grammar.sh
+- Build all util java files :
+> bash build_util.sh
 - Run a test, display the result and put the output in a mvap file :
 > bash test_grammar.sh
+
+#### stackmachine folder :
+
 - Run .mvap file :
 > bash test_mvap.sh
