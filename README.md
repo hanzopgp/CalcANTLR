@@ -1,5 +1,12 @@
 # CalcANTLR
 
+## Table of contents
+
+1. [Presentation](#presentation)
+2. [How does it work](#how-does-it-work)
+3. [Commands](#commands)
+4. [Links](#links)
+
 ## Presentation
 
 >This is a calculator language compiler done with ANTLR and a stack machine.
