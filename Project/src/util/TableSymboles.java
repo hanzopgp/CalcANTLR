@@ -17,7 +17,7 @@ public class TableSymboles {
 
     public void putVar(String s, String t) {
 	if (table.get(s) != null)
-	    System.err.println("Erreur : Variable \""+ s + "\" de type " + table.get(s).type + " dÃ©jÃ  dÃ©finie");
+	    System.err.println("Erreur : Variable \""+ s + "\" de type " + table.get(s).type + " deja  definie");
         else 
             {
                 AdresseType at = new AdresseType(n,t);

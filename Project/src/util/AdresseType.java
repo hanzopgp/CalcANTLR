@@ -5,7 +5,7 @@ public  class AdresseType {
     public static int getSize( String t ) {
         if (t.equals("int") || t.equals("bool"))   return 1;
         if (t.equals("float")) return 2;
-        System.err.println("Erreur type "+ t + " non dÃ©fini");
+        System.err.println("Erreur type "+ t + " non defini");
         return 0;
     }
 

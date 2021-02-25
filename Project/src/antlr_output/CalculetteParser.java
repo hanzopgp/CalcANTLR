@@ -596,11 +596,11 @@ public class CalculetteParser extends Parser {
 				          if((((DeclContext)_localctx).type!=null?((DeclContext)_localctx).type.getText():null).equals("int")){
 				            tablesSymboles.putVar((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null), "int");                                                //On ajoute notre id avec son type pour
 				            int adresse = tablesSymboles.getAdresseType((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null)).adresse;                         //reserver une adresse
-				            ((DeclContext)_localctx).code =  "PUSHI " + ((DeclContext)_localctx).expression.code + "\nSTOREG " + adresse + "\n";                    //Puis on la recupere pour le mvap
+				            ((DeclContext)_localctx).code =  ((DeclContext)_localctx).expression.code + "\nSTOREG " + adresse + "\n";                    //Puis on la recupere pour le mvap
 				          }else if((((DeclContext)_localctx).type!=null?((DeclContext)_localctx).type.getText():null).equals("float")){
 				            tablesSymboles.putVar((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null), "float");
 				            int adresse = tablesSymboles.getAdresseType((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null)).adresse;
-				            ((DeclContext)_localctx).code =  "PUSHI " + ((DeclContext)_localctx).expression.code + "\nSTOREG " + adresse + "\n";
+				            ((DeclContext)_localctx).code =  ((DeclContext)_localctx).expression.code + "\nSTOREG " + adresse + "\n";
 				          }
 				        
 				}

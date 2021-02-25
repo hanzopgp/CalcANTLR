@@ -68,7 +68,7 @@ class TablesSymboles {
 		 return new AdresseType(a.adresse - (_tableLocale.getSize() + 2), a.type);
 	    }
 	}
-	System.err.println(symbol + " pas trouvÃ© en local");
+	System.err.println(symbol + " pas trouve en local");
 	return null;
     }
    
@@ -97,14 +97,14 @@ class TablesSymboles {
 	String l = _tableFonctions.get(function);
 	if (l != null)
 	    return l;
-	System.err.println("Appel Ã  une fonction non dÃ©finie \""+function+"\"");
+	System.err.println("Appel a une fonction non definie \""+function+"\"");
 	return null;
     }
 
     public boolean newFunction(String function,String t) {
         String fat = _tableFonctions.get(function);
 	if ( fat!= null ) {
-	    System.err.println("Fonction \""+ function + "\" dÃ©jÃ  dÃ©finie avec type de retour \"" + fat +"\".");
+	    System.err.println("Fonction \""+ function + "\" deja definie avec type de retour \"" + fat +"\".");
 	    return false;
 	}
 	_tableFonctions.put(function, t);

@@ -1,12 +1,12 @@
 grammar Calculette;
 
 @members {
-    private TablesSymboles tablesSymboles = new TablesSymboles();
-}
-
+    private TablesSymboles tablesSymboles = new TablesSymboles();                                 //On utilise la table de symboles pour garder les
+}                                                                                                 //liens var/type et les valeurs dans les adresses
+  
 calcul returns [ String code ]
-@init{ $code = new String(); }   
-@after{ System.out.println($code); }
+@init{ $code = new String(); }                                                                    //Initialisation de $code qui contiendra le code
+@after{ System.out.println($code); }                                                              //mvap et l'affichera a la fin
     : 
       (decl { $code += $decl.code; })*
 
@@ -86,16 +86,16 @@ decl returns [ String code ]
           if($type.text.equals("int")){
             tablesSymboles.putVar($id.text, "int");                                                //On ajoute notre id avec son type pour
             int adresse = tablesSymboles.getAdresseType($id.text).adresse;                         //reserver une adresse
-            $code = "PUSHI " + $expression.code + "\nSTOREG " + adresse + "\n";                    //Puis on la recupere pour le mvap
+            $code = $expression.code + "\nSTOREG " + adresse + "\n";                               //Puis on la recupere pour le mvap
           }else if($type.text.equals("float")){
             tablesSymboles.putVar($id.text, "float");
             int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-            $code = "PUSHI " + $expression.code + "\nSTOREG " + adresse + "\n";
+            $code = $expression.code + "\nSTOREG " + adresse + "\n";
           }
         }
     ; 
 
-assignation returns [ String code ] 
+assignation returns [ String code ]                                                                //Assignation a une variable
     : 
       id = IDENTIFIANT
       '=' 
