@@ -40,7 +40,7 @@
 
 ### Scripts :
 
-#### src folder :
+#### --> src folder :
 
 - Does basicaly everything from building to test :
 `bash build_all_and_test.sh`
@@ -53,7 +53,7 @@
 - Run a test, display the result and put the output in a mvap file :
 `bash test_grammar.sh`
 
-#### stackmachine folder :
+#### --> stackmachine folder :
 
 - Run .mvap file :
 `bash test_mvap.sh`
