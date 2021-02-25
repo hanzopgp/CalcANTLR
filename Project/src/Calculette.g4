@@ -1,5 +1,9 @@
 grammar Calculette;
 
+@members {
+    private TablesSymboles tablesSymboles = new TablesSymboles();
+}
+
 calcul returns [ String code ]
 @init{ $code = new String(); }   
 @after{ System.out.println($code); }
@@ -17,7 +21,7 @@ instruction returns [ String code ]
     : 
       expression finInstruction 
       { $code = $expression.code; }
-
+ 
       | finInstruction 
         { $code= ""; }
 
@@ -47,6 +51,8 @@ expression returns [ String code ]
       | n = ENTIER                                            
         { $code = "PUSHI " + $n.text + "\n"; }
 
+      | id = IDENTIFIANT                                                                           //Prise en charge des variables dans
+        { $code = "PUSHG " + tablesSymboles.getAdresseType($id.text).adresse + "\n"; }             //les calculs
     ;
 
 finInstruction 
@@ -61,9 +67,13 @@ decl returns [ String code ]
       finInstruction
       {
         if($type.text.equals("int")){
-          $code = "PUSHI " + "0" + "\nSTORE " + $id.text + "\n"; 
+          tablesSymboles.putVar($id.text, "int");
+          int adresse = tablesSymboles.getAdresseType($id.text).adresse;
+          $code = "PUSHI 0" + "\nSTOREG " + adresse + "\n"; 
         }else if($type.text.equals("float")){
-          $code = "PUSHI " + "0.0" + "\nSTORE " + $id.text + "\n";
+          tablesSymboles.putVar($id.text, "float");
+          int adresse = tablesSymboles.getAdresseType($id.text).adresse;
+          $code = "PUSHI 0.0" + "\nSTOREG " + adresse + "\n";
         }
       }
 
@@ -74,9 +84,13 @@ decl returns [ String code ]
         finInstruction
         {
           if($type.text.equals("int")){
-            $code = "PUSHI " + $expression.code + "\nSTORE " + $id.text + "\n"; 
+            tablesSymboles.putVar($id.text, "int");                                                //On ajoute notre id avec son type pour
+            int adresse = tablesSymboles.getAdresseType($id.text).adresse;                         //reserver une adresse
+            $code = "PUSHI " + $expression.code + "\nSTOREG " + adresse + "\n";                    //Puis on la recupere pour le mvap
           }else if($type.text.equals("float")){
-            $code = "PUSHI " + $expression.code + "\nSTORE " + $id.text + "\n";
+            tablesSymboles.putVar($id.text, "float");
+            int adresse = tablesSymboles.getAdresseType($id.text).adresse;
+            $code = "PUSHI " + $expression.code + "\nSTOREG " + adresse + "\n";
           }
         }
     ; 
@@ -86,7 +100,10 @@ assignation returns [ String code ]
       id = IDENTIFIANT
       '=' 
       expression
-      { $code = $expression.code + "\nSTORE " + $id.text + "\n"; }
+      { 
+        int adresse = tablesSymboles.getAdresseType($id.text).adresse;
+        $code = $expression.code + "\nSTOREG " + adresse + "\n"; 
+      }
     ;
 
 

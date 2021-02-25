@@ -81,6 +81,9 @@ public class CalculetteLexer extends Lexer {
 	}
 
 
+	    private TablesSymboles tablesSymboles = new TablesSymboles();
+
+
 	public CalculetteLexer(CharStream input) {
 		super(input);
 		_interp = new LexerATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);

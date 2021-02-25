@@ -86,6 +86,9 @@ public class CalculetteParser extends Parser {
 	@Override
 	public ATN getATN() { return _ATN; }
 
+
+	    private TablesSymboles tablesSymboles = new TablesSymboles();
+
 	public CalculetteParser(TokenStream input) {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
@@ -229,11 +232,8 @@ public class CalculetteParser extends Parser {
 		try {
 			setState(47);
 			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-			case T__0:
-			case T__4:
-			case T__5:
-			case ENTIER:
+			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
+			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(36);
@@ -243,8 +243,7 @@ public class CalculetteParser extends Parser {
 				 ((InstructionContext)_localctx).code =  ((InstructionContext)_localctx).expression.code; 
 				}
 				break;
-			case T__6:
-			case NEWLINE:
+			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(40);
@@ -252,7 +251,7 @@ public class CalculetteParser extends Parser {
 				 ((InstructionContext)_localctx).code =  ""; 
 				}
 				break;
-			case IDENTIFIANT:
+			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(43);
@@ -262,8 +261,6 @@ public class CalculetteParser extends Parser {
 				 ((InstructionContext)_localctx).code =  ((InstructionContext)_localctx).assignation.code; 
 				}
 				break;
-			default:
-				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -285,6 +282,7 @@ public class CalculetteParser extends Parser {
 		public Token op3;
 		public Token e;
 		public Token n;
+		public Token id;
 		public Token op1;
 		public ExpressionContext b;
 		public Token op2;
@@ -296,6 +294,7 @@ public class CalculetteParser extends Parser {
 			return getRuleContext(ExpressionContext.class,i);
 		}
 		public TerminalNode ENTIER() { return getToken(CalculetteParser.ENTIER, 0); }
+		public TerminalNode IDENTIFIANT() { return getToken(CalculetteParser.IDENTIFIANT, 0); }
 		public ExpressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -326,7 +325,7 @@ public class CalculetteParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(60);
+			setState(62);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case T__0:
@@ -366,11 +365,18 @@ public class CalculetteParser extends Parser {
 				 ((ExpressionContext)_localctx).code =  "PUSHI " + (((ExpressionContext)_localctx).n!=null?((ExpressionContext)_localctx).n.getText():null) + "\n"; 
 				}
 				break;
+			case IDENTIFIANT:
+				{
+				setState(60);
+				((ExpressionContext)_localctx).id = match(IDENTIFIANT);
+				 ((ExpressionContext)_localctx).code =  "PUSHG " + tablesSymboles.getAdresseType((((ExpressionContext)_localctx).id!=null?((ExpressionContext)_localctx).id.getText():null)).adresse + "\n"; 
+				}
+				break;
 			default:
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(74);
+			setState(76);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,6,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -378,7 +384,7 @@ public class CalculetteParser extends Parser {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(72);
+					setState(74);
 					_errHandler.sync(this);
 					switch ( getInterpreter().adaptivePredict(_input,5,_ctx) ) {
 					case 1:
@@ -387,9 +393,9 @@ public class CalculetteParser extends Parser {
 						_localctx.a = _prevctx;
 						_localctx.a = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(62);
-						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
-						setState(63);
+						setState(64);
+						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
+						setState(65);
 						((ExpressionContext)_localctx).op1 = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==T__2 || _la==T__3) ) {
@@ -400,8 +406,8 @@ public class CalculetteParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(64);
-						((ExpressionContext)_localctx).b = expression(5);
+						setState(66);
+						((ExpressionContext)_localctx).b = expression(6);
 						 ((ExpressionContext)_localctx).code =  ((ExpressionContext)_localctx).a.code + ((ExpressionContext)_localctx).b.code + ((((ExpressionContext)_localctx).op1!=null?((ExpressionContext)_localctx).op1.getText():null).equals("*") ? "MUL" : "DIV") + "\n"; 
 						}
 						break;
@@ -411,9 +417,9 @@ public class CalculetteParser extends Parser {
 						_localctx.c = _prevctx;
 						_localctx.c = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(67);
-						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
-						setState(68);
+						setState(69);
+						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
+						setState(70);
 						((ExpressionContext)_localctx).op2 = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==T__4 || _la==T__5) ) {
@@ -424,15 +430,15 @@ public class CalculetteParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(69);
-						((ExpressionContext)_localctx).d = expression(4);
+						setState(71);
+						((ExpressionContext)_localctx).d = expression(5);
 						 ((ExpressionContext)_localctx).code =  ((ExpressionContext)_localctx).c.code + ((ExpressionContext)_localctx).d.code + ((((ExpressionContext)_localctx).op2!=null?((ExpressionContext)_localctx).op2.getText():null).equals("+") ? "ADD" : "SUB") + "\n"; 
 						}
 						break;
 					}
 					} 
 				}
-				setState(76);
+				setState(78);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,6,_ctx);
 			}
@@ -476,7 +482,7 @@ public class CalculetteParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(78); 
+			setState(80); 
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -484,7 +490,7 @@ public class CalculetteParser extends Parser {
 				case 1:
 					{
 					{
-					setState(77);
+					setState(79);
 					_la = _input.LA(1);
 					if ( !(_la==T__6 || _la==NEWLINE) ) {
 					_errHandler.recoverInline(this);
@@ -500,7 +506,7 @@ public class CalculetteParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(80); 
+				setState(82); 
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,7,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -548,23 +554,27 @@ public class CalculetteParser extends Parser {
 		DeclContext _localctx = new DeclContext(_ctx, getState());
 		enterRule(_localctx, 8, RULE_decl);
 		try {
-			setState(94);
+			setState(96);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(82);
-				((DeclContext)_localctx).type = match(TYPE);
-				setState(83);
-				((DeclContext)_localctx).id = match(IDENTIFIANT);
 				setState(84);
+				((DeclContext)_localctx).type = match(TYPE);
+				setState(85);
+				((DeclContext)_localctx).id = match(IDENTIFIANT);
+				setState(86);
 				finInstruction();
 
 				        if((((DeclContext)_localctx).type!=null?((DeclContext)_localctx).type.getText():null).equals("int")){
-				          ((DeclContext)_localctx).code =  "PUSHI " + "0" + "\nSTORE " + (((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null) + "\n"; 
+				          tablesSymboles.putVar((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null), "int");
+				          int adresse = tablesSymboles.getAdresseType((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null)).adresse;
+				          ((DeclContext)_localctx).code =  "PUSHI 0" + "\nSTOREG " + adresse + "\n"; 
 				        }else if((((DeclContext)_localctx).type!=null?((DeclContext)_localctx).type.getText():null).equals("float")){
-				          ((DeclContext)_localctx).code =  "PUSHI " + "0.0" + "\nSTORE " + (((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null) + "\n";
+				          tablesSymboles.putVar((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null), "float");
+				          int adresse = tablesSymboles.getAdresseType((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null)).adresse;
+				          ((DeclContext)_localctx).code =  "PUSHI 0.0" + "\nSTOREG " + adresse + "\n";
 				        }
 				      
 				}
@@ -572,21 +582,25 @@ public class CalculetteParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(87);
-				((DeclContext)_localctx).type = match(TYPE);
-				setState(88);
-				((DeclContext)_localctx).id = match(IDENTIFIANT);
 				setState(89);
-				match(T__7);
+				((DeclContext)_localctx).type = match(TYPE);
 				setState(90);
-				((DeclContext)_localctx).expression = expression(0);
+				((DeclContext)_localctx).id = match(IDENTIFIANT);
 				setState(91);
+				match(T__7);
+				setState(92);
+				((DeclContext)_localctx).expression = expression(0);
+				setState(93);
 				finInstruction();
 
 				          if((((DeclContext)_localctx).type!=null?((DeclContext)_localctx).type.getText():null).equals("int")){
-				            ((DeclContext)_localctx).code =  "PUSHI " + ((DeclContext)_localctx).expression.code + "\nSTORE " + (((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null) + "\n"; 
+				            tablesSymboles.putVar((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null), "int");                                                //On ajoute notre id avec son type pour
+				            int adresse = tablesSymboles.getAdresseType((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null)).adresse;                         //reserver une adresse
+				            ((DeclContext)_localctx).code =  "PUSHI " + ((DeclContext)_localctx).expression.code + "\nSTOREG " + adresse + "\n";                    //Puis on la recupere pour le mvap
 				          }else if((((DeclContext)_localctx).type!=null?((DeclContext)_localctx).type.getText():null).equals("float")){
-				            ((DeclContext)_localctx).code =  "PUSHI " + ((DeclContext)_localctx).expression.code + "\nSTORE " + (((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null) + "\n";
+				            tablesSymboles.putVar((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null), "float");
+				            int adresse = tablesSymboles.getAdresseType((((DeclContext)_localctx).id!=null?((DeclContext)_localctx).id.getText():null)).adresse;
+				            ((DeclContext)_localctx).code =  "PUSHI " + ((DeclContext)_localctx).expression.code + "\nSTOREG " + adresse + "\n";
 				          }
 				        
 				}
@@ -632,13 +646,16 @@ public class CalculetteParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(96);
-			((AssignationContext)_localctx).id = match(IDENTIFIANT);
-			setState(97);
-			match(T__7);
 			setState(98);
+			((AssignationContext)_localctx).id = match(IDENTIFIANT);
+			setState(99);
+			match(T__7);
+			setState(100);
 			((AssignationContext)_localctx).expression = expression(0);
-			 ((AssignationContext)_localctx).code =  ((AssignationContext)_localctx).expression.code + "\nSTORE " + (((AssignationContext)_localctx).id!=null?((AssignationContext)_localctx).id.getText():null) + "\n"; 
+			 
+			        int adresse = tablesSymboles.getAdresseType((((AssignationContext)_localctx).id!=null?((AssignationContext)_localctx).id.getText():null)).adresse;
+			        ((AssignationContext)_localctx).code =  ((AssignationContext)_localctx).expression.code + "\nSTOREG " + adresse + "\n"; 
+			      
 			}
 		}
 		catch (RecognitionException re) {
@@ -662,40 +679,41 @@ public class CalculetteParser extends Parser {
 	private boolean expression_sempred(ExpressionContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
-			return precpred(_ctx, 4);
+			return precpred(_ctx, 5);
 		case 1:
-			return precpred(_ctx, 3);
+			return precpred(_ctx, 4);
 		}
 		return true;
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\21h\4\2\t\2\4\3\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\21j\4\2\t\2\4\3\t"+
 		"\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\3\2\3\2\3\2\7\2\22\n\2\f\2\16\2\25"+
 		"\13\2\3\2\7\2\30\n\2\f\2\16\2\33\13\2\3\2\3\2\3\2\7\2 \n\2\f\2\16\2#\13"+
 		"\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3\62\n\3\3\4"+
-		"\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4?\n\4\3\4\3\4\3\4\3\4\3\4"+
-		"\3\4\3\4\3\4\3\4\3\4\7\4K\n\4\f\4\16\4N\13\4\3\5\6\5Q\n\5\r\5\16\5R\3"+
-		"\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\5\6a\n\6\3\7\3\7\3\7\3"+
-		"\7\3\7\3\7\2\3\6\b\2\4\6\b\n\f\2\5\3\2\7\b\3\2\5\6\4\2\t\t\f\f\2l\2\23"+
-		"\3\2\2\2\4\61\3\2\2\2\6>\3\2\2\2\bP\3\2\2\2\n`\3\2\2\2\fb\3\2\2\2\16\17"+
-		"\5\n\6\2\17\20\b\2\1\2\20\22\3\2\2\2\21\16\3\2\2\2\22\25\3\2\2\2\23\21"+
-		"\3\2\2\2\23\24\3\2\2\2\24\31\3\2\2\2\25\23\3\2\2\2\26\30\7\f\2\2\27\26"+
-		"\3\2\2\2\30\33\3\2\2\2\31\27\3\2\2\2\31\32\3\2\2\2\32!\3\2\2\2\33\31\3"+
-		"\2\2\2\34\35\5\4\3\2\35\36\b\2\1\2\36 \3\2\2\2\37\34\3\2\2\2 #\3\2\2\2"+
-		"!\37\3\2\2\2!\"\3\2\2\2\"$\3\2\2\2#!\3\2\2\2$%\b\2\1\2%\3\3\2\2\2&\'\5"+
-		"\6\4\2\'(\5\b\5\2()\b\3\1\2)\62\3\2\2\2*+\5\b\5\2+,\b\3\1\2,\62\3\2\2"+
-		"\2-.\5\f\7\2./\5\b\5\2/\60\b\3\1\2\60\62\3\2\2\2\61&\3\2\2\2\61*\3\2\2"+
-		"\2\61-\3\2\2\2\62\5\3\2\2\2\63\64\b\4\1\2\64\65\7\3\2\2\65\66\5\6\4\2"+
-		"\66\67\7\4\2\2\678\b\4\1\28?\3\2\2\29:\t\2\2\2:;\7\16\2\2;?\b\4\1\2<="+
-		"\7\16\2\2=?\b\4\1\2>\63\3\2\2\2>9\3\2\2\2><\3\2\2\2?L\3\2\2\2@A\f\6\2"+
-		"\2AB\t\3\2\2BC\5\6\4\7CD\b\4\1\2DK\3\2\2\2EF\f\5\2\2FG\t\2\2\2GH\5\6\4"+
-		"\6HI\b\4\1\2IK\3\2\2\2J@\3\2\2\2JE\3\2\2\2KN\3\2\2\2LJ\3\2\2\2LM\3\2\2"+
-		"\2M\7\3\2\2\2NL\3\2\2\2OQ\t\4\2\2PO\3\2\2\2QR\3\2\2\2RP\3\2\2\2RS\3\2"+
-		"\2\2S\t\3\2\2\2TU\7\13\2\2UV\7\20\2\2VW\5\b\5\2WX\b\6\1\2Xa\3\2\2\2YZ"+
-		"\7\13\2\2Z[\7\20\2\2[\\\7\n\2\2\\]\5\6\4\2]^\5\b\5\2^_\b\6\1\2_a\3\2\2"+
-		"\2`T\3\2\2\2`Y\3\2\2\2a\13\3\2\2\2bc\7\20\2\2cd\7\n\2\2de\5\6\4\2ef\b"+
-		"\7\1\2f\r\3\2\2\2\13\23\31!\61>JLR`";
+		"\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4A\n\4\3\4\3\4\3\4"+
+		"\3\4\3\4\3\4\3\4\3\4\3\4\3\4\7\4M\n\4\f\4\16\4P\13\4\3\5\6\5S\n\5\r\5"+
+		"\16\5T\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\5\6c\n\6\3\7\3"+
+		"\7\3\7\3\7\3\7\3\7\2\3\6\b\2\4\6\b\n\f\2\5\3\2\7\b\3\2\5\6\4\2\t\t\f\f"+
+		"\2o\2\23\3\2\2\2\4\61\3\2\2\2\6@\3\2\2\2\bR\3\2\2\2\nb\3\2\2\2\fd\3\2"+
+		"\2\2\16\17\5\n\6\2\17\20\b\2\1\2\20\22\3\2\2\2\21\16\3\2\2\2\22\25\3\2"+
+		"\2\2\23\21\3\2\2\2\23\24\3\2\2\2\24\31\3\2\2\2\25\23\3\2\2\2\26\30\7\f"+
+		"\2\2\27\26\3\2\2\2\30\33\3\2\2\2\31\27\3\2\2\2\31\32\3\2\2\2\32!\3\2\2"+
+		"\2\33\31\3\2\2\2\34\35\5\4\3\2\35\36\b\2\1\2\36 \3\2\2\2\37\34\3\2\2\2"+
+		" #\3\2\2\2!\37\3\2\2\2!\"\3\2\2\2\"$\3\2\2\2#!\3\2\2\2$%\b\2\1\2%\3\3"+
+		"\2\2\2&\'\5\6\4\2\'(\5\b\5\2()\b\3\1\2)\62\3\2\2\2*+\5\b\5\2+,\b\3\1\2"+
+		",\62\3\2\2\2-.\5\f\7\2./\5\b\5\2/\60\b\3\1\2\60\62\3\2\2\2\61&\3\2\2\2"+
+		"\61*\3\2\2\2\61-\3\2\2\2\62\5\3\2\2\2\63\64\b\4\1\2\64\65\7\3\2\2\65\66"+
+		"\5\6\4\2\66\67\7\4\2\2\678\b\4\1\28A\3\2\2\29:\t\2\2\2:;\7\16\2\2;A\b"+
+		"\4\1\2<=\7\16\2\2=A\b\4\1\2>?\7\20\2\2?A\b\4\1\2@\63\3\2\2\2@9\3\2\2\2"+
+		"@<\3\2\2\2@>\3\2\2\2AN\3\2\2\2BC\f\7\2\2CD\t\3\2\2DE\5\6\4\bEF\b\4\1\2"+
+		"FM\3\2\2\2GH\f\6\2\2HI\t\2\2\2IJ\5\6\4\7JK\b\4\1\2KM\3\2\2\2LB\3\2\2\2"+
+		"LG\3\2\2\2MP\3\2\2\2NL\3\2\2\2NO\3\2\2\2O\7\3\2\2\2PN\3\2\2\2QS\t\4\2"+
+		"\2RQ\3\2\2\2ST\3\2\2\2TR\3\2\2\2TU\3\2\2\2U\t\3\2\2\2VW\7\13\2\2WX\7\20"+
+		"\2\2XY\5\b\5\2YZ\b\6\1\2Zc\3\2\2\2[\\\7\13\2\2\\]\7\20\2\2]^\7\n\2\2^"+
+		"_\5\6\4\2_`\5\b\5\2`a\b\6\1\2ac\3\2\2\2bV\3\2\2\2b[\3\2\2\2c\13\3\2\2"+
+		"\2de\7\20\2\2ef\7\n\2\2fg\5\6\4\2gh\b\7\1\2h\r\3\2\2\2\13\23\31!\61@L"+
+		"NTb";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
