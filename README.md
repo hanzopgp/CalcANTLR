@@ -37,6 +37,9 @@
 `java org.antlr.v4.runtime.misc.TestRig <your_grammar> <start_rule> > <file_name>.mvap`
 - Signal you are done writing your test :
 `CTRL+D`
+- Show binary code :
+`od -t x4 --endian=big <file>.mvap.cbap`
+`od -t d4 --endian=big <file>.mvap.cbap`
 
 ### Stack machine commands :
 
@@ -46,8 +49,6 @@
 `java CBaP <your_stackmachine_file>.mvap.cbap`
 
 ### Scripts :
-
-#### --> src folder :
 
 - Does basicaly everything from building to test :
 `bash build_all_and_test.sh`
@@ -59,9 +60,6 @@
 `bash build_util.sh`
 - Run a test, display the result and put the output in a mvap file :
 `bash test_grammar.sh`
-
-#### --> stackmachine folder :
-
 - Run .mvap file :
 `bash test_mvap.sh`
 
