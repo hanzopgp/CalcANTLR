@@ -8,7 +8,7 @@ calcul returns [ String code ]
 @init{ $code = new String(); }                                                                    //Initialisation de $code qui contiendra le code
 @after{ System.out.println($code); }                                                              //mvap et l'affichera a la fin
     : 
-      (decl { $code += $decl.code; })*
+      (declaration { $code += $declaration.code; })*
 
       NEWLINE*
 
@@ -25,14 +25,17 @@ instruction returns [ String code ]
       | finInstruction 
         { $code= ""; }
 
+      | declaration finInstruction
+        { $code = $declaration.code; }
+
       | assignation finInstruction
         { $code = $assignation.code; }
 
-      | 'write(' expression ')' finInstruction
-        { $code = $expression.code + "WRITE\nPOP\n"; }
+      | outputInstr finInstruction
+        { $code = $outputInstr.code; }
 
-      | 'read(' expression ')' finInstruction
-        { $code = $expression.code + "READ\n"; }
+      | inputInstr finInstruction
+        { $code = $inputInstr.code; }
     ;
 
 expression returns [ String code ]
@@ -61,16 +64,26 @@ expression returns [ String code ]
         { $code = "PUSHG " + tablesSymboles.getAdresseType($id.text).adresse + "\n"; }             //les calculs
     ;
 
-finInstruction 
+inputInstr returns [ String code ]                                                                 //Fonction prenant les input avec read()
     :
-      ( NEWLINE | ';' )+ 
+      'read(' 
+      id = IDENTIFIANT 
+      ')' 
+      { $code = "PUSHI 0\nREAD\nSTOREG "+ tablesSymboles.getAdresseType($id.text).adresse + "\n"; }
     ;
 
-decl returns [ String code ] 
+outputInstr returns [ String code ]                                                                //Fonction prenant les output avec write()
+    :
+      'write(' 
+      expression 
+      ')' 
+      { $code = $expression.code + "WRITE\nPOP\n"; }
+    ;
+
+declaration returns [ String code ] 
     :
       type = TYPE 
       id = IDENTIFIANT 
-      finInstruction
       {
         if($type.text.equals("int")){
           tablesSymboles.putVar($id.text, "int");
@@ -87,7 +100,6 @@ decl returns [ String code ]
         id = IDENTIFIANT
         '='
         expression
-        finInstruction
         {
           if($type.text.equals("int")){
             tablesSymboles.putVar($id.text, "int");                                                //On ajoute notre id avec son type pour
@@ -108,8 +120,13 @@ assignation returns [ String code ]                                             
       expression
       { 
         int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-        $code = $expression.code + "\nSTOREG " + adresse + "\n"; 
+        $code = $expression.code + "STOREG " + adresse + "\n"; 
       }
+    ;
+
+finInstruction 
+    :
+      ( NEWLINE | ';' )+ 
     ;
 
 

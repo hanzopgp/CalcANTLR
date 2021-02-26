@@ -51,25 +51,37 @@ public class CalculetteBaseListener implements CalculetteListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFinInstruction(CalculetteParser.FinInstructionContext ctx) { }
+	@Override public void enterInputInstr(CalculetteParser.InputInstrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFinInstruction(CalculetteParser.FinInstructionContext ctx) { }
+	@Override public void exitInputInstr(CalculetteParser.InputInstrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDecl(CalculetteParser.DeclContext ctx) { }
+	@Override public void enterOutputInstr(CalculetteParser.OutputInstrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitDecl(CalculetteParser.DeclContext ctx) { }
+	@Override public void exitOutputInstr(CalculetteParser.OutputInstrContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDeclaration(CalculetteParser.DeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDeclaration(CalculetteParser.DeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -82,6 +94,18 @@ public class CalculetteBaseListener implements CalculetteListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitAssignation(CalculetteParser.AssignationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFinInstruction(CalculetteParser.FinInstructionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFinInstruction(CalculetteParser.FinInstructionContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

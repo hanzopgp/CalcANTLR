@@ -62,19 +62,19 @@ class TablesSymboles {
      */
     private AdresseType getAdresseTypeLocale(String symbol) {
 	if (_tableLocale != null) {
-	    System.err.println("Recherche de "+ symbol + " dans table locale: " + _tableLocale);
+	    //System.err.println("Recherche de "+ symbol + " dans table locale: " + _tableLocale);
 	    AdresseType a = _tableLocale.getAdresseType(symbol);
 	    if (a != null) { // on a trouvÃ©
 		 return new AdresseType(a.adresse - (_tableLocale.getSize() + 2), a.type);
 	    }
 	}
-	System.err.println(symbol + " pas trouve en local");
+	//System.err.println(symbol + " pas trouve en local");
 	return null;
     }
    
     private AdresseType getAdresseTypeGlobale(String symbol) {
-	System.err.println("Recherche de "+ symbol + " dans table globale: " + _tableGlobale
-			   + " => @"+ _tableGlobale.getAdresseType(symbol));
+	//System.err.println("Recherche de "+ symbol + " dans table globale: " + _tableGlobale
+	//		   + " => @"+ _tableGlobale.getAdresseType(symbol));
 	return _tableGlobale.getAdresseType(symbol);
     }
    
@@ -87,7 +87,7 @@ class TablesSymboles {
 	if (a != null)                    
 	    return a;
             
-	System.err.println("## Erreur : la variable \"" + symbol + "\" n'existe pas");
+	//System.err.println("## Erreur : la variable \"" + symbol + "\" n'existe pas");
 	return null; // n'importe quoi, et l'adresse nâ€™existe pas!
     }
 
@@ -97,14 +97,14 @@ class TablesSymboles {
 	String l = _tableFonctions.get(function);
 	if (l != null)
 	    return l;
-	System.err.println("Appel a une fonction non definie \""+function+"\"");
+	//System.err.println("Appel a une fonction non definie \""+function+"\"");
 	return null;
     }
 
     public boolean newFunction(String function,String t) {
         String fat = _tableFonctions.get(function);
 	if ( fat!= null ) {
-	    System.err.println("Fonction \""+ function + "\" deja definie avec type de retour \"" + fat +"\".");
+	    //System.err.println("Fonction \""+ function + "\" deja definie avec type de retour \"" + fat +"\".");
 	    return false;
 	}
 	_tableFonctions.put(function, t);

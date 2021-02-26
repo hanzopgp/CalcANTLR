@@ -37,25 +37,35 @@ public interface CalculetteListener extends ParseTreeListener {
 	 */
 	void exitExpression(CalculetteParser.ExpressionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link CalculetteParser#finInstruction}.
+	 * Enter a parse tree produced by {@link CalculetteParser#inputInstr}.
 	 * @param ctx the parse tree
 	 */
-	void enterFinInstruction(CalculetteParser.FinInstructionContext ctx);
+	void enterInputInstr(CalculetteParser.InputInstrContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link CalculetteParser#finInstruction}.
+	 * Exit a parse tree produced by {@link CalculetteParser#inputInstr}.
 	 * @param ctx the parse tree
 	 */
-	void exitFinInstruction(CalculetteParser.FinInstructionContext ctx);
+	void exitInputInstr(CalculetteParser.InputInstrContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link CalculetteParser#decl}.
+	 * Enter a parse tree produced by {@link CalculetteParser#outputInstr}.
 	 * @param ctx the parse tree
 	 */
-	void enterDecl(CalculetteParser.DeclContext ctx);
+	void enterOutputInstr(CalculetteParser.OutputInstrContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link CalculetteParser#decl}.
+	 * Exit a parse tree produced by {@link CalculetteParser#outputInstr}.
 	 * @param ctx the parse tree
 	 */
-	void exitDecl(CalculetteParser.DeclContext ctx);
+	void exitOutputInstr(CalculetteParser.OutputInstrContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link CalculetteParser#declaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterDeclaration(CalculetteParser.DeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CalculetteParser#declaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitDeclaration(CalculetteParser.DeclarationContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link CalculetteParser#assignation}.
 	 * @param ctx the parse tree
@@ -66,4 +76,14 @@ public interface CalculetteListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAssignation(CalculetteParser.AssignationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link CalculetteParser#finInstruction}.
+	 * @param ctx the parse tree
+	 */
+	void enterFinInstruction(CalculetteParser.FinInstructionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CalculetteParser#finInstruction}.
+	 * @param ctx the parse tree
+	 */
+	void exitFinInstruction(CalculetteParser.FinInstructionContext ctx);
 }
