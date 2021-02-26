@@ -50,6 +50,8 @@
 
 ### Scripts :
 
+- Does everything in one script :
+`bash do_all.sh`
 - Does basicaly everything from building to test :
 `bash build_all_and_test.sh`
 - Reset everything :
