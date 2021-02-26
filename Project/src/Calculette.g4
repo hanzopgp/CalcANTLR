@@ -27,6 +27,18 @@ instruction returns [ String code ]
 
       | assignation finInstruction
         { $code = $assignation.code; }
+
+      | 'write('
+        IDENTIFIANT
+        ')'
+        finInstruction
+        { $code = "WRITE\nPOP\n"; }
+
+      | 'read('
+        IDENTIFIANT
+        ')'
+        finInstruction
+        { $code = "READ\n"; }
     ;
 
 expression returns [ String code ]
@@ -119,6 +131,6 @@ ENTIER: ('0' ..'9')+;
 
 FLOAT: ('0'..'9')+'.'('0'..'9')+;
 
-IDENTIFIANT: ('a'..'z' | 'A'..'Z')+;
+IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*;
 
 UNMATCH: . -> skip;
