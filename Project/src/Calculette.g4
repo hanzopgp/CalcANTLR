@@ -28,12 +28,6 @@ instruction returns [ String code ]
       | assignation finInstruction
         { $code = $assignation.code; }
 
-      | 'write(' IDENTIFIANT ')' finInstruction
-        { $code = "WRITE\nPOP\n"; }
-
-      | 'read(' IDENTIFIANT ')' finInstruction
-        { $code = "READ\n"; }
-
       | 'write(' expression ')' finInstruction
         { $code = $expression.code + "WRITE\nPOP\n"; }
 
