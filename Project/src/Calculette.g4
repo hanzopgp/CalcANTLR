@@ -92,11 +92,11 @@ decl returns [ String code ]
           if($type.text.equals("int")){
             tablesSymboles.putVar($id.text, "int");                                                //On ajoute notre id avec son type pour
             int adresse = tablesSymboles.getAdresseType($id.text).adresse;                         //reserver une adresse
-            $code = $expression.code + "\nSTOREG " + adresse + "\n";                               //Puis on la recupere pour le mvap
+            $code = "PUSHI 0\n" + $expression.code + "\nSTOREG " + adresse + "\n";                 //Puis on la recupere pour le mvap
           }else if($type.text.equals("float")){
             tablesSymboles.putVar($id.text, "float");
             int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-            $code = $expression.code + "\nSTOREG " + adresse + "\n";
+            $code = "PUSHI 0\n" + $expression.code + "\nSTOREG " + adresse + "\n";
           }
         }
     ; 
