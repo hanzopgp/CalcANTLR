@@ -27,6 +27,18 @@ public class CalculetteBaseListener implements CalculetteListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterBlock(CalculetteParser.BlockContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBlock(CalculetteParser.BlockContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterInstruction(CalculetteParser.InstructionContext ctx) { }
 	/**
 	 * {@inheritDoc}

@@ -27,14 +27,14 @@ grammar Calculette;
       }
     }
 
-    public String evalLoop(String condition, String instruction){                                 //Fonction renvoyant le code mvap pour creer
+    public String evalLoop(String condition, String block){                                       //Fonction renvoyant le code mvap pour creer
       String startLabel = getNewLabel();                                                          //les boucles avec leurs conditions et instr
       String endLabel = getNewLabel();
       String res = "";
       res += "LABEL " + startLabel + "\n";
       res += condition;
       res += "JUMPF " + endLabel + "\n";
-      res += instruction;
+      res += block;
       res += "JUMP " + startLabel + "\n";
       res += "LABEL " + endLabel + "\n";
       return res;
@@ -55,15 +55,15 @@ calcul returns [ String code ]
       { $code += "\nHALT \n"; }
     ;
 
-/*block returns [ String code ]
+block returns [ String code ]                                                                     //Prise en charge des block d'instructions
     :
+      { $code = ""; }
       '{'
-      instruction*
+      (instruction { $code += $instruction.code; })*
       '}'
-      { $code = $instruction.code; }
-    ;*/
+    ;
 
-instruction returns [ String code ] 
+instruction returns [ String code ]                                                             
     : 
       expression finInstruction 
       { $code = $expression.code; }
@@ -83,7 +83,7 @@ instruction returns [ String code ]
       | inputInstr finInstruction
         { $code = $inputInstr.code; }
 
-      | loopInstr finInstruction
+      | loopInstr
         { $code = $loopInstr.code; }
     ;
 
@@ -129,16 +129,16 @@ outputInstr returns [ String code ]                                             
       { $code = $expression.code + "WRITE\n"; }
     ;
 
-loopInstr returns [ String code ]
+loopInstr returns [ String code ]                                                                  //Prise en charge des boucles en mvap
     :
       'while('
-      condi = condition
+      condition
       ')'
-      instru = instruction
-      { $code = evalLoop($condi.code, $instru.code); }
+      block
+      { $code = evalLoop($condition.code, $block.code); }
     ;
 
-condition returns [ String code ]
+condition returns [ String code ]                                                                  //Condition inf sup eq true false ...
     : 
       'true'  { $code = "PUSHI 1\n"; }
 
@@ -150,7 +150,7 @@ condition returns [ String code ]
         { $code = evalCond($exp1.code, $cond.text, $exp2.code); }
     ;
 
-declaration returns [ String code ] 
+declaration returns [ String code ]                                                                 //Prise en charge des declarations typees 
     :
       type = TYPE 
       id = IDENTIFIANT 
@@ -166,7 +166,7 @@ declaration returns [ String code ]
         }
       }
 
-      | type = TYPE
+      | type = TYPE                                                                                //Et des declarations typees plus assignation
         id = IDENTIFIANT
         '='
         expression
@@ -178,7 +178,7 @@ declaration returns [ String code ]
           }else if($type.text.equals("float")){
             tablesSymboles.putVar($id.text, "float");
             int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-            $code = "PUSHI 0\n" + $expression.code + "\nSTOREG " + adresse + "\n";
+            $code = "PUSHI 0.0\n" + $expression.code + "\nSTOREG " + adresse + "\n";
           }
         }
     ; 
