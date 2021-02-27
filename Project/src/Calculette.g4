@@ -2,8 +2,7 @@ grammar Calculette;
 
 @members {
     private TablesSymboles tablesSymboles = new TablesSymboles();                                 //On utilise la table de symboles pour garder les
-                                                                                                  //liens var/type et les valeurs dans les adresses
-    private int _cur_label = 1;                                                                   
+    private int _cur_label = 1;                                                                   //liens var/type et les valeurs dans les adresses
     private String getNewLabel() { return "B" +(_cur_label++); }                                  //Generateur de nom d'etiquettes pour les boucles                                
 
     public String evalCond(String exp1, String cond, String exp2){                                //Fonction renvoyant le code mvap pour chacune 
@@ -63,8 +62,8 @@ block returns [ String code ]                                                   
       '}'
     ;
 
-instruction returns [ String code ]                                                             
-    : 
+instruction returns [ String code ]                                                               //Ensemble des types d'instructions que l'on                                                      
+    :                                                                                             //peut rencontrer
       expression finInstruction 
       { $code = $expression.code; }
  
@@ -174,16 +173,16 @@ declaration returns [ String code ]                                             
           if($type.text.equals("int")){
             tablesSymboles.putVar($id.text, "int");                                                //On ajoute notre id avec son type pour
             int adresse = tablesSymboles.getAdresseType($id.text).adresse;                         //reserver une adresse
-            $code = "PUSHI 0\n" + $expression.code + "\nSTOREG " + adresse + "\n";                 //Puis on la recupere pour le mvap
+            $code = "PUSHI 0\n" + $expression.code + "STOREG " + adresse + "\n";                   //Puis on la recupere pour le mvap
           }else if($type.text.equals("float")){
             tablesSymboles.putVar($id.text, "float");
             int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-            $code = "PUSHI 0.0\n" + $expression.code + "\nSTOREG " + adresse + "\n";
+            $code = "PUSHI 0.0\n" + $expression.code + "STOREG " + adresse + "\n";
           }
         }
     ; 
 
-assignation returns [ String code ]                                                                //Assignation a une variable
+assignation returns [ String code ]                                                                //Assignation d'une valeur a une variable
     : 
       id = IDENTIFIANT
       '=' 
@@ -194,7 +193,7 @@ assignation returns [ String code ]                                             
       }
     ;
 
-finInstruction 
+finInstruction                                                                                      //Reconnaissance des fins d'instructions
     :
       ( NEWLINE | ';' )+ 
     ;
