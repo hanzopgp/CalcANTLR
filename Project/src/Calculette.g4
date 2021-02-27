@@ -2,7 +2,45 @@ grammar Calculette;
 
 @members {
     private TablesSymboles tablesSymboles = new TablesSymboles();                                 //On utilise la table de symboles pour garder les
-}                                                                                                 //liens var/type et les valeurs dans les adresses
+                                                                                                  //liens var/type et les valeurs dans les adresses
+    private int _cur_label = 1;                                                                   
+    private String getNewLabel() { return "B" +(_cur_label++); }                                  //Generateur de nom d'etiquettes pour les boucles                                
+
+    public String evalCond(String exp1, String cond, String exp2){                                //Fonction renvoyant le code mvap pour chacune 
+      String res = exp1 + exp2;                                                                   //des conditions possibles
+      switch(cond){
+        case "==" :
+          return res + "EQUAL\n";
+        case "<=" :
+          return res + "INFEQ\n";
+        case ">=" :
+          return res + "SUPEQ\n";
+        case "<" :
+          return res + "INF\n";
+        case ">" :
+          return res + "SUP\n";
+        case "!=" :
+          return res + "NEQ\n";
+        default :
+          System.err.println("ERROR evalCond");
+          return "";
+      }
+    }
+
+    public String evalLoop(String condition, String instruction){                                 //Fonction renvoyant le code mvap pour creer
+      String startLabel = getNewLabel();                                                          //les boucles avec leurs conditions et instr
+      String endLabel = getNewLabel();
+      String res = "";
+      res += "LABEL " + startLabel + "\n";
+      res += condition;
+      res += "JUMPF " + endLabel + "\n";
+      res += instruction;
+      res += "JUMP " + startLabel + "\n";
+      res += "LABEL " + endLabel + "\n";
+      return res;
+    }
+
+}                                                                                                 
   
 calcul returns [ String code ]
 @init{ $code = new String(); }                                                                    //Initialisation de $code qui contiendra le code
@@ -16,6 +54,14 @@ calcul returns [ String code ]
 
       { $code += "\nHALT \n"; }
     ;
+
+/*block returns [ String code ]
+    :
+      '{'
+      instruction*
+      '}'
+      { $code = $instruction.code; }
+    ;*/
 
 instruction returns [ String code ] 
     : 
@@ -36,6 +82,9 @@ instruction returns [ String code ]
 
       | inputInstr finInstruction
         { $code = $inputInstr.code; }
+
+      | loopInstr finInstruction
+        { $code = $loopInstr.code; }
     ;
 
 expression returns [ String code ]
@@ -74,10 +123,31 @@ inputInstr returns [ String code ]                                              
 
 outputInstr returns [ String code ]                                                                //Fonction prenant les output avec write()
     :
-      'write(' 
+      'write('
       expression 
       ')' 
-      { $code = $expression.code + "WRITE\nPOP\n"; }
+      { $code = $expression.code + "WRITE\n"; }
+    ;
+
+loopInstr returns [ String code ]
+    :
+      'while('
+      condi = condition
+      ')'
+      instru = instruction
+      { $code = evalLoop($condi.code, $instru.code); }
+    ;
+
+condition returns [ String code ]
+    : 
+      'true'  { $code = "PUSHI 1\n"; }
+
+      | 'false' { $code = "PUSHI 0\n"; }
+
+      | exp1 = expression
+        cond = COND
+        exp2 = expression
+        { $code = evalCond($exp1.code, $cond.text, $exp2.code); }
     ;
 
 declaration returns [ String code ] 
@@ -130,7 +200,7 @@ finInstruction
     ;
 
 
-
+COND : '==' | '<' | '>' | '<=' | '>=' | '!=';
 
 TYPE : 'int' | 'float' ;
 
