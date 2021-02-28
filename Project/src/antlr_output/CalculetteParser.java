@@ -146,24 +146,36 @@ public class CalculetteParser extends Parser {
 	      }
 	    }
 
-	    public String evalIfElse(String condition, String ifBlock, String elseBlock){                 //Fonction renvoyant le code pour gerer les      
-	      String startLabel = getNewLabel();                                                          //if else avec condition
-	      String endLabel = getNewLabel();
+	    public String evalIfElse(String condition, String ifBlock, String elseBlock){                 //Fonction renvoyant le code pour gerer les                                                                
+	      String endLabel = getNewLabel();                                                            //if else avec condition
+	      String startLabelIf = getNewLabel();                                                          
+	      String endLabelIf = getNewLabel();
+	      String startLabelElse = getNewLabel();                                                          
+	      String endLabelElse = getNewLabel();
 	      String res = "";
-	      res += "LABEL " + startLabel + "\n";
-	      res += condition;
-	      res += "JUMPF " + endLabel + "\n";
-	      res += ifBlock;
-	      res += "JUMP " + startLabel + "\n";
-	      res += "LABEL " + endLabel + "\n";
+
+	      res += condition;                        //Condition
+	      res += "JUMPF " + startLabelIf + "\n";   //Si condition ok on va au block if
+
+
+	                                               //Si condition pas ok on va au block else ???
+
+
+	      res += "LABEL " + startLabelIf + "\n";   //Debut du block if
+	      res += ifBlock;                          //Block if
+	      res += "JUMP " + endLabelElse + "\n";    //Si on a fait le block if on saute a la fin du block else
+
+	      res += "LABEL " + startLabelElse + "\n"; //Debut du block else
+	      res += elseBlock;                        //Block else
+	      res += "LABEL " + endLabelElse + "\n";   //Fin du block else
+
 	      if(elseBlock!=null){
 	        res += elseBlock;
-	        res += "JUMP " + startLabel + "\n";
-	        res += "LABEL " + endLabel + "\n";
+	        res += "JUMP " + startLabelElse + "\n";
+	        res += "LABEL " + endLabelElse + "\n";
 	      } 
 	      return res;
 	    }
-
 
 	public CalculetteParser(TokenStream input) {
 		super(input);
