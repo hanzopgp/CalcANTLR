@@ -11,6 +11,35 @@
 
 >This is a calculator language compiler done with ANTLR and a stack machine.
 
+## Details
+
+### ToDo
+
+- For loop
+- Repeat until loop
+- Syntaxic analysis of functions
+- Float numbers
+- General tests
+- Add features
+
+### Doing
+
+- Else statement
+- Logical operators
+
+### Done
+
+- ANTLR basic use
+- Basic calcul grammar
+- Calcul priority / Negative numbers
+- Parenthesis
+- Integur variables
+- Write / Read
+- While loop
+- Blocks (sequence of instructions)
+- If statement
+- Relational operators
+
 ## How does it work
 
 >I'm using ANTLR to generate a java lexer and parser with a grammar file. The "calculator language" is made of numbers, operators, spaces, brackets... The purpose of the grammar I've built is to translate the calculator language into stack machine language. We can then run this stack machine language (which looks like assembly but without register) using the stack machine in src/stackmachine folder.
