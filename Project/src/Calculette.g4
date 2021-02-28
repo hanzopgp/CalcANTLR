@@ -39,8 +39,8 @@ grammar Calculette;
       return res;
     }
 
-    public String evalCondAvecLog(String cond1, String exprlog, String cond2){
-      String res = "";
+    public String evalCondAvecLog(String cond1, String exprlog, String cond2){                    //Fonction renvoyant le code apres avoir tester
+      String res = "";                                                                            //en prenant en compte la logique booleene
       switch(exprlog){
         case "!" :
         case "||" :
@@ -49,6 +49,24 @@ grammar Calculette;
           System.err.println("ERROR evalCondAvecLog");
           return "";
       }
+    }
+
+    public String evalIfElse(String condition, String ifBlock, String elseBlock){                 //Fonction renvoyant le code pour gerer les      
+      String startLabel = getNewLabel();                                                          //if else avec condition
+      String endLabel = getNewLabel();
+      String res = "";
+      res += "LABEL " + startLabel + "\n";
+      res += condition;
+      res += "JUMPF " + endLabel + "\n";
+      res += ifBlock;
+      res += "JUMP " + startLabel + "\n";
+      res += "LABEL " + endLabel + "\n";
+      if(elseBlock!=null){
+        res += elseBlock;
+        res += "JUMP " + startLabel + "\n";
+        res += "LABEL " + endLabel + "\n";
+      } 
+      return res;
     }
 
 }                                                                                                 
@@ -96,6 +114,9 @@ instruction returns [ String code ]                                             
 
       | loopInstr
         { $code = $loopInstr.code; }
+
+      | branchement
+        { $code = $branchement.code; }
     ;
 
 expression returns [ String code ]
@@ -122,6 +143,17 @@ expression returns [ String code ]
 
       | id = IDENTIFIANT                                                                           //Prise en charge des variables dans
         { $code = "PUSHG " + tablesSymboles.getAdresseType($id.text).adresse + "\n"; }             //les calculs
+    ;
+
+branchement returns [ String code ]                                                                //Prise en charge des if else
+    :
+      'if('
+      condition
+      ')'
+      ifblock = block
+      ('else'
+      elseblock = block)?
+      { $code = evalIfElse($condition.code, $ifblock.code, $elseblock.code); }
     ;
 
 inputInstr returns [ String code ]                                                                 //Fonction prenant les input avec read()
