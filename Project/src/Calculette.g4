@@ -39,6 +39,18 @@ grammar Calculette;
       return res;
     }
 
+    public String evalCondAvecLog(String cond1, String exprlog, String cond2){
+      String res = "";
+      switch(exprlog){
+        case "!" :
+        case "||" :
+        case "&&" :
+        default :
+          System.err.println("ERROR evalCondAvecLog");
+          return "";
+      }
+    }
+
 }                                                                                                 
   
 calcul returns [ String code ]
@@ -137,6 +149,14 @@ loopInstr returns [ String code ]                                               
       { $code = evalLoop($condition.code, $block.code); }
     ;
 
+conditionAvecLogique returns [ String code ]                                                       //Prise en charge des expressions logiques
+    :                                                                                              //dans les conditions
+      cond1 = condition
+      exprlog = EXPRLOG
+      cond2 = condition
+      { $code = evalCondAvecLog($cond1.code, $exprlog.text, $cond2.code); }
+    ;
+
 condition returns [ String code ]                                                                  //Condition inf sup eq true false ...
     : 
       'true'  { $code = "PUSHI 1\n"; }
@@ -198,6 +218,8 @@ finInstruction                                                                  
       ( NEWLINE | ';' )+ 
     ;
 
+
+EXPRLOG : '&&' | '||' | '!';
 
 COND : '==' | '<' | '>' | '<=' | '>=' | '!=';
 

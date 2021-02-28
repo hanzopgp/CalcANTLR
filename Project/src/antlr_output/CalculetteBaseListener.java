@@ -99,6 +99,18 @@ public class CalculetteBaseListener implements CalculetteListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterConditionAvecLogique(CalculetteParser.ConditionAvecLogiqueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitConditionAvecLogique(CalculetteParser.ConditionAvecLogiqueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterCondition(CalculetteParser.ConditionContext ctx) { }
 	/**
 	 * {@inheritDoc}
