@@ -1,2 +1,7 @@
 21510242 DURAND Enzo
 21810620 TIEM Hugo
+
+fichier g4 : Project/src/
+fichiers java annexes : Project/src/util
+explication déroulement : README.md
+benchmarks : aucun pour le moment
