@@ -29,27 +29,24 @@ grammar Calculette;
     public String evalWhileLoop(String condition, String block){                                  //Fonction renvoyant le code mvap pour creer
       String startLabel = getNewLabel();                                                          //les boucles avec leurs conditions et instr
       String endLabel = getNewLabel();
-      String res = "";
-      res += "LABEL " + startLabel + "\n";
-      res += condition;
-      res += "JUMPF " + endLabel + "\n";
-      res += block;
-      res += "JUMP " + startLabel + "\n";
-      res += "LABEL " + endLabel + "\n";
+      String res = "LABEL " + startLabel + "\n" + condition + "JUMPF " + endLabel + "\n"
+          + block + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
       return res;
     }
 
     public String evalForLoop(String init, String condition, String iteration, String block){     //Fonction renvoyant le code mvap pour creer une
       String startLabel = getNewLabel();                                                          //boucle for
       String endLabel = getNewLabel();
-      $code = init + "LABEL " + startLabel + "\n" + condition + "JUMPF " + endLabel + "\n"
+      String res = init + "LABEL " + startLabel + "\n" + condition + "JUMPF " + endLabel + "\n"
             + block + iteration + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
+      return res;
     }
 
     public String evalRepeatLoop(String condition, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
       String startLabel = getNewLabel();                                                          //boucle repeat until
-      $code = "LABEL " + startLabel + "\n" + block 
+      String res = "LABEL " + startLabel + "\n" + block 
             + condition + "\n" + "JUMPF " + startLabel + "\n";
+      return res;
     }
 
     public String evalCondAvecLog(String cond1, String exprlog, String cond2){                    //Fonction renvoyant le code apres avoir tester
@@ -140,8 +137,8 @@ instruction returns [ String code ]                                             
       | loopInstr
         { $code = $loopInstr.code; }
 
-      | branchement
-        { $code = $branchement.code; }
+      | ifElseInstr
+        { $code = $ifElseInstr.code; }
     ;
 
 expression returns [ String code ]
@@ -170,7 +167,7 @@ expression returns [ String code ]
         { $code = "PUSHG " + tablesSymboles.getAdresseType($id.text).adresse + "\n"; }             //les calculs
     ;
 
-branchement returns [ String code ]                                                                //Prise en charge des if else
+ifElseInstr returns [ String code ]                                                                //Prise en charge des if else
     :
       'if('
       condition

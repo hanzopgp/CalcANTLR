@@ -63,13 +63,13 @@ public class CalculetteBaseListener implements CalculetteListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBranchement(CalculetteParser.BranchementContext ctx) { }
+	@Override public void enterIfElseInstr(CalculetteParser.IfElseInstrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitBranchement(CalculetteParser.BranchementContext ctx) { }
+	@Override public void exitIfElseInstr(CalculetteParser.IfElseInstrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
