@@ -100,6 +100,17 @@ public class CalculetteParser extends Parser {
 	    private int _cur_label = 1;                                                                   //liens var/type et les valeurs dans les adresses
 	    private String getNewLabel() { return "B" +(_cur_label++); }                                  //Generateur de nom d'etiquettes pour les boucles                                
 
+	    public String evalDeclaration(String id){
+	      tablesSymboles.putVar(id, "int");
+	      return "PUSHI 0" + "\nSTOREG " + tablesSymboles.getAdresseType(id).adresse + "\n";
+	    }
+
+	    public String evalDeclarationExpr(String id, String expression){
+	      tablesSymboles.putVar(id, "int");                                                                        
+	      return "PUSHI 0\n" + expression + "STOREG " 
+	            + tablesSymboles.getAdresseType(id).adresse + "\n"; 
+	    }
+
 	    public String evalCond(String exp1, String cond, String exp2){                                //Fonction renvoyant le code mvap pour chacune 
 	      String res = exp1 + exp2;                                                                   //des conditions possibles
 	      switch(cond){
@@ -1079,7 +1090,6 @@ public class CalculetteParser extends Parser {
 
 	public static class DeclarationContext extends ParserRuleContext {
 		public String code;
-		public Token type;
 		public Token id;
 		public ExpressionContext expression;
 		public TerminalNode TYPE() { return getToken(CalculetteParser.TYPE, 0); }
@@ -1112,44 +1122,24 @@ public class CalculetteParser extends Parser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(189);
-				((DeclarationContext)_localctx).type = match(TYPE);
+				match(TYPE);
 				setState(190);
 				((DeclarationContext)_localctx).id = match(IDENTIFIANT);
-
-				        if((((DeclarationContext)_localctx).type!=null?((DeclarationContext)_localctx).type.getText():null).equals("int")){
-				          tablesSymboles.putVar((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null), "int");
-				          int adresse = tablesSymboles.getAdresseType((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null)).adresse;
-				          ((DeclarationContext)_localctx).code =  "PUSHI 0" + "\nSTOREG " + adresse + "\n"; 
-				        }else if((((DeclarationContext)_localctx).type!=null?((DeclarationContext)_localctx).type.getText():null).equals("float")){
-				          tablesSymboles.putVar((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null), "float");
-				          int adresse = tablesSymboles.getAdresseType((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null)).adresse;
-				          ((DeclarationContext)_localctx).code =  "PUSHI 0.0" + "\nSTOREG " + adresse + "\n";
-				        }
-				      
+				 ((DeclarationContext)_localctx).code =  evalDeclaration((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null)); 
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(192);
-				((DeclarationContext)_localctx).type = match(TYPE);
+				match(TYPE);
 				setState(193);
 				((DeclarationContext)_localctx).id = match(IDENTIFIANT);
 				setState(194);
 				match(T__19);
 				setState(195);
 				((DeclarationContext)_localctx).expression = expression(0);
-
-				          if((((DeclarationContext)_localctx).type!=null?((DeclarationContext)_localctx).type.getText():null).equals("int")){
-				            tablesSymboles.putVar((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null), "int");                                                //On ajoute notre id avec son type pour
-				            int adresse = tablesSymboles.getAdresseType((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null)).adresse;                         //reserver une adresse
-				            ((DeclarationContext)_localctx).code =  "PUSHI 0\n" + ((DeclarationContext)_localctx).expression.code + "STOREG " + adresse + "\n";                   //Puis on la recupere pour le mvap
-				          }else if((((DeclarationContext)_localctx).type!=null?((DeclarationContext)_localctx).type.getText():null).equals("float")){
-				            tablesSymboles.putVar((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null), "float");
-				            int adresse = tablesSymboles.getAdresseType((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null)).adresse;
-				            ((DeclarationContext)_localctx).code =  "PUSHI 0.0\n" + ((DeclarationContext)_localctx).expression.code + "STOREG " + adresse + "\n";
-				          }
-				        
+				 ((DeclarationContext)_localctx).code =  evalDeclarationExpr((((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null), ((DeclarationContext)_localctx).expression.code);
 				}
 				break;
 			}

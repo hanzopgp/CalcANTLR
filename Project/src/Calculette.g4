@@ -5,6 +5,17 @@ grammar Calculette;
     private int _cur_label = 1;                                                                   //liens var/type et les valeurs dans les adresses
     private String getNewLabel() { return "B" +(_cur_label++); }                                  //Generateur de nom d'etiquettes pour les boucles                                
 
+    public String evalDeclaration(String id){                                                     //Renvoie le code pour une declaration simple
+      tablesSymboles.putVar(id, "int");
+      return "PUSHI 0" + "\nSTOREG " + tablesSymboles.getAdresseType(id).adresse + "\n";
+    }
+
+    public String evalDeclarationExpr(String id, String expression){                              //Renvoie le code pour une declaration assignation
+      tablesSymboles.putVar(id, "int");                                                                        
+      return "PUSHI 0\n" + expression + "STOREG " 
+            + tablesSymboles.getAdresseType(id).adresse + "\n"; 
+    }
+
     public String evalCond(String exp1, String cond, String exp2){                                //Fonction renvoyant le code mvap pour chacune 
       String res = exp1 + exp2;                                                                   //des conditions possibles
       switch(cond){
@@ -233,35 +244,15 @@ condition returns [ String code ]                                               
 
 declaration returns [ String code ]                                                                 //Prise en charge des declarations typees 
     :
-      type = TYPE 
+      TYPE 
       id = IDENTIFIANT 
-      {
-        if($type.text.equals("int")){
-          tablesSymboles.putVar($id.text, "int");
-          int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-          $code = "PUSHI 0" + "\nSTOREG " + adresse + "\n"; 
-        }else if($type.text.equals("float")){
-          tablesSymboles.putVar($id.text, "float");
-          int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-          $code = "PUSHI 0.0" + "\nSTOREG " + adresse + "\n";
-        }
-      }
+      { $code = evalDeclaration($id.text); }
 
-      | type = TYPE                                                                                //Et des declarations typees plus assignation
+      | TYPE                                                                                
         id = IDENTIFIANT
         '='
         expression
-        {
-          if($type.text.equals("int")){
-            tablesSymboles.putVar($id.text, "int");                                                //On ajoute notre id avec son type pour
-            int adresse = tablesSymboles.getAdresseType($id.text).adresse;                         //reserver une adresse
-            $code = "PUSHI 0\n" + $expression.code + "STOREG " + adresse + "\n";                   //Puis on la recupere pour le mvap
-          }else if($type.text.equals("float")){
-            tablesSymboles.putVar($id.text, "float");
-            int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-            $code = "PUSHI 0.0\n" + $expression.code + "STOREG " + adresse + "\n";
-          }
-        }
+        { $code = evalDeclarationExpr($id.text, $expression.code);}
     ; 
 
 assignation returns [ String code ]                                                                //Assignation d'une valeur a une variable

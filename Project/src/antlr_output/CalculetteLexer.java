@@ -92,6 +92,17 @@ public class CalculetteLexer extends Lexer {
 	    private int _cur_label = 1;                                                                   //liens var/type et les valeurs dans les adresses
 	    private String getNewLabel() { return "B" +(_cur_label++); }                                  //Generateur de nom d'etiquettes pour les boucles                                
 
+	    public String evalDeclaration(String id){
+	      tablesSymboles.putVar(id, "int");
+	      return "PUSHI 0" + "\nSTOREG " + tablesSymboles.getAdresseType(id).adresse + "\n";
+	    }
+
+	    public String evalDeclarationExpr(String id, String expression){
+	      tablesSymboles.putVar(id, "int");                                                                        
+	      return "PUSHI 0\n" + expression + "STOREG " 
+	            + tablesSymboles.getAdresseType(id).adresse + "\n"; 
+	    }
+
 	    public String evalCond(String exp1, String cond, String exp2){                                //Fonction renvoyant le code mvap pour chacune 
 	      String res = exp1 + exp2;                                                                   //des conditions possibles
 	      switch(cond){
