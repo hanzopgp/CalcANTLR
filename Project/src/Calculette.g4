@@ -92,8 +92,8 @@ calcul returns [ String code ]
     ;
 
 block returns [ String code ]                                                                     //Prise en charge des block d'instructions
+@init{ $code = new String(); }                                                                   
     :
-      { $code = ""; }
       '{'
       (instruction { $code += $instruction.code; })*
       '}'
