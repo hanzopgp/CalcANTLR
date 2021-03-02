@@ -62,33 +62,18 @@ grammar Calculette;
     }
 
     public String evalIfElse(String condition, String ifBlock, String elseBlock){                 //Fonction renvoyant le code pour gerer les                                                                
-      String endLabel = getNewLabel();                                                            //if else avec condition
-      String startLabelIf = getNewLabel();                                                          
-      String endLabelIf = getNewLabel();
-      String startLabelElse = getNewLabel();                                                          
-      String endLabelElse = getNewLabel();
-      String res = "";
+      String elseStartLabel = getNewLabel();                                                      //branchement if else
+      String ifEndLabel = getNewLabel();  
+      String res = condition + "\n" + "JUMPF " + elseStartLabel +"\n" 
+                 + ifBlock + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
+                 + elseStartLabel + "\n" + elseBlock + "LABEL " + ifEndLabel + "\n";
+      return res;
+    }
 
-      res += condition;                        //Condition
-      res += "JUMPF " + startLabelIf + "\n";   //Si condition ok on va au block if
-
-
-                                               //Si condition pas ok on va au block else ???
-
-
-      res += "LABEL " + startLabelIf + "\n";   //Debut du block if
-      res += ifBlock;                          //Block if
-      res += "JUMP " + endLabelElse + "\n";    //Si on a fait le block if on saute a la fin du block else
-
-      res += "LABEL " + startLabelElse + "\n"; //Debut du block else
-      res += elseBlock;                        //Block else
-      res += "LABEL " + endLabelElse + "\n";   //Fin du block else
-
-      if(elseBlock!=null){
-        res += elseBlock;
-        res += "JUMP " + startLabelElse + "\n";
-        res += "LABEL " + endLabelElse + "\n";
-      } 
+    public String evalIf(String condition, String ifBlock){                                       //Fonction renvoyant le code pour gerer les
+      String ifEndLabel = getNewLabel();                                                          //branchement if
+      String res = condition + "\n" + "JUMPF " + ifEndLabel 
+                 + "\n" + ifBlock + "LABEL " + ifEndLabel + "\n";
       return res;
     }
 }                                                                                                 
@@ -173,9 +158,15 @@ ifElseInstr returns [ String code ]                                             
       condition
       ')'
       ifblock = block
-      ('else'
-      elseblock = block)?
-      { $code = evalIfElse($condition.code, $ifblock.code, $elseblock.code); }
+      { $code = evalIf($condition.code, $ifblock.code); }
+
+      | 'if('
+        condition
+        ')'
+        ifblock = block
+        'else'
+        elseblock = block
+        { $code = evalIfElse($condition.code, $ifblock.code, $elseblock.code); }
     ;
 
 inputInstr returns [ String code ]                                                                 //Fonction prenant les input avec read()
