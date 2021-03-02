@@ -26,7 +26,7 @@ grammar Calculette;
       }
     }
 
-    public String evalLoop(String condition, String block){                                       //Fonction renvoyant le code mvap pour creer
+    public String evalWhileLoop(String condition, String block){                                  //Fonction renvoyant le code mvap pour creer
       String startLabel = getNewLabel();                                                          //les boucles avec leurs conditions et instr
       String endLabel = getNewLabel();
       String res = "";
@@ -37,6 +37,19 @@ grammar Calculette;
       res += "JUMP " + startLabel + "\n";
       res += "LABEL " + endLabel + "\n";
       return res;
+    }
+
+    public String evalForLoop(String init, String condition, String iteration, String block){     //Fonction renvoyant le code mvap pour creer une
+      String startLabel = getNewLabel();                                                          //boucle for
+      String endLabel = getNewLabel();
+      $code = init + "LABEL " + startLabel + "\n" + condition + "JUMPF " + endLabel + "\n"
+            + block + iteration + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
+    }
+
+    public String evalRepeatLoop(String condition, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
+      String startLabel = getNewLabel();                                                          //boucle repeat until
+      $code = "LABEL " + startLabel + "\n" + block 
+            + condition + "\n" + "JUMPF " + startLabel + "\n";
     }
 
     public String evalCondAvecLog(String cond1, String exprlog, String cond2){                    //Fonction renvoyant le code apres avoir tester
@@ -186,11 +199,28 @@ outputInstr returns [ String code ]                                             
 
 loopInstr returns [ String code ]                                                                  //Prise en charge des boucles en mvap
     :
-      'while('
+      'while('                                                                                     //While loop
       condition
       ')'
       block
-      { $code = evalLoop($condition.code, $block.code); }
+      { $code = evalWhileLoop($condition.code, $block.code); }
+
+    | 'for('                                                                                       //For loop
+      init = assignation 
+      ';'
+      condition 
+      ';' 
+      iteration = assignation 
+      ')' 
+      block     
+    { $code = evalForLoop($init.code, $condition.code, $iteration.code, $block.code); }
+
+    | 'repeat'                                                                                    //Repeat until loop
+      block 
+      'until(' 
+      condition 
+      ')'
+    { $code = evalRepeatLoop($condition.code, $block.code); }
     ;
 
 conditionAvecLogique returns [ String code ]                                                       //Prise en charge des expressions logiques
