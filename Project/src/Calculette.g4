@@ -37,8 +37,11 @@ grammar Calculette;
               + "JUMP " + falseLabel + "\nLABEL " + trueLabel + "\nPUSHI 1\n" 
               + "LABEL " + falseLabel + "\n";
           break;
-        }
-        return res;
+        default:
+          System.err.println("ERROR trad");
+          break;
+      }
+      return res;
     }
 
     //Met au meme type 2 expressions en renvoyant le type et en modifier l'object StringBuilder
@@ -56,15 +59,17 @@ grammar Calculette;
       return typeRes;
     }
 
+    //Renvoie STOREL ou STOREG suivant l'id traite
     private String storeGOrL(String id){
       AdresseType at = tablesSymboles.getAdresseType(id); 
-      String str1 = (at.adresse < 0) ? "STOREL\n" : "STOREG\n";
+      String str1 = (at.adresse < 0) ? "STOREL " : "STOREG ";
       String str2 = at.getSize(at.type) == 1 
                     ? tablesSymboles.getAdresseType(id).adresse + "\n" 
                     : (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; 
       return str1 + str2;
     }
 
+    //Renvoie PUSHI 0 ou PUSHI 0.0 suivant le type traite
     private String pushIOrF(String type){
       return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
     }
@@ -145,11 +150,11 @@ grammar Calculette;
     }
 
     //Fonction renvoyant le code mvap pour utiliser write
-    private String evalOutput(String type, String expr){
+    private String evalOutput(String type){
       String str = (type.equals("int")) || (type.equals("bool")) 
-                   ? "WRITE\n POP\n"
-                   : "WRITEF\n POP\n POP\n";
-      return expr + str;
+                   ? "WRITE\nPOP\n"
+                   : "WRITEF\nPOP\nPOP\n";
+      return str;
     }
 
      //Fonction renvoyant le code apres avoir tester
@@ -305,7 +310,7 @@ expression returns [ String type, String code ]
       { 
         String typeRes = "";
         StringBuilder codeRes = new StringBuilder(); 
-        $type = tradTwo($expr.type, $expr.code, $fac.type, $fac.code, typeRes, codeRes);;
+        $type = tradTwo($expr.type, $expr.code, $fac.type, $fac.code, typeRes, codeRes);
         $code = codeRes.toString() + ($op.text.equals("+") ? "ADD" : "SUB") + "\n";
       } 
 
@@ -367,7 +372,7 @@ preparenthesis returns [ String type, String code ]
 
     | '-' //Expressions negatives
       pp = preparenthesis
-      { $type = $pp.type; $code = ($type.equals("int") ? "PUSHI 0\n SUB" : "PUSHI 0.0\n FSUB"); }
+      { $type = $pp.type; $code = ($type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHI 0.0\nFSUB\n"); }
 
     | '+' //Expressions positives
       pp = preparenthesis
@@ -481,7 +486,7 @@ outputInstr returns [ String code ] //Fonction prenant les output avec write()
       'write('
       expr = expression 
       ')' 
-      { $code = evalOutput($expr.type, $expr.code); }
+      { $code = $expr.code + evalOutput($expr.type); }
     ;
 
 /*==================================================

@@ -135,8 +135,11 @@ public class CalculetteParser extends Parser {
 	              + "JUMP " + falseLabel + "\nLABEL " + trueLabel + "\nPUSHI 1\n" 
 	              + "LABEL " + falseLabel + "\n";
 	          break;
-	        }
-	        return res;
+	        default:
+	          System.err.println("ERROR trad");
+	          break;
+	      }
+	      return res;
 	    }
 
 	    //Met au meme type 2 expressions en renvoyant le type et en modifier l'object StringBuilder
@@ -154,15 +157,17 @@ public class CalculetteParser extends Parser {
 	      return typeRes;
 	    }
 
+	    //Renvoie STOREL ou STOREG suivant l'id traite
 	    private String storeGOrL(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
-	      String str1 = (at.adresse < 0) ? "STOREL\n" : "STOREG\n";
+	      String str1 = (at.adresse < 0) ? "STOREL " : "STOREG ";
 	      String str2 = at.getSize(at.type) == 1 
 	                    ? tablesSymboles.getAdresseType(id).adresse + "\n" 
 	                    : (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; 
 	      return str1 + str2;
 	    }
 
+	    //Renvoie PUSHI 0 ou PUSHI 0.0 suivant le type traite
 	    private String pushIOrF(String type){
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
 	    }
@@ -243,11 +248,11 @@ public class CalculetteParser extends Parser {
 	    }
 
 	    //Fonction renvoyant le code mvap pour utiliser write
-	    private String evalOutput(String type, String expr){
+	    private String evalOutput(String type){
 	      String str = (type.equals("int")) || (type.equals("bool")) 
-	                   ? "WRITE\n POP\n"
-	                   : "WRITEF\n POP\n POP\n";
-	      return expr + str;
+	                   ? "WRITE\nPOP\n"
+	                   : "WRITEF\nPOP\nPOP\n";
+	      return str;
 	    }
 
 	     //Fonction renvoyant le code apres avoir tester
@@ -989,7 +994,7 @@ public class CalculetteParser extends Parser {
 						 
 						                  String typeRes = "";
 						                  StringBuilder codeRes = new StringBuilder(); 
-						                  ((ExpressionContext)_localctx).type =  tradTwo(((ExpressionContext)_localctx).expr.type, ((ExpressionContext)_localctx).expr.code, ((ExpressionContext)_localctx).fac.type, ((ExpressionContext)_localctx).fac.code, typeRes, codeRes);;
+						                  ((ExpressionContext)_localctx).type =  tradTwo(((ExpressionContext)_localctx).expr.type, ((ExpressionContext)_localctx).expr.code, ((ExpressionContext)_localctx).fac.type, ((ExpressionContext)_localctx).fac.code, typeRes, codeRes);
 						                  ((ExpressionContext)_localctx).code =  codeRes.toString() + ((((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getText():null).equals("+") ? "ADD" : "SUB") + "\n";
 						                
 						}
@@ -1222,7 +1227,7 @@ public class CalculetteParser extends Parser {
 				match(T__4);
 				setState(215);
 				((PreparenthesisContext)_localctx).pp = preparenthesis();
-				 ((PreparenthesisContext)_localctx).type =  ((PreparenthesisContext)_localctx).pp.type; ((PreparenthesisContext)_localctx).code =  (_localctx.type.equals("int") ? "PUSHI 0\n SUB" : "PUSHI 0.0\n FSUB"); 
+				 ((PreparenthesisContext)_localctx).type =  ((PreparenthesisContext)_localctx).pp.type; ((PreparenthesisContext)_localctx).code =  (_localctx.type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHI 0.0\nFSUB\n"); 
 				}
 				break;
 			case T__3:
@@ -1639,7 +1644,7 @@ public class CalculetteParser extends Parser {
 			((OutputInstrContext)_localctx).expr = expression(0);
 			setState(295);
 			match(T__12);
-			 ((OutputInstrContext)_localctx).code =  evalOutput(((OutputInstrContext)_localctx).expr.type, ((OutputInstrContext)_localctx).expr.code); 
+			 ((OutputInstrContext)_localctx).code =  ((OutputInstrContext)_localctx).expr.code + evalOutput(((OutputInstrContext)_localctx).expr.type); 
 			}
 		}
 		catch (RecognitionException re) {

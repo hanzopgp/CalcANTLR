@@ -127,8 +127,11 @@ public class CalculetteLexer extends Lexer {
 	              + "JUMP " + falseLabel + "\nLABEL " + trueLabel + "\nPUSHI 1\n" 
 	              + "LABEL " + falseLabel + "\n";
 	          break;
-	        }
-	        return res;
+	        default:
+	          System.err.println("ERROR trad");
+	          break;
+	      }
+	      return res;
 	    }
 
 	    //Met au meme type 2 expressions en renvoyant le type et en modifier l'object StringBuilder
@@ -146,15 +149,17 @@ public class CalculetteLexer extends Lexer {
 	      return typeRes;
 	    }
 
+	    //Renvoie STOREL ou STOREG suivant l'id traite
 	    private String storeGOrL(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
-	      String str1 = (at.adresse < 0) ? "STOREL\n" : "STOREG\n";
+	      String str1 = (at.adresse < 0) ? "STOREL " : "STOREG ";
 	      String str2 = at.getSize(at.type) == 1 
 	                    ? tablesSymboles.getAdresseType(id).adresse + "\n" 
 	                    : (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; 
 	      return str1 + str2;
 	    }
 
+	    //Renvoie PUSHI 0 ou PUSHI 0.0 suivant le type traite
 	    private String pushIOrF(String type){
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
 	    }
@@ -235,11 +240,11 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Fonction renvoyant le code mvap pour utiliser write
-	    private String evalOutput(String type, String expr){
+	    private String evalOutput(String type){
 	      String str = (type.equals("int")) || (type.equals("bool")) 
-	                   ? "WRITE\n POP\n"
-	                   : "WRITEF\n POP\n POP\n";
-	      return expr + str;
+	                   ? "WRITE\nPOP\n"
+	                   : "WRITEF\nPOP\nPOP\n";
+	      return str;
 	    }
 
 	     //Fonction renvoyant le code apres avoir tester
