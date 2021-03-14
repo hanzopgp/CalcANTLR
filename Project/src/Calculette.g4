@@ -121,6 +121,13 @@ grammar Calculette;
                  + "\n" + ifBlock + "LABEL " + ifEndLabel + "\n";
       return res;
     }
+
+    public String evalReturn(String expr, String exprType){
+      AdresseType at = tablesSymboles.getAdresseType("return");
+      String res = trad(expr.type, exprType.code, at.type)
+                 + "STOREG " + at.adresse + "\n";
+                 + "RETURN\n";
+    }
 }                                                                                                 
   
 calcul returns [ String code ]
@@ -175,6 +182,9 @@ instruction returns [ String code ]                                             
 
       | ifElseInstr
         { $code = $ifElseInstr.code; }
+
+      | returnInstr finInstruction
+        { $code = returnInstr.code; }
     ;
 
 expression returns [ String type, String code ]
@@ -306,15 +316,6 @@ assignation returns [ String code ]                                             
       }
     ;
 
-
-
-
-
-
-
-
-
-
 fonction returns [ String code ]
 @init{ tablesSymboles.newTableLocale(); }       
 @after{ tablesSymboles.dropTableLocale(); }     
@@ -370,15 +371,12 @@ args returns [ String code, int size]
       )?
     ;
 
-
-
-
-
-
-
-
-
-
+returnInstr returns [ String code ]
+    :
+      "return" 
+      expr = expression
+      { $code = evalReturn($expr.code, $expr.type); }
+    ;
 
 finInstruction                                                                                      //Reconnaissance des fins d'instructions
     :
