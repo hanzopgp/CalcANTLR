@@ -10,26 +10,26 @@ grammar Calculette;
     private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles                                
 
     //Renvoie le code pour un cast simple d'un type a un autre
-    private String trad(String currentType, String expr, String targetType){ 
-      String res = expr;
+    private String trad(String currentType, String currentExpr, String targetType){ 
+      String res = currentExpr;
       switch(targetType){
-        case "int":
-          if(currentType.equals("float")){
+        case "int":                           
+          if(currentType.equals("float")){    //Passage de float ===> int
             res += "FTOI\n";   
           }
           break;  
-        case "float": 
-          res += "ITOF\n";
+        case "float":                         
+          res += "ITOF\n";                    //Passage de int ===> float
           break;                             
-        case "bool":    
+        case "bool":                          
           String trueLabel = getNewLabel();
           String falseLabel = getNewLabel();                           
           String pushType;
           String equalType;
-          if(currentType.equals("float")){
+          if(currentType.equals("float")){   //Passage de float ===> bool
             pushType = "PUSHF 0\n";
             equalType = "FEQUAL\n";
-          }else{
+          }else{                             //Passage de int ===> bool
             pushType = "PUSHI 0.0\n";
             equalType = "EQUAL\n";
           }   
@@ -41,15 +41,15 @@ grammar Calculette;
         return res;
     }
 
-    //Modifie 2 String pour recuperer le code des deux entrees mises au meme type
+    //Modifie 2 objets String pour recuperer le code des deux entrees mises au meme type
     private void tradTwo(String type, String expr, String type2, String expr2, String typeRes, String exprRes){
-      if(type.equals(type2)){
+      if(type.equals(type2)){               //Operation sur deux expressions de meme type
         typeRes = type;
         exprRes = expr + expr2;
-      }else if(type.equals("float")){
+      }else if(type.equals("float")){       //Passage de float + int ===> float
         typeRes = "float";
         exprRes = expr + expr2 + "ITOF\n";
-      }else if(type2.equals("float")){
+      }else if(type2.equals("float")){      //Passage de int + float ===> float
         typeRes = "float";
         exprRes = expr + "ITOF\n" + expr2;
       }
@@ -58,14 +58,14 @@ grammar Calculette;
     //Renvoie le code pour une declaration simple
     private String evalDeclaration(String type, String id){  
       tablesSymboles.putVar(id, type);
-      return (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n";
+      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
     }
 
     //Renvoie le code pour une declaration assignation
     private String evalDeclarationExpr(String type, String id, String expr, String exprType){
       tablesSymboles.putVar(id, type);  
       AdresseType at = tablesSymboles.getAdresseType(id); 
-      return (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n"
+      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n")
              + trad(exprType, expr, at.type) + "STOREG "  + at.adresse + "\n";
     }
 
@@ -267,48 +267,50 @@ assignation returns [ String code ] //Assignation d'une valeur a une variable
 
 expression returns [ String type, String code ]
     : 
-      addsub //Addition et soustraction
-      { $type = $addsub.type; $code = $addsub.code; }
-
-      | muldiv //Multiplication et division
-        { $type = $muldiv.type; $code = $muldiv.code; }
-
-      | cast //Changement de type
-        { $type = $cast.type; $code = $cast.code; }
-
-      | condition //Condition inferieur, superieur...
-        { $type = $condition.type; $code = $condition.code; }
-
-      | andLogic //Logique &&
-        { $type = $andLogic.type; $code = $andLogic.code; }
-
-      | orLogic //Logique ||
-        { $type = $orLogic.type; $code = $orLogic.code; }            
-    ;
-
-addsub returns [ String type, String code ]
-    :
-      expr = expression 
+      expr = expression                                  //Addition et soustraction
       op = ('+'|'-') 
-      md = muldiv
+      fac = factor
       { 
         String typeRes = new String();
         String codeRes = new String();
-        tradTwo($expr.type, $expr.code, $md.type, $md.code, typeRes, codeRes);     
+        tradTwo($expr.type, $expr.code, $fac.type, $fac.code, typeRes, codeRes);     
         $type = typeRes;
         $code = codeRes + ($op.text.equals("+") ? "ADD" : "SUB") + "\n";
       } 
+
+      | factor                                           //Multiplication, division...
+        { $type = $factor.type; $code = $factor.code; }
+
+      | cast                                             //Changement de type
+        { $type = $cast.type; $code = $cast.code; }
+
+      | 'true' { $type = "bool"; $code = "PUSHI 1\n"; }  //Differentes conditions dont true
+      | 'false' { $type = "bool"; $code = "PUSHI 0\n"; } //et false
+      | expr1 = expression                               //et conditions en general
+        cond = COND
+        expr2 = expression
+        { $type = "bool"; $code = evalCond($expr1.code, $cond.text, $expr2.code); }
+
+      | expr1 = expression                               //Prise en charge du && logique
+        '&&' 
+        expr2 = expression  
+        { $type = "bool"; $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code); }
+
+      | expr1 = expression                               //Prise en charge du || logique
+        '||' 
+        expr2 = expression  
+        { $type = "bool"; $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code); }            
     ;
 
-muldiv returns [ String type, String code ]
+factor returns [ String type, String code ]
     :
-      md = muldiv 
+      fac = factor 
       op = ('*'|'/') 
       pp = preparenthesis
       {
         String typeRes = new String();
         String codeRes = new String();
-        tradTwo($md.type, $md.code, $pp.type, $pp.code, typeRes, codeRes);     
+        tradTwo($fac.type, $fac.code, $pp.type, $pp.code, typeRes, codeRes);     
         $type = typeRes;
         $code = codeRes + ($op.text.equals("*") ? "MUL" : "DIV") + "\n";
       }
@@ -326,34 +328,6 @@ cast returns [ String type, String code ]
       { $type = $ty.text; $code = trad($expr.type, $expr.code, $ty.text); }
     ;
 
-condition returns [ String type, String code ]                                                                
-    : 
-      'true' { $type = "bool"; $code = "PUSHI 1\n"; }
-
-      | 'false' { $type = "bool"; $code = "PUSHI 0\n"; }
-
-      | expr1 = expression
-        cond = COND
-        expr2 = expression
-        { $type = "bool"; $code = evalCond($expr1.code, $cond.text, $expr2.code); }
-    ;
-
-andLogic returns [ String type, String code ]
-    :
-      expr1 = expression 
-      '&&' 
-      expr2 = expression  
-      { $type = "bool"; $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code); }
-    ;
-
-orLogic returns [ String type, String code ]
-    :
-      expr1 = expression 
-      '||' 
-      expr2 = expression  
-      { $type = "bool"; $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code); }
-    ;
-
 preparenthesis returns [ String type, String code ]
     :
       '(' //Prise en charge des parentheses
@@ -363,7 +337,7 @@ preparenthesis returns [ String type, String code ]
 
     | '-' //Expressions negatives
       pp = preparenthesis
-      { $type = $pp.type; $code = $type.equals("int") ? "PUSHI 0\n SUB" : "PUSHI 0.0\n FSUB"; }
+      { $type = $pp.type; $code = ($type.equals("int") ? "PUSHI 0\n SUB" : "PUSHI 0.0\n FSUB"); }
 
     | '+' //Expressions positives
       pp = preparenthesis
@@ -371,7 +345,7 @@ preparenthesis returns [ String type, String code ]
 
     | '!' //Prise en charge du non logique
       expr = expression
-      { $type = "bool"; $code = "PUSHI 1\n" + trad($expr.type, $expr.code, $type) + "SUB\n"); }
+      { $type = "bool"; $code = "PUSHI 1\n" + trad($expr.type, $expr.code, $type) + "SUB\n"; }
 
     | atom //Expressions unitaires
       { $type = $atom.type; $code = $atom.code; }
@@ -379,19 +353,19 @@ preparenthesis returns [ String type, String code ]
 
 atom returns [ String type, String code ]
     :
-      x = ENTIER
-      { $type = "int"; $code = "PUSHI " + x.text + "\n"; }
+      ent = ENTIER
+      { $type = "int"; $code = "PUSHI " + $ent.text + "\n"; }
 
-    | x = FLOAT
-      { $type = "float"; $code = "PUSHI " + x.text + "\n"; }
+    | flo = FLOAT
+      { $type = "float"; $code = "PUSHI " + $flo.text + "\n"; }
 
-    | x = BOOLEAN
-      { $type = "bool"; $code = ($x.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n") }
+    | boo = BOOLEAN
+      { $type = "bool"; $code = ($boo.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); }
 
     | id = IDENTIFIANT
       { 
         AdresseType at = tablesSymboles.getAdresseType($id.text); 
-        $type = at.type,
+        $type = at.type;
         $code = "PUSHG " + at.adresse + "\n";
       }
 
@@ -401,7 +375,7 @@ atom returns [ String type, String code ]
       ')'
       { 
         $type = tablesSymboles.getFunction($id.text); 
-        String pusher = $type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
+        String pusher = ($type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
         $code = pusher + $args.code + "CALL " + $id.text + "\n";
         for (int i = 0; i < $args.nbArgs; i++){
           $code += "POP\n"; //On pop tous les arguments lors du call pour executer la fonction       
