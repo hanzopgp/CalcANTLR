@@ -1,1 +1,7 @@
-3 + 4;
+int x
+/* Ce fichier contient 
+des exemples de 
+commentaires */
+x=42 // La reponse Ã  tout
+/* Et on affiche la reponse **/
+write(x) 

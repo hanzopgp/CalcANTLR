@@ -41,8 +41,8 @@ grammar Calculette;
         return res;
     }
 
-    //Modifie 2 objets String pour recuperer le code des deux entrees mises au meme type
-    private void tradTwo(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
+    //Met au meme type 2 expressions en renvoyant le type et en modifier l'object StringBuilder
+    private String tradTwo(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
       if(type.equals(type2)){               //Operation sur deux expressions de meme type
         typeRes = type;
         exprRes.append(expr + expr2);
@@ -53,26 +53,39 @@ grammar Calculette;
         typeRes = "float";
         exprRes.append(expr + "ITOF\n" + expr2);
       }
+      return typeRes;
+    }
+
+    private String storeGOrL(String id){
+      AdresseType at = tablesSymboles.getAdresseType(id); 
+      String str1 = (at.adresse < 0) ? "STOREL\n" : "STOREG\n";
+      String str2 = at.getSize(at.type) == 1 
+                    ? tablesSymboles.getAdresseType(id).adresse + "\n" 
+                    : (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; 
+      return str1 + str2;
+    }
+
+    private String pushIOrF(String type){
+      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
     }
 
     //Renvoie le code pour une declaration simple
     private String evalDeclaration(String type, String id){  
       tablesSymboles.putVar(id, type);
-      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
+      return pushIOrF(type); 
     }
 
     //Renvoie le code pour une declaration assignation
     private String evalDeclarationExpr(String type, String id, String exprType, String expr){
       tablesSymboles.putVar(id, type);  
       AdresseType at = tablesSymboles.getAdresseType(id); 
-      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n")
-             + trad(exprType, expr, at.type) + "STOREG "  + at.adresse + "\n";
+      return pushIOrF(type) + trad(exprType, expr, at.type) + storeGOrL(id);
     }
 
     //Renvoie le code pour une assignation
     private String evalAssign(String id, String exprType, String expr){ 
       AdresseType at = tablesSymboles.getAdresseType(id);
-      return trad(exprType, expr, at.type) + "STOREG " + at.adresse + "\n";
+      return trad(exprType, expr, at.type) + storeGOrL(id);
     }
 
     //Renvoie le code mvap pour chacune des conditions possibles
@@ -123,6 +136,22 @@ grammar Calculette;
              + tradExpr + "\n" + "JUMPF " + startLabelR + "\n";
     }
 
+    //Fonction renvoyant le code mvap pour utiliser read
+    private String evalInput(String id){
+      AdresseType at = tablesSymboles.getAdresseType(id);
+      String str1 = at.type.equals("int") ? "READ\n" : "READF\n";
+      String str2 = storeGOrL(id);
+      return str1 + str2;
+    }
+
+    //Fonction renvoyant le code mvap pour utiliser write
+    private String evalOutput(String type, String expr){
+      String str = (type.equals("int")) || (type.equals("bool")) 
+                   ? "WRITE\n POP\n"
+                   : "WRITEF\n POP\n POP\n";
+      return expr + str;
+    }
+
      //Fonction renvoyant le code apres avoir tester
     private String evalAnd(String expr1Type, String expr1, String expr2Type, String expr2){                  
       String falseLabel1And = getNewLabel();
@@ -165,7 +194,7 @@ grammar Calculette;
     private String evalReturn(String exprType, String expr){
       AdresseType at = tablesSymboles.getAdresseType("return");
       return trad(expr, exprType, at.type)
-             + "STOREG " + at.adresse + "\n" + "RETURN\n";
+             + storeGOrL(expr) + "RETURN\n";
     }                                                                                               
 }
 
@@ -189,7 +218,7 @@ calcul returns [ String code ]
       { $code += "LABEL " + "Main\n"; }               //Et les instructions
       (instruction { $code += $instruction.code; })*
 
-      { $code += "\nHALT \n"; }                       //Puis par un HALT
+      { $code += "HALT \n"; }                         //Puis par un HALT
     ;
 
 /*==================================================
@@ -216,11 +245,14 @@ instruction returns [ String code ] //Ensemble des types d'instructions seules q
       | inputInstr finInstruction
         { $code = $inputInstr.code; }
 
-      | loopInstr
+      | loopInstr finInstruction
         { $code = $loopInstr.code; }
 
-      | ifElseInstr
+      | ifElseInstr finInstruction
         { $code = $ifElseInstr.code; }
+
+      | block finInstruction
+        { $code = $block.code; }
 
       | returnInstr finInstruction
         { $code = $returnInstr.code; }
@@ -272,10 +304,9 @@ expression returns [ String type, String code ]
       fac = factor
       { 
         String typeRes = "";
-        StringBuilder codeRes = new StringBuilder();
-        tradTwo($expr.type, $expr.code, $fac.type, $fac.code, typeRes, codeRes);     
-        $type = typeRes;
-        $code = codeRes + ($op.text.equals("+") ? "ADD" : "SUB") + "\n";
+        StringBuilder codeRes = new StringBuilder(); 
+        $type = tradTwo($expr.type, $expr.code, $fac.type, $fac.code, typeRes, codeRes);;
+        $code = codeRes.toString() + ($op.text.equals("+") ? "ADD" : "SUB") + "\n";
       } 
 
       | factor                                           //Multiplication, division...
@@ -309,10 +340,9 @@ factor returns [ String type, String code ]
       pp = preparenthesis
       {
         String typeRes = "";
-        StringBuilder codeRes = new StringBuilder();
-        tradTwo($fac.type, $fac.code, $pp.type, $pp.code, typeRes, codeRes);     
-        $type = typeRes;
-        $code = codeRes + ($op.text.equals("*") ? "MUL" : "DIV") + "\n";
+        StringBuilder codeRes = new StringBuilder();      
+        $type = tradTwo($fac.type, $fac.code, $pp.type, $pp.code, typeRes, codeRes); 
+        $code = codeRes.toString() + ($op.text.equals("*") ? "MUL" : "DIV") + "\n";
       }
 
     | pp = preparenthesis
@@ -443,15 +473,15 @@ inputInstr returns [ String code ] //Fonction prenant les input avec read()
       'read('
       id = IDENTIFIANT 
       ')' 
-      { $code = "PUSHI 0\nREAD\nSTOREG "+ tablesSymboles.getAdresseType($id.text).adresse + "\n"; }
+      { $code = evalInput($id.text); }
     ;
 
 outputInstr returns [ String code ] //Fonction prenant les output avec write()
     :
       'write('
-      expression 
+      expr = expression 
       ')' 
-      { $code = $expression.code + "WRITE\n"; }
+      { $code = evalOutput($expr.type, $expr.code); }
     ;
 
 /*==================================================
@@ -551,5 +581,11 @@ IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*;
 NEWLINE: '\r'? '\n' -> skip;
 
 WS: (' ' | '\t')+ -> skip;
+
+STARCOMMENT : ('/*'.?'*/') -> skip;
+
+HASHTAGCOMMENT : '#'~('\r' | '\n')* -> skip;
+
+SINGLELINECOMMENT : '//'~('\r' | '\n')* -> skip;
 
 UNMATCH: . -> skip;
