@@ -15,17 +15,10 @@
 
 ### ToDo
 
-- For loop
-- Repeat until loop
-- Syntaxic analysis of functions
-- Float numbers
 - General tests
 - Add features
 
 ### Doing
-
-- Else statement
-- Logical operators
 
 ### Done
 
@@ -39,6 +32,12 @@
 - Blocks (sequence of instructions)
 - If statement
 - Relational operators
+- Else statement
+- Logical operators
+- For loop
+- Repeat until loop
+- Syntaxic analysis of functions
+- Float numbers
 
 ## How does it work
 
