@@ -138,16 +138,16 @@ public class CalculetteParser extends Parser {
 	    }
 
 	    //Modifie 2 objets String pour recuperer le code des deux entrees mises au meme type
-	    private void tradTwo(String type, String expr, String type2, String expr2, String typeRes, String exprRes){
+	    private void tradTwo(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
 	      if(type.equals(type2)){               //Operation sur deux expressions de meme type
 	        typeRes = type;
-	        exprRes = expr + expr2;
+	        exprRes.append(expr + expr2);
 	      }else if(type.equals("float")){       //Passage de float + int ===> float
 	        typeRes = "float";
-	        exprRes = expr + expr2 + "ITOF\n";
+	        exprRes.append(expr + expr2 + "ITOF\n");
 	      }else if(type2.equals("float")){      //Passage de int + float ===> float
 	        typeRes = "float";
-	        exprRes = expr + "ITOF\n" + expr2;
+	        exprRes.append(expr + "ITOF\n" + expr2);
 	      }
 	    }
 
@@ -938,8 +938,8 @@ public class CalculetteParser extends Parser {
 						setState(175);
 						((ExpressionContext)_localctx).fac = ((ExpressionContext)_localctx).factor = factor(0);
 						 
-						                  String typeRes = new String();
-						                  String codeRes = new String();
+						                  String typeRes = "";
+						                  StringBuilder codeRes = new StringBuilder();
 						                  tradTwo(((ExpressionContext)_localctx).expr.type, ((ExpressionContext)_localctx).expr.code, ((ExpressionContext)_localctx).fac.type, ((ExpressionContext)_localctx).fac.code, typeRes, codeRes);     
 						                  ((ExpressionContext)_localctx).type =  typeRes;
 						                  ((ExpressionContext)_localctx).code =  codeRes + ((((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getText():null).equals("+") ? "ADD" : "SUB") + "\n";
@@ -1043,8 +1043,8 @@ public class CalculetteParser extends Parser {
 					setState(189);
 					((FactorContext)_localctx).pp = preparenthesis();
 
-					                  String typeRes = new String();
-					                  String codeRes = new String();
+					                  String typeRes = "";
+					                  StringBuilder codeRes = new StringBuilder();
 					                  tradTwo(((FactorContext)_localctx).fac.type, ((FactorContext)_localctx).fac.code, ((FactorContext)_localctx).pp.type, ((FactorContext)_localctx).pp.code, typeRes, codeRes);     
 					                  ((FactorContext)_localctx).type =  typeRes;
 					                  ((FactorContext)_localctx).code =  codeRes + ((((FactorContext)_localctx).op!=null?((FactorContext)_localctx).op.getText():null).equals("*") ? "MUL" : "DIV") + "\n";

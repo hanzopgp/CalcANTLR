@@ -42,16 +42,16 @@ grammar Calculette;
     }
 
     //Modifie 2 objets String pour recuperer le code des deux entrees mises au meme type
-    private void tradTwo(String type, String expr, String type2, String expr2, String typeRes, String exprRes){
+    private void tradTwo(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
       if(type.equals(type2)){               //Operation sur deux expressions de meme type
         typeRes = type;
-        exprRes = expr + expr2;
+        exprRes.append(expr + expr2);
       }else if(type.equals("float")){       //Passage de float + int ===> float
         typeRes = "float";
-        exprRes = expr + expr2 + "ITOF\n";
+        exprRes.append(expr + expr2 + "ITOF\n");
       }else if(type2.equals("float")){      //Passage de int + float ===> float
         typeRes = "float";
-        exprRes = expr + "ITOF\n" + expr2;
+        exprRes.append(expr + "ITOF\n" + expr2);
       }
     }
 
@@ -271,8 +271,8 @@ expression returns [ String type, String code ]
       op = ('+'|'-') 
       fac = factor
       { 
-        String typeRes = new String();
-        String codeRes = new String();
+        String typeRes = "";
+        StringBuilder codeRes = new StringBuilder();
         tradTwo($expr.type, $expr.code, $fac.type, $fac.code, typeRes, codeRes);     
         $type = typeRes;
         $code = codeRes + ($op.text.equals("+") ? "ADD" : "SUB") + "\n";
@@ -308,8 +308,8 @@ factor returns [ String type, String code ]
       op = ('*'|'/') 
       pp = preparenthesis
       {
-        String typeRes = new String();
-        String codeRes = new String();
+        String typeRes = "";
+        StringBuilder codeRes = new StringBuilder();
         tradTwo($fac.type, $fac.code, $pp.type, $pp.code, typeRes, codeRes);     
         $type = typeRes;
         $code = codeRes + ($op.text.equals("*") ? "MUL" : "DIV") + "\n";
