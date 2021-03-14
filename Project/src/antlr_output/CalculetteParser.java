@@ -122,10 +122,10 @@ public class CalculetteParser extends Parser {
 	          String falseLabel = getNewLabel();                           
 	          String pushType;
 	          String equalType;
-	          if(currentType.equals("float")){   //Passage de float ===> bool
+	          if(currentType.equals("float")){    //Passage de float ===> bool
 	            pushType = "PUSHF 0\n";
 	            equalType = "FEQUAL\n";
-	          }else{                             //Passage de int ===> bool
+	          }else{                              //Passage de int ===> bool
 	            pushType = "PUSHI 0.0\n";
 	            equalType = "EQUAL\n";
 	          }   
@@ -659,7 +659,7 @@ public class CalculetteParser extends Parser {
 
 	public static class DeclarationContext extends ParserRuleContext {
 		public String code;
-		public Token type;
+		public Token ty;
 		public Token id;
 		public ExpressionContext expr;
 		public TerminalNode TYPE() { return getToken(CalculetteParser.TYPE, 0); }
@@ -692,24 +692,24 @@ public class CalculetteParser extends Parser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(129);
-				((DeclarationContext)_localctx).type = match(TYPE);
+				((DeclarationContext)_localctx).ty = match(TYPE);
 				setState(130);
 				((DeclarationContext)_localctx).id = match(IDENTIFIANT);
-				 ((DeclarationContext)_localctx).code =  evalDeclaration((((DeclarationContext)_localctx).type!=null?((DeclarationContext)_localctx).type.getText():null), (((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null)); 
+				 ((DeclarationContext)_localctx).code =  evalDeclaration((((DeclarationContext)_localctx).ty!=null?((DeclarationContext)_localctx).ty.getText():null), (((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null)); 
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(132);
-				((DeclarationContext)_localctx).type = match(TYPE);
+				((DeclarationContext)_localctx).ty = match(TYPE);
 				setState(133);
 				((DeclarationContext)_localctx).id = match(IDENTIFIANT);
 				setState(134);
 				match(T__2);
 				setState(135);
 				((DeclarationContext)_localctx).expr = expression(0);
-				 ((DeclarationContext)_localctx).code =  evalDeclarationExpr((((DeclarationContext)_localctx).type!=null?((DeclarationContext)_localctx).type.getText():null), (((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null), ((DeclarationContext)_localctx).expr.code, ((DeclarationContext)_localctx).expr.type); 
+				 ((DeclarationContext)_localctx).code =  evalDeclarationExpr((((DeclarationContext)_localctx).ty!=null?((DeclarationContext)_localctx).ty.getText():null), (((DeclarationContext)_localctx).id!=null?((DeclarationContext)_localctx).id.getText():null), ((DeclarationContext)_localctx).expr.code, ((DeclarationContext)_localctx).expr.type); 
 				}
 				break;
 			}

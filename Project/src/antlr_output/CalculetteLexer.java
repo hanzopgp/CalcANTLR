@@ -113,10 +113,10 @@ public class CalculetteLexer extends Lexer {
 	          String falseLabel = getNewLabel();                           
 	          String pushType;
 	          String equalType;
-	          if(currentType.equals("float")){   //Passage de float ===> bool
+	          if(currentType.equals("float")){    //Passage de float ===> bool
 	            pushType = "PUSHF 0\n";
 	            equalType = "FEQUAL\n";
-	          }else{                             //Passage de int ===> bool
+	          }else{                              //Passage de int ===> bool
 	            pushType = "PUSHI 0.0\n";
 	            equalType = "EQUAL\n";
 	          }   
