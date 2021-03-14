@@ -1,4 +1,4 @@
-echo "<------------------------WAIT...--------------------------->"
+echo "<-------------------------WAIT----------------------------->"
 echo "<-------------------BUILDING GRAMMAR----------------------->"
 export CLASSPATH=".:/usr/local/lib/antlr-4.9-complete.jar:$CLASSPATH"
 cp util/* .
