@@ -1,5 +1,9 @@
 grammar Calculette;
 
+/*==================================================
+==================FONCTIONS UTILES==================
+==================================================*/
+
 @members {
     private TablesSymboles tablesSymboles = new TablesSymboles();                                 //On utilise la table de symboles pour garder les
     private int _cur_label = 1;                                                                   //liens var/type et les valeurs dans les adresses
@@ -87,30 +91,30 @@ grammar Calculette;
       }
     }
 
-    private String evalWhileLoop(String expr, String exprType, String block){                                  //Fonction renvoyant le code mvap pour creer
-      String startLabelW = getNewLabel();                                                                       //les boucles avec leurs conditions et instr
+    private String evalWhileLoop(String expr, String exprType, String block){                                //Fonction renvoyant le code mvap pour creer
+      String startLabelW = getNewLabel();                                                                    //les boucles avec leurs conditions et instr
       String endLabelW = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool");
       return "LABEL " + startLabelW + "\n" + tradExpr + "JUMPF " + endLabelW + "\n"
              + block + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
     }
 
-    private String evalForLoop(String init, String expr, String exprType, String iteration, String block){     //Fonction renvoyant le code mvap pour creer une
-      String startLabelF = getNewLabel();                                                                       //boucle for
+    private String evalForLoop(String init, String expr, String exprType, String iteration, String block){    //Fonction renvoyant le code mvap pour creer une
+      String startLabelF = getNewLabel();                                                                     //boucle for
       String endLabelF = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool");
       return init + "LABEL " + startLabelF + "\n" + tradExpr + "JUMPF " + endLabelF + "\n"
              + block + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
     }
 
-    private String evalRepeatLoop(String expr, String exprType, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
+    private String evalRepeatLoop(String expr, String exprType, String block){                                //Fonction renvoyant le code mvap pour creer une                  
       String startLabelR = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool"); 
       return "LABEL " + startLabelR + "\n" + block 
              + tradExpr + "\n" + "JUMPF " + startLabelR + "\n";
     }
 
-    private String evalAnd(String expr1Type, String expr1, String expr2Type, String expr2){                    //Fonction renvoyant le code apres avoir tester
+    private String evalAnd(String expr1Type, String expr1, String expr2Type, String expr2){                   //Fonction renvoyant le code apres avoir tester
       String falseLabel1And = getNewLabel();
       String trueLabel2And = getNewLabel();
       expr1 = trad(expr1Type, expr1, "bool");
@@ -139,8 +143,8 @@ grammar Calculette;
     }
 
     private String evalIf(String expr, String exprType, String ifBlock){                                       //Fonction renvoyant le code pour gerer les
-      String ifEndLabel = getNewLabel();   
-      String tradExpr = trad(exprType, expr, "bool");                                                       //branchement if
+      String ifEndLabel = getNewLabel();                                                                       //branchement if
+      String tradExpr = trad(exprType, expr, "bool");                                                      
       String res = tradExpr + "\n" + "JUMPF " + ifEndLabel 
                  + "\n" + ifBlock + "LABEL " + ifEndLabel + "\n";
       return res;
@@ -153,9 +157,13 @@ grammar Calculette;
     }
 }                                                                                                 
   
+/*==================================================
+================AXIOME DE DEPART====================
+==================================================*/
+
 calcul returns [ String code ]
-@init{ $code = new String(); }                                                                    //Initialisation de $code qui contiendra le code
-@after{ System.out.println($code); }                                                              //mvap et l'affichera a la fin
+@init{ $code = new String(); }                                                  //Initialisation de $code qui contiendra le code
+@after{ System.out.println($code); }                                            //mvap et l'affichera a la fin
     : 
       (declaration { $code += $declaration.code; })*
       { $code += "JUMP " + "Main\n"; }
@@ -172,17 +180,12 @@ calcul returns [ String code ]
       { $code += "\nHALT \n"; }
     ;
 
-block returns [ String code ]                                                                     //Prise en charge des block d'instructions
-@init{ $code = new String(); }                                                                   
-    :
-      '{'
-      (instruction { $code += $instruction.code; })*
-      '}'
-      NEWLINE*
-    ;
+/*==================================================
+================BLOCKS INSTRUCTION==================
+==================================================*/
 
-instruction returns [ String code ]                                                               //Ensemble des types d'instructions que l'on                                                      
-    :                                                                                             //peut rencontrer
+instruction returns [ String code ]                                               //Ensemble des types d'instructions que l'on                                                      
+    :                                                                             //peut rencontrer
       expression finInstruction 
       { $code = $expression.code; }
  
@@ -210,6 +213,45 @@ instruction returns [ String code ]                                             
       | returnInstr finInstruction
         { $code = $returnInstr.code; }
     ;
+
+block returns [ String code ]                                                      //Prise en charge des block d'instructions
+@init{ $code = new String(); }                                                                   
+    :
+      '{'
+      (instruction { $code += $instruction.code; })*
+      '}'
+      NEWLINE*
+    ;
+
+/*==================================================
+================DELARATION VARIABLES================
+==================================================*/
+
+declaration returns [ String code ]                                                 //Prise en charge des declarations typees 
+    :
+      type = TYPE 
+      id = IDENTIFIANT 
+      { $code = evalDeclaration($type.text, $id.text); }
+
+      | type = TYPE                                                                                
+        id = IDENTIFIANT
+        '='
+        expr = expression
+        { $code = evalDeclarationExpr($type.text, $id.text, $expr.code, $expr.type); }
+    ; 
+
+assignation returns [ String code ]                                                  //Assignation d'une valeur a une variable
+    : 
+      id = IDENTIFIANT
+      '=' 
+      expr = expression
+      { $code = evalAssign($id.text, $expr.code, $expr.type); }
+    ;
+
+
+/*==================================================
+====================EXPRESSIONS=====================
+==================================================*/
 
 expression returns [ String type, String code ]
     : 
@@ -373,7 +415,11 @@ atom returns [ String type, String code ]
       }
     ;
 
-ifElseInstr returns [ String code ]                                                                //Prise en charge des if else
+/*==================================================
+====================BRANCHEMENTS====================
+==================================================*/
+
+ifElseInstr returns [ String code ]                                               //Prise en charge des if else
     :
       'if('
       expression
@@ -390,31 +436,19 @@ ifElseInstr returns [ String code ]                                             
         { $code = evalIfElse($expression.code, $expression.type, $ifblock.code, $elseblock.code); }
     ;
 
-inputInstr returns [ String code ]                                                                 //Fonction prenant les input avec read()
-    :
-      'read(' 
-      id = IDENTIFIANT 
-      ')' 
-      { $code = "PUSHI 0\nREAD\nSTOREG "+ tablesSymboles.getAdresseType($id.text).adresse + "\n"; }
-    ;
+/*==================================================
+======================BOUCLES=======================
+==================================================*/
 
-outputInstr returns [ String code ]                                                                //Fonction prenant les output avec write()
-    :
-      'write('
-      expression 
-      ')' 
-      { $code = $expression.code + "WRITE\n"; }
-    ;
-
-loopInstr returns [ String code ]                                                                  //Prise en charge des boucles en mvap
-    :
-      'while('                                                                                     //While loop
+loopInstr returns [ String code ]                                                    //Prise en charge des boucles en mvap
+    :                                                                                //While loop
+      'while('                                                                                     
       expression
       ')'
       block
       { $code = evalWhileLoop($expression.code, $expression.type, $block.code); }
 
-    | 'for('                                                                                       //For loop
+    | 'for('                                                                         //For loop
       init = assignation 
       ';'
       expression 
@@ -424,7 +458,7 @@ loopInstr returns [ String code ]                                               
       block     
       { $code = evalForLoop($init.code, $expression.code, $expression.type, $iteration.code, $block.code); }
 
-    | 'repeat'                                                                                     //Repeat until loop
+    | 'repeat'                                                                        //Repeat until loop
       block 
       'until(' 
       expression 
@@ -432,26 +466,29 @@ loopInstr returns [ String code ]                                               
       { $code = evalRepeatLoop($expression.code, $expression.type, $block.code); }
     ;
 
-declaration returns [ String code ]                                                                //Prise en charge des declarations typees 
+/*==================================================
+===================INPUT & OUTPUT===================
+==================================================*/
+
+inputInstr returns [ String code ]                                                     //Fonction prenant les input avec read()
     :
-      type = TYPE 
+      'read(' 
       id = IDENTIFIANT 
-      { $code = evalDeclaration($type.text, $id.text); }
-
-      | type = TYPE                                                                                
-        id = IDENTIFIANT
-        '='
-        expr = expression
-        { $code = evalDeclarationExpr($type.text, $id.text, $expr.code, $expr.type); }
-    ; 
-
-assignation returns [ String code ]                                                               //Assignation d'une valeur a une variable
-    : 
-      id = IDENTIFIANT
-      '=' 
-      expr = expression
-      { $code = evalAssign($id.text, $expr.code, $expr.type); }
+      ')' 
+      { $code = "PUSHI 0\nREAD\nSTOREG "+ tablesSymboles.getAdresseType($id.text).adresse + "\n"; }
     ;
+
+outputInstr returns [ String code ]                                                     //Fonction prenant les output avec write()
+    :
+      'write('
+      expression 
+      ')' 
+      { $code = $expression.code + "WRITE\n"; }
+    ;
+
+/*==================================================
+================DECLARATION FONCTIONS===============
+==================================================*/
 
 fonction returns [ String code ]
 @init{ tablesSymboles.newTableLocale(); }       
@@ -515,11 +552,18 @@ returnInstr returns [ String code ]
       { $code = evalReturn($expr.code, $expr.type); }
     ;
 
-finInstruction                                                                                      //Reconnaissance des fins d'instructions
+/*==================================================
+===================FIN INSTRUCTION==================
+==================================================*/
+
+finInstruction                                                              //Reconnaissance des fins d'instructions
     :
       ( NEWLINE | ';' )+ 
     ;
 
+/*==================================================
+========================LEXER=======================
+==================================================*/
 
 KEYWORDS  : 'if' |'else' | 'break';
 
