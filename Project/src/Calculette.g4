@@ -392,7 +392,7 @@ atom returns [ String type, String code ]
       { $type = "int"; $code = "PUSHI " + $ent.text + "\n"; }
 
     | flo = FLOAT
-      { $type = "float"; $code = "PUSHI " + $flo.text + "\n"; }
+      { $type = "float"; $code = "PUSHF " + $flo.text + "\n"; }
 
     | boo = BOOLEAN
       { $type = "bool"; $code = ($boo.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); }
