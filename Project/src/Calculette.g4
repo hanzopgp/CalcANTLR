@@ -148,7 +148,7 @@ grammar Calculette;
       String elseStartLabel = getNewLabel();                                                                   
       String ifEndLabel = getNewLabel(); 
       String tradExpr = trad(exprType, expr, "bool"); 
-      return = tradExpr + "\n" + "JUMPF " + elseStartLabel +"\n" 
+      return tradExpr + "\n" + "JUMPF " + elseStartLabel +"\n" 
              + ifBlock + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
              + elseStartLabel + "\n" + elseBlock + "LABEL " + ifEndLabel + "\n";
     }
@@ -294,9 +294,9 @@ addsub returns [ String type, String code ]
       { 
         String typeRes = new String();
         String codeRes = new String();
-        tradTwo($expr.type, $expr.code, $md.typef, $md.code, typeRes, codeRes);     
+        tradTwo($expr.type, $expr.code, $md.type, $md.code, typeRes, codeRes);     
         $type = typeRes;
-        $code = codeRes + ($op1.text.equals("+") ? "ADD" : "SUB") + "\n";
+        $code = codeRes + ($op.text.equals("+") ? "ADD" : "SUB") + "\n";
       } 
     ;
 
@@ -308,22 +308,22 @@ muldiv returns [ String type, String code ]
       {
         String typeRes = new String();
         String codeRes = new String();
-        tradTwo($muldiv.type, $muldiv.code, $pp.typef, $pp.code, typeRes, codeRes);     
+        tradTwo($md.type, $md.code, $pp.type, $pp.code, typeRes, codeRes);     
         $type = typeRes;
-        $code = codeRes + ($op1.text.equals("*") ? "MUL" : "DIV") + "\n";
+        $code = codeRes + ($op.text.equals("*") ? "MUL" : "DIV") + "\n";
       }
 
     | pp = preparenthesis
-      { $type = $pp.type;$code = $pp.code; }
+      { $type = $pp.type; $code = $pp.code; }
     ;
 
 cast returns [ String type, String code ]
     :
       '('
-      type = TYPE 
+      ty = TYPE 
       ')' 
       expr = expression        
-      { $type = $type.text; $code = trad($expr.type, $expr.code, $type.text); }
+      { $type = $ty.text; $code = trad($expr.type, $expr.code, $ty.text); }
     ;
 
 condition returns [ String type, String code ]                                                                
@@ -488,13 +488,13 @@ fonction returns [ String code ]            //Prise en charge des fonctions
 @init{ tablesSymboles.newTableLocale(); }   //On creer une nouvelle table locale pour stocker les variables locales
 @after{ tablesSymboles.dropTableLocale(); } //On supprime la table locale
     : 
-      type = TYPE 
-      { tablesSymboles.putVar("return", $type.text); }
+      ty = TYPE 
+      { tablesSymboles.putVar("return", $ty.text); }
       id = IDENTIFIANT 
       '('
       params? //Il peut ne pas y avoir de parametre dans la fonction
       ')' 
-      { tablesSymboles.newFunction($id.text, $type.text); }
+      { tablesSymboles.newFunction($id.text, $ty.text); }
       block
       {
         $code = "LABEL " + $id.text;
@@ -502,15 +502,15 @@ fonction returns [ String code ]            //Prise en charge des fonctions
       }
     ;
 
-params //Prise en charge des parametres de la fonction
+params //Prise en charge des parametres de la fonction, pas de retour car simple reservation sans besoin de code a pile
     : 
-      type = TYPE 
+      ty = TYPE 
       id = IDENTIFIANT
-      { tablesSymboles.putVar($id.text, $type.text); }
+      { tablesSymboles.putVar($id.text, $ty.text); } //Reservation des parametres dans la table des symboles
       ( ',' 
-        type2 = TYPE 
+        ty2 = TYPE 
         id2 = IDENTIFIANT
-        { tablesSymboles.putVar($id2.text, $type2.text); }
+        { tablesSymboles.putVar($id2.text, $ty2.text); }
       )* //Il peut y avoir plusieurs parametres
     ;
 
@@ -570,7 +570,7 @@ ENTIER: ('0' ..'9')+;
 
 FLOAT: ('0'..'9')+'.'('0'..'9')*;
 
-BOOL : 'true' | 'false' ;
+BOOLEAN : 'true' | 'false' ;
 
 IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*;
 
