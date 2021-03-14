@@ -7,32 +7,30 @@ grammar Calculette;
 
     public String trad(String currentType, String expr, String targetType){
       String res = expr;
-      //if (currentType.equals(targetType)){
-      //    return 0;
-      //}
-      switch (targetType){
+      switch(targetType){
         case "int":
-          if (currentType.equals("float"))
-            res += "FTOI\n";
-            break;  
+          if(currentType.equals("float")){
+            res += "FTOI\n";   
+          }
+          break;  
         case "float":   
           res += "ITOF\n";
           break;                             
-        case "bool":                               
-          String pushType
+        case "bool":    
+          String trueLabel = getNewLabel();
+          String falseLabel = getNewLabel();                           
+          String pushType;
           String equalType;
-          if (currentType.equals("float"))  {
+          if(currentType.equals("float")){
             pushType = "PUSHF 0\n";
             equalType = "FEQUAL\n";
           }else{
             pushType = "PUSHI 0.0\n";
             equalType = "EQUAL\n";
-          }
-          String trueLabel = getNewLabel("BoolExpr");
-          String falseLabel = getNewLabel("BoolExpr");
-          res += pushType + equalType + "JUMPF " + labelVrai + "PUSHI 0" 
-              + "JUMP " + labelFaux) + "LABEL " + labelVrai + "PUSHI 1" 
-              + "LABEL " + labelFaux ;
+          }   
+          res += pushType + equalType + "JUMPF " + trueLabel + "\nPUSHI 0\n" 
+              + "JUMP " + falseLabel + "\nLABEL " + trueLabel + "\nPUSHI 1\n" 
+              + "LABEL " + falseLabel + "\n";
           break;
         }
         return res;
@@ -80,7 +78,7 @@ grammar Calculette;
       String startLabel = getNewLabel();                                                          //les boucles avec leurs conditions et instr
       String endLabel = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool");
-      return + "LABEL " + startLabel + "\n" + tradExpr + "JUMPF " + endLabel + "\n"
+      return "LABEL " + startLabel + "\n" + tradExpr + "JUMPF " + endLabel + "\n"
              + block + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
     }
 
@@ -88,14 +86,14 @@ grammar Calculette;
       String startLabel = getNewLabel();                                                          //boucle for
       String endLabel = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool");
-      return + init + "LABEL " + startLabel + "\n" + tradExpr + "JUMPF " + endLabel + "\n"
+      return init + "LABEL " + startLabel + "\n" + tradExpr + "JUMPF " + endLabel + "\n"
              + block + iteration + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
     }
 
-    public String evalRepeatLoop(String expr, exprType, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
+    public String evalRepeatLoop(String expr, String exprType, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
       String startLabel = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool"); 
-      return + "LABEL " + startLabel + "\n" + block 
+      return "LABEL " + startLabel + "\n" + block 
              + tradExpr + "\n" + "JUMPF " + startLabel + "\n";
     }
 
@@ -131,9 +129,8 @@ grammar Calculette;
 
     public String evalReturn(String expr, String exprType){
       AdresseType at = tablesSymboles.getAdresseType("return");
-      String res = trad(expr.type, exprType.code, at.type)
-                 + "STOREG " + at.adresse + "\n";
-                 + "RETURN\n";
+      String res = trad(expr, exprType, at.type)
+                 + "STOREG " + at.adresse + "\n" + "RETURN\n";
     }
 }                                                                                                 
   
@@ -192,7 +189,7 @@ instruction returns [ String code ]                                             
         { $code = $ifElseInstr.code; }
 
       | returnInstr finInstruction
-        { $code = returnInstr.code; }
+        { $code = $returnInstr.code; }
     ;
 
 expression returns [ String type, String code ]
@@ -309,15 +306,15 @@ declaration returns [ String code ]                                             
       | type = TYPE                                                                                
         id = IDENTIFIANT
         '='
-        expression
-        { $code = evalDeclarationExpr($type.text, $id.text, $expression.code); }
+        expr = expression
+        { $code = evalDeclarationExpr($type.text, $id.text, $expr.code, $expr.type); }
     ; 
 
 assignation returns [ String code ]                                                                //Assignation d'une valeur a une variable
     : 
       id = IDENTIFIANT
       '=' 
-      expression
+      expr = expression
       { $code = evalAssign($id.text, $expr.code, $expr.type); }
     ;
 
@@ -325,16 +322,16 @@ fonction returns [ String code ]
 @init{ tablesSymboles.newTableLocale(); }       
 @after{ tablesSymboles.dropTableLocale(); }     
     : 
-      TYPE 
-      { tablesSymboles.putVar("return", $TYPE.text); }
-      ID  
+      type = TYPE 
+      { tablesSymboles.putVar("return", $type.text); }
+      id = IDENTIFIANT 
       '('
       params? 
       ')' 
-      { tablesSymboles.newFunction($ID.text, $TYPE.text); }
+      { tablesSymboles.newFunction($id.text, $type.text); }
       block
       {
-        $code = "LABEL " + $ID.text;
+        $code = "LABEL " + $id.text;
         $code += $block.code;
       }
     ;
@@ -342,11 +339,11 @@ fonction returns [ String code ]
 params
     : 
       type = TYPE 
-      id = ID
+      id = IDENTIFIANT
       { tablesSymboles.putVar($id.text, $type.text); }
       ( ',' 
         type2 = TYPE 
-        id2 = ID
+        id2 = IDENTIFIANT
         { tablesSymboles.putVar($id2.text, $type2.text); }
       )*
     ;
@@ -378,7 +375,7 @@ args returns [ String code, int size]
 
 returnInstr returns [ String code ]
     :
-      "return" 
+      'return' 
       expr = expression
       { $code = evalReturn($expr.code, $expr.type); }
     ;
