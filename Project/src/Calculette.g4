@@ -155,6 +155,7 @@ block returns [ String code ]                                                   
       '{'
       (instruction { $code += $instruction.code; })*
       '}'
+      NEWLINE*
     ;
 
 instruction returns [ String code ]                                                               //Ensemble des types d'instructions que l'on                                                      
