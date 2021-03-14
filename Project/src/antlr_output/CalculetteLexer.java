@@ -149,7 +149,7 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Renvoie le code pour une declaration assignation
-	    private String evalDeclarationExpr(String type, String id, String expr, String exprType){
+	    private String evalDeclarationExpr(String type, String id, String exprType, String expr){
 	      tablesSymboles.putVar(id, type);  
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n")
@@ -157,7 +157,7 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Renvoie le code pour une assignation
-	    private String evalAssign(String id, String expr, String exprType){ 
+	    private String evalAssign(String id, String exprType, String expr){ 
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      return trad(exprType, expr, at.type) + "STOREG " + at.adresse + "\n";
 	    }
@@ -194,7 +194,7 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Fonction renvoyant le code mvap pour creer une boucle for
-	    private String evalForLoop(String init, String expr, String exprType, String iteration, String block){  
+	    private String evalForLoop(String init, String exprType, String expr, String iteration, String block){  
 	      String startLabelF = getNewLabel();                                                                    
 	      String endLabelF = getNewLabel();
 	      String tradExpr = trad(exprType, expr, "bool");
@@ -203,7 +203,7 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Fonction renvoyant le code mvap pour creer une boucle repeat until
-	    private String evalRepeatLoop(String expr, String exprType, String block){                                                  
+	    private String evalRepeatLoop(String exprType, String expr, String block){                                                  
 	      String startLabelR = getNewLabel();
 	      String tradExpr = trad(exprType, expr, "bool"); 
 	      return "LABEL " + startLabelR + "\n" + block 
@@ -231,7 +231,7 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Fonction renvoyant le code mvap lors d'un branchement if else
-	    private String evalIfElse(String expr, String exprType, String ifBlock, String elseBlock){                                                                                 
+	    private String evalIfElse(String exprType, String expr, String ifBlock, String elseBlock){                                                                                 
 	      String elseStartLabel = getNewLabel();                                                                   
 	      String ifEndLabel = getNewLabel(); 
 	      String tradExpr = trad(exprType, expr, "bool"); 
@@ -241,7 +241,7 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
-	    private String evalIf(String expr, String exprType, String ifBlock){      
+	    private String evalIf(String exprType, String expr, String ifBlock){      
 	      String ifEndLabel = getNewLabel();                                           
 	      String tradExpr = trad(exprType, expr, "bool");                                                      
 	      return tradExpr + "\n" + "JUMPF " + ifEndLabel 
@@ -249,7 +249,7 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Fonction renvoyant le code mvap pour les return
-	    private String evalReturn(String expr, String exprType){
+	    private String evalReturn(String exprType, String expr){
 	      AdresseType at = tablesSymboles.getAdresseType("return");
 	      return trad(expr, exprType, at.type)
 	             + "STOREG " + at.adresse + "\n" + "RETURN\n";

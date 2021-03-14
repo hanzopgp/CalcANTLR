@@ -79,7 +79,7 @@
 
 ### Scripts :
 
-- Does everything in one script :
+- Does everything in one script : (the input file is in tests folder)
 `bash do_all.sh`
 - Does basicaly everything from building to test :
 `bash build_all_and_test.sh`
@@ -89,7 +89,7 @@
 `bash build_grammar.sh`
 - Build all util java files :
 `bash build_util.sh`
-- Run a test, display the result and put the output in a mvap file :
+- Run a test file, display the result and put the output in a mvap file : (the test file is in tests folder)
 `bash test_grammar.sh`
 - Run .mvap file :
 `bash test_mvap.sh`

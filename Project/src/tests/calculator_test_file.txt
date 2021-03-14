@@ -1,0 +1,5 @@
+int a;
+a = 30;
+int c;
+c = 20;
+write(a+c);
