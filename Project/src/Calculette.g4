@@ -255,22 +255,22 @@ assignation returns [ String code ]                                             
 
 expression returns [ String type, String code ]
     : 
-      addsub
+      addsub  //Addition et soustraction
       { $type = $addsub.type; $code = $addsub.code; }
 
-      | muldiv
+      | muldiv //Multiplication et division
       { $type = $muldiv.type; $code = $muldiv.code; }
 
-      | cast
+      | cast //Changement de type
       { $type = $cast.type; $code = $cast.code; }
 
-      | condition
+      | condition //Condition inferieur, superieur...
       { $type = $condition.type; $code = $condition.code; }
 
-      | andLogic
+      | andLogic //Logique &&
       { $type = $andLogic.type; $code = $andLogic.code; }
 
-      | orLogic 
+      | orLogic //Logique ||
       { $type = $orLogic.type; $code = $orLogic.code; }            
     ;
 
@@ -337,9 +337,7 @@ andLogic returns [ String type, String code ]
       expr1 = expression 
       '&&' 
       expr2 = expression  
-      {
-        $type = "bool";
-        $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code);
+      { $type = "bool"; $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code);
       }
     ;
 
@@ -348,38 +346,29 @@ orLogic returns [ String type, String code ]
       expr1 = expression 
       '||' 
       expr2 = expression  
-      {
-        $type = "bool";
-        $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code);
-      }
+      { $type = "bool"; $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code); }
     ;
 
 preparenthesis returns [ String type, String code ]
     :
-      '(' 
+      '(' //Prise en charge des parentheses
       expr = expression 
       ')' 
       { $type = $expr.type; $code = $expr.code; }
 
-    | '-' 
+    | '-' //Expressions negatives
       pp = preparenthesis
-      { 
-        $type = $pp.type;
-        $code = $type.equals("int") ? "PUSHI 0\n SUB" : "PUSHI 0.0\n FSUB";
-      }
+      { $type = $pp.type; $code = $type.equals("int") ? "PUSHI 0\n SUB" : "PUSHI 0.0\n FSUB"; }
 
-    | '+' 
+    | '+' //Expressions positives
       pp = preparenthesis
       { $type = $pp.type; $code = $pp.code; }
 
-    | '!'
+    | '!' //Prise en charge du non logique
       expr = expression
-      {
-        $type = "bool";
-        $code = "PUSHI 1\n" + trad($expr.type, $expr.code, $type) + "SUB\n");
-      }
+      { $type = "bool"; $code = "PUSHI 1\n" + trad($expr.type, $expr.code, $type) + "SUB\n"); }
 
-    | atom
+    | atom //Expressions unitaires
       { $type = $atom.type; $code = $atom.code; }
     ;
 
@@ -401,16 +390,16 @@ atom returns [ String type, String code ]
         $code = "PUSHG " + at.adresse + "\n";
       }
 
-    | id = IDENTIFIANT
+    | id = IDENTIFIANT //Call d'une fonction
       '('
       args
       ')'
       { 
         $type = tablesSymboles.getFunction($id.text); 
-        String pusher = $type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n");
+        String pusher = $type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
         $code = pusher + $args.code + "CALL " + $id.text + "\n";
-        for (int i = 0; i < $args.size; i++){
-          $code += "POP\n";       
+        for (int i = 0; i < $args.nbArgs; i++){
+          $code += "POP\n"; //On pop tous les arguments lors du call pour executer la fonction       
         }
       }
     ;
@@ -419,7 +408,7 @@ atom returns [ String type, String code ]
 ====================BRANCHEMENTS====================
 ==================================================*/
 
-ifElseInstr returns [ String code ]                                               //Prise en charge des if else
+ifElseInstr returns [ String code ]                                                //Prise en charge des if else
     :
       'if('
       expression
@@ -470,7 +459,7 @@ loopInstr returns [ String code ]                                               
 ===================INPUT & OUTPUT===================
 ==================================================*/
 
-inputInstr returns [ String code ]                                                     //Fonction prenant les input avec read()
+inputInstr returns [ String code ]                                                    //Fonction prenant les input avec read()
     :
       'read(' 
       id = IDENTIFIANT 
@@ -478,7 +467,7 @@ inputInstr returns [ String code ]                                              
       { $code = "PUSHI 0\nREAD\nSTOREG "+ tablesSymboles.getAdresseType($id.text).adresse + "\n"; }
     ;
 
-outputInstr returns [ String code ]                                                     //Fonction prenant les output avec write()
+outputInstr returns [ String code ]                                                   //Fonction prenant les output avec write()
     :
       'write('
       expression 
@@ -520,25 +509,25 @@ params
       )*
     ;
 
-args returns [ String code, int size] 
-@init{ $code = new String(); $size = 0; }
+args returns [ int nbArgs, String code ] 
+@init{ $nbArgs = 0; $code = new String(); }
     : 
       ( expr = expression
         {
+          $nbArgs++;
           $code += $expr.code;
-          $size++;
           if($expr.type.equals("float")){
-            $size++;
+            $nbArgs++;
           }
         }
 
         ( ',' expr2 = expression
           {
-            $code += $expr2.code; 
-            $size++;
+            $nbArgs++;
             if($expr.type.equals("float")){
-              $size++;;
+              $nbArgs++;
             }
+            $code += $expr2.code;    
           }
         )*
 
@@ -556,7 +545,7 @@ returnInstr returns [ String code ]
 ===================FIN INSTRUCTION==================
 ==================================================*/
 
-finInstruction                                                              //Reconnaissance des fins d'instructions
+finInstruction 
     :
       ( NEWLINE | ';' )+ 
     ;
@@ -565,11 +554,12 @@ finInstruction                                                              //Re
 ========================LEXER=======================
 ==================================================*/
 
-KEYWORDS  : 'if' |'else' | 'break';
+//On declare ces mots pour empecher l'utilisateur de les utiliser comme IDENTIFIANT
+KEYWORDS  : 'if' |'else' | 'break' | 'while' | 'for' | 'do' | 'repeat' | 'until' | 'function' | 'return' | 'write' | 'read'; 
 
 COND : '==' | '<' | '>' | '<=' | '>=' | '!=';
 
-TYPE : 'int' | 'float' ;
+TYPE : 'int' | 'float' | 'bool';
 
 ENTIER: ('0' ..'9')+;
 
