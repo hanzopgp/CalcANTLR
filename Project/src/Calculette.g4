@@ -76,7 +76,7 @@ grammar Calculette;
       }
     }
 
-    public String evalWhileLoop(String condition, String block){                                  //Fonction renvoyant le code mvap pour creer
+    public String evalWhileLoop(String expr, String exprType, String block){                                  //Fonction renvoyant le code mvap pour creer
       String startLabel = getNewLabel();                                                          //les boucles avec leurs conditions et instr
       String endLabel = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool");
@@ -84,7 +84,7 @@ grammar Calculette;
              + block + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
     }
 
-    public String evalForLoop(String init, String condition, String iteration, String block){     //Fonction renvoyant le code mvap pour creer une
+    public String evalForLoop(String init, String expr, String exprType, String iteration, String block){     //Fonction renvoyant le code mvap pour creer une
       String startLabel = getNewLabel();                                                          //boucle for
       String endLabel = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool");
@@ -92,7 +92,7 @@ grammar Calculette;
              + block + iteration + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
     }
 
-    public String evalRepeatLoop(String condition, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
+    public String evalRepeatLoop(String expr, exprType, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
       String startLabel = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool"); 
       return + "LABEL " + startLabel + "\n" + block 
@@ -111,18 +111,20 @@ grammar Calculette;
       }
     }
 
-    public String evalIfElse(String condition, String ifBlock, String elseBlock){                 //Fonction renvoyant le code pour gerer les                                                                
+    public String evalIfElse(String expr, String exprType, String ifBlock, String elseBlock){                 //Fonction renvoyant le code pour gerer les                                                                
       String elseStartLabel = getNewLabel();                                                      //branchement if else
-      String ifEndLabel = getNewLabel();  
-      String res = condition + "\n" + "JUMPF " + elseStartLabel +"\n" 
+      String ifEndLabel = getNewLabel(); 
+      String tradExpr = trad(exprType, expr, "bool"); 
+      String res = tradExpr + "\n" + "JUMPF " + elseStartLabel +"\n" 
                  + ifBlock + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
                  + elseStartLabel + "\n" + elseBlock + "LABEL " + ifEndLabel + "\n";
       return res;
     }
 
-    public String evalIf(String condition, String ifBlock){                                       //Fonction renvoyant le code pour gerer les
-      String ifEndLabel = getNewLabel();                                                          //branchement if
-      String res = condition + "\n" + "JUMPF " + ifEndLabel 
+    public String evalIf(String expr, String exprType, String ifBlock){                                       //Fonction renvoyant le code pour gerer les
+      String ifEndLabel = getNewLabel();   
+      String tradExpr = trad(exprType, expr, "bool");                                                       //branchement if
+      String res = tradExpr + "\n" + "JUMPF " + ifEndLabel 
                  + "\n" + ifBlock + "LABEL " + ifEndLabel + "\n";
       return res;
     }
@@ -222,18 +224,18 @@ expression returns [ String type, String code ]
 ifElseInstr returns [ String code ]                                                                //Prise en charge des if else
     :
       'if('
-      condition
+      expression
       ')'
       ifblock = block
-      { $code = evalIf($condition.code, $ifblock.code); }
+      { $code = evalIf($expression.code, $expression.type, $ifblock.code); }
 
       | 'if('
-        condition
+        expression
         ')'
         ifblock = block
         'else'
         elseblock = block
-        { $code = evalIfElse($condition.code, $ifblock.code, $elseblock.code); }
+        { $code = evalIfElse($expression.code, $expression.type, $ifblock.code, $elseblock.code); }
     ;
 
 inputInstr returns [ String code ]                                                                 //Fonction prenant les input avec read()
@@ -255,27 +257,27 @@ outputInstr returns [ String code ]                                             
 loopInstr returns [ String code ]                                                                  //Prise en charge des boucles en mvap
     :
       'while('                                                                                     //While loop
-      condition
+      expression
       ')'
       block
-      { $code = evalWhileLoop($condition.code, $block.code); }
+      { $code = evalWhileLoop($expression.code, $expression.type, $block.code); }
 
     | 'for('                                                                                       //For loop
       init = assignation 
       ';'
-      condition 
+      expression 
       ';' 
       iteration = assignation 
       ')' 
       block     
-    { $code = evalForLoop($init.code, $condition.code, $iteration.code, $block.code); }
+    { $code = evalForLoop($init.code, $expression.code, $expression.type, $iteration.code, $block.code); }
 
     | 'repeat'                                                                                    //Repeat until loop
       block 
       'until(' 
-      condition 
+      expression 
       ')'
-    { $code = evalRepeatLoop($condition.code, $block.code); }
+    { $code = evalRepeatLoop($expression.code, $expression.type, $block.code); }
     ;
 
 conditionAvecLogique returns [ String code ]                                                       //Prise en charge des expressions logiques
