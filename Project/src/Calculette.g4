@@ -5,15 +5,49 @@ grammar Calculette;
     private int _cur_label = 1;                                                                   //liens var/type et les valeurs dans les adresses
     private String getNewLabel() { return "B" +(_cur_label++); }                                  //Generateur de nom d'etiquettes pour les boucles                                
 
-    public String evalDeclaration(String id){                                                     //Renvoie le code pour une declaration simple
-      tablesSymboles.putVar(id, "int");
-      return "PUSHI 0" + "\nSTOREG " + tablesSymboles.getAdresseType(id).adresse + "\n";
+    public String trad(String type, String expr, String targetType){
+      String res = expr;
+      //if (type.equals(targetType)){
+      //    return 0;
+      //}
+      switch (targetType){
+        case "int":
+          if (type.equals("float"))
+            res += "FTOI\n";
+            break;  
+        case "float":   
+          res += "ITOF\n";
+          break;                             
+        case "bool":                               
+          String pushType, equalType;
+          if (type.equals("float"))  {
+            pushType = "PUSHF 0\n";
+            equalType = "FEQUAL\n";
+          }else{
+            pushType = "PUSHI 0.0\n";
+            equalType = "EQUAL\n";
+          }
+          String trueLabel = getNewLabel("BoolExpr");
+          String falseLabel = getNewLabel("BoolExpr");
+          res += pushType + equalType + "JUMPF " + labelVrai + "PUSHI 0" 
+              + "JUMP " + labelFaux) + "LABEL " + labelVrai + "PUSHI 1" 
+              + "LABEL " + labelFaux ;
+          break;
+        }
+        return res;
     }
 
-    public String evalDeclarationExpr(String id, String expression){                              //Renvoie le code pour une declaration assignation
-      tablesSymboles.putVar(id, "int");                                                                        
-      return "PUSHI 0\n" + expression + "STOREG " 
-            + tablesSymboles.getAdresseType(id).adresse + "\n"; 
+    public String evalDeclaration(String type, String id){                                                     //Renvoie le code pour une declaration simple
+      tablesSymboles.putVar(id, type);
+      return (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n";
+    }
+
+    public String evalDeclarationExpr(String type, String id, String expression){                              //Renvoie le code pour une declaration assignation
+      tablesSymboles.putVar(id, type);  
+      String res = (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n"; 
+      AdresseType at = tablesSymboles.getAdresseType(id);                                                                    
+      res += trad($e.type, $e.code, at.type); 
+      return res + tablesSymboles.getAdresseType($id.text).adresse;
     }
 
     public String evalCond(String exp1, String cond, String exp2){                                //Fonction renvoyant le code mvap pour chacune 
@@ -94,9 +128,15 @@ calcul returns [ String code ]
 @after{ System.out.println($code); }                                                              //mvap et l'affichera a la fin
     : 
       (declaration { $code += $declaration.code; })*
+      { $code += "JUMP " + "Main\n"; }
 
       NEWLINE*
 
+      (fonction { $code += $fonction.code; })*
+      
+      NEWLINE*
+
+      { $code += "LABEL " + "Main\n"; }
       (instruction { $code += $instruction.code; })*
 
       { $code += "\nHALT \n"; }
@@ -137,7 +177,7 @@ instruction returns [ String code ]                                             
         { $code = $ifElseInstr.code; }
     ;
 
-expression returns [ String code ]
+expression returns [ String type, String code ]
     : 
       '(' x = expression ')'                                                                       //Prise en charge de la priorite des parentheses
       { $code = $x.code; }
@@ -244,15 +284,15 @@ condition returns [ String code ]                                               
 
 declaration returns [ String code ]                                                                 //Prise en charge des declarations typees 
     :
-      TYPE 
+      type = TYPE 
       id = IDENTIFIANT 
-      { $code = evalDeclaration($id.text); }
+      { $code = evalDeclaration($type.text, $id.text); }
 
-      | TYPE                                                                                
+      | type = TYPE                                                                                
         id = IDENTIFIANT
         '='
         expression
-        { $code = evalDeclarationExpr($id.text, $expression.code);}
+        { $code = evalDeclarationExpr($type.text, $id.text, $expression.code); }
     ; 
 
 assignation returns [ String code ]                                                                //Assignation d'une valeur a une variable
@@ -266,11 +306,87 @@ assignation returns [ String code ]                                             
       }
     ;
 
+
+
+
+
+
+
+
+
+
+fonction returns [ String code ]
+@init{ tablesSymboles.newTableLocale(); }       
+@after{ tablesSymboles.dropTableLocale(); }     
+    : 
+      TYPE 
+      { tablesSymboles.putVar("return", $TYPE.text); }
+      ID  
+      '('
+      params? 
+      ')' 
+      { tablesSymboles.newFunction($ID.text, $TYPE.text); }
+      block
+      {
+        $code = "LABEL " + $ID.text;
+        $code += $block.code;
+      }
+    ;
+
+params
+    : 
+      type = TYPE 
+      id = ID
+      { tablesSymboles.putVar($id.text, $type.text); }
+      ( ',' 
+        type2 = TYPE 
+        id2 = ID
+        { tablesSymboles.putVar($id2.text, $type2.text); }
+      )*
+    ;
+
+args returns [ String code, int size] 
+@init{ $code = new String(); $size = 0; }
+    : 
+      ( expr = expression
+        {
+          $code += $expr.code;
+          $size++;
+          if($expr.type.equals("float")){
+            $size++;
+          }
+        }
+
+        ( ',' expr2 = expression
+          {
+            $code += $expr2.code; 
+            $size++;
+            if($expr.type.equals("float")){
+              $size++;;
+            }
+          }
+        )*
+
+      )?
+    ;
+
+
+
+
+
+
+
+
+
+
+
 finInstruction                                                                                      //Reconnaissance des fins d'instructions
     :
       ( NEWLINE | ';' )+ 
     ;
 
+
+KEYWORDS  : 'if' |'else' | 'break';
 
 EXPRLOG : '&&' | '||' | '!';
 
@@ -278,14 +394,16 @@ COND : '==' | '<' | '>' | '<=' | '>=' | '!=';
 
 TYPE : 'int' | 'float' ;
 
+ENTIER: ('0' ..'9')+;
+
+FLOAT: ('0'..'9')+'.'('0'..'9')*;
+
+BOOL : 'true' | 'false' ;
+
+IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*;
+
 NEWLINE: '\r'? '\n' -> skip;
 
 WS: (' ' | '\t')+ -> skip;
-
-ENTIER: ('0' ..'9')+;
-
-FLOAT: ('0'..'9')+'.'('0'..'9')+;
-
-IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*;
 
 UNMATCH: . -> skip;
