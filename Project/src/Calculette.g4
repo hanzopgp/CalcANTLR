@@ -5,22 +5,23 @@ grammar Calculette;
     private int _cur_label = 1;                                                                   //liens var/type et les valeurs dans les adresses
     private String getNewLabel() { return "B" +(_cur_label++); }                                  //Generateur de nom d'etiquettes pour les boucles                                
 
-    public String trad(String type, String expr, String targetType){
+    public String trad(String currentType, String expr, String targetType){
       String res = expr;
-      //if (type.equals(targetType)){
+      //if (currentType.equals(targetType)){
       //    return 0;
       //}
       switch (targetType){
         case "int":
-          if (type.equals("float"))
+          if (currentType.equals("float"))
             res += "FTOI\n";
             break;  
         case "float":   
           res += "ITOF\n";
           break;                             
         case "bool":                               
-          String pushType, equalType;
-          if (type.equals("float"))  {
+          String pushType
+          String equalType;
+          if (currentType.equals("float"))  {
             pushType = "PUSHF 0\n";
             equalType = "FEQUAL\n";
           }else{
@@ -42,12 +43,16 @@ grammar Calculette;
       return (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n";
     }
 
-    public String evalDeclarationExpr(String type, String id, String expression){                              //Renvoie le code pour une declaration assignation
+    public String evalDeclarationExpr(String type, String id, String expr, String exprType){                              //Renvoie le code pour une declaration assignation
       tablesSymboles.putVar(id, type);  
-      String res = (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n"; 
-      AdresseType at = tablesSymboles.getAdresseType(id);                                                                    
-      res += trad($e.type, $e.code, at.type); 
-      return res + tablesSymboles.getAdresseType($id.text).adresse;
+      AdresseType at = tablesSymboles.getAdresseType(id); 
+      return (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n"
+             + trad(exprType, expr, at.type) + "STOREG "  + at.adresse + "\n";
+    }
+
+    public String evalAssign(String id, String expr, String exprType){
+      AdresseType at = tablesSymboles.getAdresseType(id);
+      return trad(exprType, expr, at.type) + "STOREG " + at.adresse + "\n";
     }
 
     public String evalCond(String exp1, String cond, String exp2){                                //Fonction renvoyant le code mvap pour chacune 
@@ -74,24 +79,24 @@ grammar Calculette;
     public String evalWhileLoop(String condition, String block){                                  //Fonction renvoyant le code mvap pour creer
       String startLabel = getNewLabel();                                                          //les boucles avec leurs conditions et instr
       String endLabel = getNewLabel();
-      String res = "LABEL " + startLabel + "\n" + condition + "JUMPF " + endLabel + "\n"
-          + block + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
-      return res;
+      String tradExpr = trad(exprType, expr, "bool");
+      return + "LABEL " + startLabel + "\n" + tradExpr + "JUMPF " + endLabel + "\n"
+             + block + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
     }
 
     public String evalForLoop(String init, String condition, String iteration, String block){     //Fonction renvoyant le code mvap pour creer une
       String startLabel = getNewLabel();                                                          //boucle for
       String endLabel = getNewLabel();
-      String res = init + "LABEL " + startLabel + "\n" + condition + "JUMPF " + endLabel + "\n"
-            + block + iteration + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
-      return res;
+      String tradExpr = trad(exprType, expr, "bool");
+      return + init + "LABEL " + startLabel + "\n" + tradExpr + "JUMPF " + endLabel + "\n"
+             + block + iteration + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
     }
 
     public String evalRepeatLoop(String condition, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
-      String startLabel = getNewLabel();                                                          //boucle repeat until
-      String res = "LABEL " + startLabel + "\n" + block 
-            + condition + "\n" + "JUMPF " + startLabel + "\n";
-      return res;
+      String startLabel = getNewLabel();
+      String tradExpr = trad(exprType, expr, "bool"); 
+      return + "LABEL " + startLabel + "\n" + block 
+             + tradExpr + "\n" + "JUMPF " + startLabel + "\n";
     }
 
     public String evalCondAvecLog(String cond1, String exprlog, String cond2){                    //Fonction renvoyant le code apres avoir tester
@@ -311,10 +316,7 @@ assignation returns [ String code ]                                             
       id = IDENTIFIANT
       '=' 
       expression
-      { 
-        int adresse = tablesSymboles.getAdresseType($id.text).adresse;
-        $code = $expression.code + "STOREG " + adresse + "\n"; 
-      }
+      { $code = evalAssign($id.text, $expr.code, $expr.type); }
     ;
 
 fonction returns [ String code ]
