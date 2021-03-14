@@ -5,7 +5,7 @@ grammar Calculette;
     private int _cur_label = 1;                                                                   //liens var/type et les valeurs dans les adresses
     private String getNewLabel() { return "B" +(_cur_label++); }                                  //Generateur de nom d'etiquettes pour les boucles                                
 
-    public String trad(String currentType, String expr, String targetType){
+    private String trad(String currentType, String expr, String targetType){
       String res = expr;
       switch(targetType){
         case "int":
@@ -36,24 +36,37 @@ grammar Calculette;
         return res;
     }
 
-    public String evalDeclaration(String type, String id){                                                     //Renvoie le code pour une declaration simple
+    private void tradTwo(String type, String expr, String type2, String expr2, String typeRes, String exprRes){
+      if(type.equals(type2)){
+        typeRes = type;
+        exprRes = expr + expr2;
+      }else if(type.equals("float")){
+        typeRes = "float";
+        exprRes = expr + expr2 + "ITOF\n";
+      }else if(type2.equals("float")){
+        typeRes = "float";
+        exprRes = expr + "ITOF\n" + expr2;
+      }
+    }
+
+    private String evalDeclaration(String type, String id){                                       //Renvoie le code pour une declaration simple
       tablesSymboles.putVar(id, type);
       return (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n";
     }
 
-    public String evalDeclarationExpr(String type, String id, String expr, String exprType){                              //Renvoie le code pour une declaration assignation
+    private String evalDeclarationExpr(String type, String id, String expr, String exprType){     //Renvoie le code pour une declaration assignation
       tablesSymboles.putVar(id, type);  
       AdresseType at = tablesSymboles.getAdresseType(id); 
       return (type.equals("bool") || type.equals("int")) ? "PUSHI 0\n" : "PUSHF 0.0\n"
              + trad(exprType, expr, at.type) + "STOREG "  + at.adresse + "\n";
     }
 
-    public String evalAssign(String id, String expr, String exprType){
+    private String evalAssign(String id, String expr, String exprType){
       AdresseType at = tablesSymboles.getAdresseType(id);
       return trad(exprType, expr, at.type) + "STOREG " + at.adresse + "\n";
     }
 
-    public String evalCond(String exp1, String cond, String exp2){                                //Fonction renvoyant le code mvap pour chacune 
+    private String evalCond(String exp1, String cond, String exp2){                               //Fonction renvoyant le code mvap pour chacune 
       String res = exp1 + exp2;                                                                   //des conditions possibles
       switch(cond){
         case "==" :
@@ -74,43 +87,49 @@ grammar Calculette;
       }
     }
 
-    public String evalWhileLoop(String expr, String exprType, String block){                                  //Fonction renvoyant le code mvap pour creer
-      String startLabel = getNewLabel();                                                          //les boucles avec leurs conditions et instr
-      String endLabel = getNewLabel();
+    private String evalWhileLoop(String expr, String exprType, String block){                                  //Fonction renvoyant le code mvap pour creer
+      String startLabelW = getNewLabel();                                                                       //les boucles avec leurs conditions et instr
+      String endLabelW = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool");
-      return "LABEL " + startLabel + "\n" + tradExpr + "JUMPF " + endLabel + "\n"
-             + block + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
+      return "LABEL " + startLabelW + "\n" + tradExpr + "JUMPF " + endLabelW + "\n"
+             + block + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
     }
 
-    public String evalForLoop(String init, String expr, String exprType, String iteration, String block){     //Fonction renvoyant le code mvap pour creer une
-      String startLabel = getNewLabel();                                                          //boucle for
-      String endLabel = getNewLabel();
+    private String evalForLoop(String init, String expr, String exprType, String iteration, String block){     //Fonction renvoyant le code mvap pour creer une
+      String startLabelF = getNewLabel();                                                                       //boucle for
+      String endLabelF = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool");
-      return init + "LABEL " + startLabel + "\n" + tradExpr + "JUMPF " + endLabel + "\n"
-             + block + iteration + "JUMP " + startLabel + "\n" + "LABEL " + endLabel + "\n";
+      return init + "LABEL " + startLabelF + "\n" + tradExpr + "JUMPF " + endLabelF + "\n"
+             + block + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
     }
 
-    public String evalRepeatLoop(String expr, String exprType, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
-      String startLabel = getNewLabel();
+    private String evalRepeatLoop(String expr, String exprType, String block){                                 //Fonction renvoyant le code mvap pour creer une                  
+      String startLabelR = getNewLabel();
       String tradExpr = trad(exprType, expr, "bool"); 
-      return "LABEL " + startLabel + "\n" + block 
-             + tradExpr + "\n" + "JUMPF " + startLabel + "\n";
+      return "LABEL " + startLabelR + "\n" + block 
+             + tradExpr + "\n" + "JUMPF " + startLabelR + "\n";
     }
 
-    public String evalCondAvecLog(String cond1, String exprlog, String cond2){                    //Fonction renvoyant le code apres avoir tester
-      String res = "";                                                                            //en prenant en compte la logique booleene
-      switch(exprlog){
-        case "!" :
-        case "||" :
-        case "&&" :
-        default :
-          System.err.println("ERROR evalCondAvecLog");
-          return "";
-      }
+    private String evalAnd(String expr1Type, String expr1, String expr2Type, String expr2){                    //Fonction renvoyant le code apres avoir tester
+      String falseLabel1And = getNewLabel();
+      String trueLabel2And = getNewLabel();
+      expr1 = trad(expr1Type, expr1, "bool");
+      expr2 = trad(expr2Type, expr2, "bool"); 
+      return expr1 + "JUMPF " + falseLabel1And + "\n" + expr2 + "JUMP " + trueLabel2And + "\n"                    
+              + "LABEL " + falseLabel1And + "\n" + "PUSHI 0\n" + "LABEL " + trueLabel2And + "\n";
     }
 
-    public String evalIfElse(String expr, String exprType, String ifBlock, String elseBlock){                 //Fonction renvoyant le code pour gerer les                                                                
-      String elseStartLabel = getNewLabel();                                                      //branchement if else
+    private String evalOr(String expr1Type, String expr1, String expr2Type, String expr2){                    //Fonction renvoyant le code apres avoir tester
+      String falseLabel1Or = getNewLabel();
+      String trueLabel1Or = getNewLabel();
+      expr1 = trad(expr1Type, expr1, "bool");
+      expr2 = trad(expr2Type, expr2, "bool"); 
+      return expr1 + "JUMPF " + falseLabel1Or + "\n" + "PUSHI 1\n" + "JUMP " + trueLabel1Or + "\n"
+             + "LABEL " + falseLabel1Or + expr2 + "LABEL " + trueLabel1Or + "\n";
+    }
+
+    private String evalIfElse(String expr, String exprType, String ifBlock, String elseBlock){                 //Fonction renvoyant le code pour gerer les                                                                
+      String elseStartLabel = getNewLabel();                                                                   //branchement if else
       String ifEndLabel = getNewLabel(); 
       String tradExpr = trad(exprType, expr, "bool"); 
       String res = tradExpr + "\n" + "JUMPF " + elseStartLabel +"\n" 
@@ -119,7 +138,7 @@ grammar Calculette;
       return res;
     }
 
-    public String evalIf(String expr, String exprType, String ifBlock){                                       //Fonction renvoyant le code pour gerer les
+    private String evalIf(String expr, String exprType, String ifBlock){                                       //Fonction renvoyant le code pour gerer les
       String ifEndLabel = getNewLabel();   
       String tradExpr = trad(exprType, expr, "bool");                                                       //branchement if
       String res = tradExpr + "\n" + "JUMPF " + ifEndLabel 
@@ -127,7 +146,7 @@ grammar Calculette;
       return res;
     }
 
-    public String evalReturn(String expr, String exprType){
+    private String evalReturn(String expr, String exprType){
       AdresseType at = tablesSymboles.getAdresseType("return");
       String res = trad(expr, exprType, at.type)
                  + "STOREG " + at.adresse + "\n" + "RETURN\n";
@@ -194,28 +213,164 @@ instruction returns [ String code ]                                             
 
 expression returns [ String type, String code ]
     : 
-      '(' x = expression ')'                                                                       //Prise en charge de la priorite des parentheses
-      { $code = $x.code; }
+      addsub
+      { $type = $addsub.type; $code = $addsub.code; }
 
-      | a = expression                                                                             //Priorite de la multiplication
-        op1 = ('*' | '/')                                                                          //et de la divison grace
-        b = expression                                                                             //a l'ordre de la grammaire
-        { $code = $a.code + $b.code + ($op1.text.equals("*") ? "MUL" : "DIV") + "\n"; }
+      | muldiv
+      { $type = $muldiv.type; $code = $muldiv.code; }
 
-      | c = expression
-        op2 = ('+' | '-')
-        d = expression
-        { $code = $c.code + $d.code + ($op2.text.equals("+") ? "ADD" : "SUB") + "\n"; }
+      | cast
+      { $type = $cast.type; $code = $cast.code; }
 
-      | op3 = ('-' | '+')                                                                          //Prise en charge d'expression commencant
-        e = ENTIER                                                                                 //par le signe moins et plus
-        { $code = "PUSHI 0\n" + "PUSHI " + $e.text + "\n" + ($op3.text.equals("+") ? "ADD" : "SUB") + "\n"; }
+      | condition
+      { $type = $condition.type; $code = $condition.code; }
 
-      | n = ENTIER                                            
-        { $code = "PUSHI " + $n.text + "\n"; }
+      | andLogic
+      { $type = $andLogic.type; $code = $andLogic.code; }
 
-      | id = IDENTIFIANT                                                                           //Prise en charge des variables dans
-        { $code = "PUSHG " + tablesSymboles.getAdresseType($id.text).adresse + "\n"; }             //les calculs
+      | orLogic 
+      { $type = $orLogic.type; $code = $orLogic.code; }            
+    ;
+
+addsub returns [ String type, String code ]
+    :
+      expr = expression 
+      op = ('+'|'-') 
+      md = muldiv
+      { 
+        String typeRes = new String();
+        String codeRes = new String();
+        tradTwo($expr.type, $expr.code, $md.typef, $md.code, typeRes, codeRes);     
+        $type = typeRes;
+        $code = codeRes + ($op1.text.equals("+") ? "ADD" : "SUB") + "\n";
+      } 
+    ;
+
+muldiv returns [ String type, String code ]
+    :
+      md = muldiv 
+      op = ('*'|'/') 
+      pp = preparenthesis
+      {
+        String typeRes = new String();
+        String codeRes = new String();
+        tradTwo($muldiv.type, $muldiv.code, $pp.typef, $pp.code, typeRes, codeRes);     
+        $type = typeRes;
+        $code = codeRes + ($op1.text.equals("*") ? "MUL" : "DIV") + "\n";
+      }
+
+    | pp = preparenthesis
+      { 
+        $type = $pp.type;
+        $code = $pp.code; 
+      }
+    ;
+
+cast returns [ String type, String code ]
+    :
+      '('
+      type = TYPE 
+      ')' 
+      expr = expression        
+      {
+        $type = $type.text;  
+        return trad($expr.type, $expr.code, $type.text);
+      }
+    ;
+
+condition returns [ String type, String code ]                                                                
+    : 
+      'true' { $type = "bool"; $code = "PUSHI 1\n"; }
+
+      | 'false' { $type = "bool"; $code = "PUSHI 0\n"; }
+
+      | expr1 = expression
+        cond = COND
+        expr2 = expression
+        { $type = "bool"; $code = evalCond($expr1.code, $cond.text, $expr2.code); }
+    ;
+
+andLogic returns [ String type, String code ]
+    :
+      expr1 = expression 
+      '&&' 
+      expr2 = expression  
+      {
+        $type = "bool";
+        $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code);
+      }
+    ;
+
+orLogic returns [ String type, String code ]
+    :
+      expr1 = expression 
+      '||' 
+      expr2 = expression  
+      {
+        $type = "bool";
+        $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code);
+      }
+    ;
+
+preparenthesis returns [ String type, String code ]
+    :
+      '(' 
+      expr = expression 
+      ')' 
+      { $type = $expr.type; $code = $expr.code; }
+
+    | '-' 
+      pp = preparenthesis
+      { 
+        $type = $pp.type;
+        $code = $type.equals("int") ? "PUSHI 0\n SUB" : "PUSHI 0.0\n FSUB";
+      }
+
+    | '+' 
+      pp = preparenthesis
+      { $type = $pp.type; $code = $pp.code; }
+
+    | '!'
+      expr = expression
+      {
+        $type = "bool";
+        $code = "PUSHI 1\n" + trad($expr.type, $expr.code, $type) + "SUB\n");
+      }
+
+    | atom
+      { $type = $atom.type; $code = $atom.code; }
+    ;
+
+atom returns [ String type, String code ]
+    :
+      x = ENTIER
+      { $type = "int"; $code = "PUSHI " + x.text + "\n"; }
+
+    | x = FLOAT
+      { $type = "float"; $code = "PUSHI " + x.text + "\n"; }
+
+    | x = BOOLEAN
+      { $type = "bool"; $code = ($x.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n") }
+
+    | id = IDENTIFIANT
+      { 
+        AdresseType at = tablesSymboles.getAdresseType($id.text); 
+        $type = at.type,
+        $code = "PUSHG " + at.adresse + "\n";
+      }
+
+    | id = IDENTIFIANT
+      '('
+      args
+      ')'
+      { 
+        $type = tablesSymboles.getFunction($id.text); 
+        String pusher = $type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n");
+        $code = pusher + $args.code + "CALL " + $id.text + "\n";
+        for (int i = 0; i < $args.size; i++){
+          $code += "POP\n";       
+        }
+      }
     ;
 
 ifElseInstr returns [ String code ]                                                                //Prise en charge des if else
@@ -267,37 +422,17 @@ loopInstr returns [ String code ]                                               
       iteration = assignation 
       ')' 
       block     
-    { $code = evalForLoop($init.code, $expression.code, $expression.type, $iteration.code, $block.code); }
+      { $code = evalForLoop($init.code, $expression.code, $expression.type, $iteration.code, $block.code); }
 
-    | 'repeat'                                                                                    //Repeat until loop
+    | 'repeat'                                                                                     //Repeat until loop
       block 
       'until(' 
       expression 
       ')'
-    { $code = evalRepeatLoop($expression.code, $expression.type, $block.code); }
+      { $code = evalRepeatLoop($expression.code, $expression.type, $block.code); }
     ;
 
-conditionAvecLogique returns [ String code ]                                                       //Prise en charge des expressions logiques
-    :                                                                                              //dans les conditions
-      cond1 = condition
-      exprlog = EXPRLOG
-      cond2 = condition
-      { $code = evalCondAvecLog($cond1.code, $exprlog.text, $cond2.code); }
-    ;
-
-condition returns [ String code ]                                                                  //Condition inf sup eq true false ...
-    : 
-      'true'  { $code = "PUSHI 1\n"; }
-
-      | 'false' { $code = "PUSHI 0\n"; }
-
-      | exp1 = expression
-        cond = COND
-        exp2 = expression
-        { $code = evalCond($exp1.code, $cond.text, $exp2.code); }
-    ;
-
-declaration returns [ String code ]                                                                 //Prise en charge des declarations typees 
+declaration returns [ String code ]                                                                //Prise en charge des declarations typees 
     :
       type = TYPE 
       id = IDENTIFIANT 
@@ -310,7 +445,7 @@ declaration returns [ String code ]                                             
         { $code = evalDeclarationExpr($type.text, $id.text, $expr.code, $expr.type); }
     ; 
 
-assignation returns [ String code ]                                                                //Assignation d'une valeur a une variable
+assignation returns [ String code ]                                                               //Assignation d'une valeur a une variable
     : 
       id = IDENTIFIANT
       '=' 
@@ -387,8 +522,6 @@ finInstruction                                                                  
 
 
 KEYWORDS  : 'if' |'else' | 'break';
-
-EXPRLOG : '&&' | '||' | '!';
 
 COND : '==' | '<' | '>' | '<=' | '>=' | '!=';
 
