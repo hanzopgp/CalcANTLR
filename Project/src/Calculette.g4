@@ -115,7 +115,7 @@ grammar Calculette;
 
     /****************FONCTIONS REFACTORING****************/
 
-    //Renvoie STOREL ou STOREG suivant le type de l'id
+    //Renvoie STOREL ou STOREG + l'adresse suivant le type de l'id
     private String storeGOrL(String id){
       AdresseType at = tablesSymboles.getAdresseType(id); 
       String storer = (at.adresse < 0) ? "STOREL " : "STOREG ";
@@ -190,8 +190,9 @@ grammar Calculette;
       return res;
     }
 
+    //Renvoie le code mvap lors d'une negation unitaire
     private String evalNegPP(String type, String expr){
-      String pusher = (type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHF 0.0\nFSUB\n");
+      String pusher = (type.equals("int") ? "PUSHI 0\n" : "PUSHF 0.0\n");
       String content = expr;
       String operator = evalOp(type, "-");
       return pusher + content + operator;
