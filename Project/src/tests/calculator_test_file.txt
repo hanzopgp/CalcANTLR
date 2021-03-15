@@ -1,9 +1,14 @@
-int x = 7
-while(false) {
-write(x)
-x=x+1
+int i
+int j
+int x
+int xi=0
+int xj=0
+x=42
+for (i=1;i < x; i=i+1) {
+  xi=xi+i
+  write(i)
+  for (j=1;j < x; j=j+1) {
+    xj=xj+j
+    write(j)	
+  }
 }
-x = x*x-1
-while(false) write(x);
-write(x-6)
-x=x-1

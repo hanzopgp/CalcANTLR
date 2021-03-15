@@ -551,13 +551,15 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
 
 ifElseInstr returns [ String code ] //Prise en charge des if avec ou sans else
     :
-      'if('
+      'if' //Attention a ne pas mettre 'if(' car cela genere un bug si on compile
+      '('  //un if avec un espace avant la parenthese comme ceci : 'if ('
       expression
       ')'
       ifinstr = instruction                                                  //instruction contient les blocks, les branchements 
       { $code = evalIf($expression.type, $expression.code, $ifinstr.code); } //fonctionnent donc avec une seule instruction ou un block
 
-    | 'if('
+    | 'if'
+      '('
       expression
       ')'
       ifinstr = instruction
@@ -572,25 +574,28 @@ ifElseInstr returns [ String code ] //Prise en charge des if avec ou sans else
 
 loopInstr returns [ String code ] //Prise en charge des boucles en mvap
     :                                                                                
-     'while('  //Boucle while                                                                                   
-      expression
+     'while'      //Boucle while  
+      '('         //Attention a ne pas mettre 'if(' car cela genere un bug si on compile                                                                                
+      expression  //un if avec un espace avant la parenthese comme ceci : 'if ('
       ')'
       instruction //instruction contient les blocks, la boucle fonctionne donc avec une seule instruction ou un block
       { $code = evalWhileLoop($expression.type, $expression.code, $instruction.code); }
 
-    | 'for('    //Boucle for instr                                                                       
+    | 'for'       //Boucle for instr                                                                       
+      '('
       init = assignation 
-      ';'
+      SEMICOLON
       expression 
-      ';' 
+      SEMICOLON 
       iteration = assignation 
       ')' 
       instruction     
       { $code = evalForLoop($init.code, $expression.type, $expression.code, $iteration.code, $instruction.code); }
 
-    | 'repeat' //Boucle repeat until instruction                                                                    
+    | 'repeat'   //Boucle repeat until instruction                                                                    
       instruction 
-      'until(' 
+      'until' 
+      '('
       expression 
       ')'
       { $code = evalRepeatLoop($expression.type, $expression.code, $instruction.code); }
@@ -631,7 +636,7 @@ fonction returns [ String code ]            //Prise en charge des fonctions
       params? //Il peut ne pas y avoir de parametre dans la fonction
       ')' 
       { tablesSymboles.newFunction($id.text, $ty.text); }
-      block //On precise block car une instruction sans bracket n'est pas accepte comme avec les branchements et boucles
+      block   //On precise block car une instruction sans bracket n'est pas accepte comme avec les branchements et boucles
       {
         $code = "LABEL " + $id.text;
         $code += $block.code;
@@ -644,7 +649,7 @@ params //Prise en charge des parametres de la fonction, pas de retour car simple
       id = IDENTIFIANT
       { tablesSymboles.putVar($id.text, $ty.text); } //Reservation des parametres dans la table des symboles
       ( 
-        COMA 
+        COMMA 
         ty2 = TYPE 
         id2 = IDENTIFIANT
         { tablesSymboles.putVar($id2.text, $ty2.text); }
@@ -664,7 +669,7 @@ args returns [ int nbArgs, String code ]    //Prise en charge des arguments lors
         }
 
         ( 
-          COMA 
+          COMMA 
           expr2 = expression
           {
             $nbArgs++;
@@ -690,7 +695,7 @@ returnInstr returns [ String code ] //Prise en charge du return dans une fonctio
 
 finInstruction //Fin d'instruction classique par un retour chariot, un point virgule...
     :
-      ( NEWLINE | ';' )+ 
+      ( NEWLINE | SEMICOLON )+ 
     ;
 
 /*==================================================
@@ -710,7 +715,9 @@ DIV : '/';
 
 EQUAL : '=';
 
-COMA : ',';
+COMMA : ',';
+
+SEMICOLON : ';';
 
 AND : '&&';
 
