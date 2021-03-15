@@ -6,11 +6,13 @@ grammar Calculette;
 
 @members {
     private TablesSymboles tablesSymboles = new TablesSymboles(); //On utilise la table de symboles pour garder les
-    private int _cur_label = 1;                                   //liens var/type et les valeurs dans les adresses
+    private int _cur_label = 1;                                   //liens id/type et les valeurs dans les adresses
     private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles                                
 
+    /****************FONCTIONS CAST****************/
+
     //Renvoie le code pour un cast simple d'un type a un autre
-    private String trad(String currentType, String currentExpr, String targetType){ 
+    private String tradOneElement(String currentType, String currentExpr, String targetType){ 
       String res = currentExpr;
       switch(targetType){
         case "int":                           
@@ -38,14 +40,14 @@ grammar Calculette;
               + "LABEL " + falseLabel + "\n";
           break;
         default:
-          System.err.println("ERROR trad");
+          System.err.println("ERROR tradOneElement");
           break;
       }
       return res;
     }
 
     //Met au meme type 2 expressions en renvoyant le type et en modifier l'object StringBuilder
-    private String tradTwo(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
+    private String tradTwoElements(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
       if(type.equals(type2)){               //Operation sur deux expressions de meme type
         typeRes = type;
         exprRes.append(expr + expr2);
@@ -59,7 +61,9 @@ grammar Calculette;
       return typeRes;
     }
 
-    //Renvoie STOREL ou STOREG suivant l'id traite
+    /****************FONCTIONS REFACTORING****************/
+
+    //Renvoie STOREL ou STOREG suivant le type de l'id
     private String storeGOrL(String id){
       AdresseType at = tablesSymboles.getAdresseType(id); 
       String str1 = (at.adresse < 0) ? "STOREL " : "STOREG ";
@@ -69,28 +73,30 @@ grammar Calculette;
       return str1 + str2;
     }
 
-    //Renvoie PUSHI 0 ou PUSHI 0.0 suivant le type traite
+    //Renvoie PUSHI 0 ou PUSHI 0.0 suivant le type en entree
     private String pushIOrF(String type){
       return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
     }
 
-    //Renvoie le code pour une declaration simple
+    /****************FONCTIONS GERANT LA TRADUCTION EN MVAP****************/
+
+    //Renvoie le code pour une declaration simple suivant le type de l'id
     private String evalDeclaration(String type, String id){  
       tablesSymboles.putVar(id, type);
       return pushIOrF(type); 
     }
 
-    //Renvoie le code pour une declaration assignation
+    //Renvoie le code pour une declaration + assignation suivant le type de l'id
     private String evalDeclarationExpr(String type, String id, String exprType, String expr){
       tablesSymboles.putVar(id, type);  
       AdresseType at = tablesSymboles.getAdresseType(id); 
-      return pushIOrF(type) + trad(exprType, expr, at.type) + storeGOrL(id);
+      return pushIOrF(type) + tradOneElement(exprType, expr, at.type) + storeGOrL(id);
     }
 
-    //Renvoie le code pour une assignation
+    //Renvoie le code pour une assignation suivant le type de l'id
     private String evalAssign(String id, String exprType, String expr){ 
       AdresseType at = tablesSymboles.getAdresseType(id);
-      return trad(exprType, expr, at.type) + storeGOrL(id);
+      return tradOneElement(exprType, expr, at.type) + storeGOrL(id);
     }
 
     //Renvoie le code mvap pour chacune des conditions possibles
@@ -119,7 +125,7 @@ grammar Calculette;
     private String evalWhileLoop(String expr, String exprType, String block){ 
       String startLabelW = getNewLabel();                                     
       String endLabelW = getNewLabel();
-      String tradExpr = trad(exprType, expr, "bool");
+      String tradExpr = tradOneElement(exprType, expr, "bool");
       return "LABEL " + startLabelW + "\n" + tradExpr + "JUMPF " + endLabelW + "\n"
              + block + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
     }
@@ -128,7 +134,7 @@ grammar Calculette;
     private String evalForLoop(String init, String exprType, String expr, String iteration, String block){  
       String startLabelF = getNewLabel();                                                                    
       String endLabelF = getNewLabel();
-      String tradExpr = trad(exprType, expr, "bool");
+      String tradExpr = tradOneElement(exprType, expr, "bool");
       return init + "LABEL " + startLabelF + "\n" + tradExpr + "JUMPF " + endLabelF + "\n"
              + block + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
     }
@@ -136,12 +142,12 @@ grammar Calculette;
     //Fonction renvoyant le code mvap pour creer une boucle repeat until
     private String evalRepeatLoop(String exprType, String expr, String block){                                                  
       String startLabelR = getNewLabel();
-      String tradExpr = trad(exprType, expr, "bool"); 
+      String tradExpr = tradOneElement(exprType, expr, "bool"); 
       return "LABEL " + startLabelR + "\n" + block 
              + tradExpr + "\n" + "JUMPF " + startLabelR + "\n";
     }
 
-    //Fonction renvoyant le code mvap pour utiliser read
+    //Fonction renvoyant le code mvap pour utiliser read suivant le type de l'id
     private String evalInput(String id){
       AdresseType at = tablesSymboles.getAdresseType(id);
       String str1 = at.type.equals("int") ? "READ\n" : "READF\n";
@@ -152,17 +158,17 @@ grammar Calculette;
     //Fonction renvoyant le code mvap pour utiliser write
     private String evalOutput(String type){
       String str = (type.equals("int")) || (type.equals("bool")) 
-                   ? "WRITE\nPOP\n"
-                   : "WRITEF\nPOP\nPOP\n";
-      return str;
+                   ? "WRITE\nPOP\n"        //Un seul POP normal pour l'output
+                   : "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float car les float 
+      return str;                          //prennent plus de place dans la stack machine
     }
 
      //Fonction renvoyant le code apres avoir tester
     private String evalAnd(String expr1Type, String expr1, String expr2Type, String expr2){                  
       String falseLabel1And = getNewLabel();
       String trueLabel2And = getNewLabel();
-      expr1 = trad(expr1Type, expr1, "bool");
-      expr2 = trad(expr2Type, expr2, "bool"); 
+      expr1 = tradOneElement(expr1Type, expr1, "bool");
+      expr2 = tradOneElement(expr2Type, expr2, "bool"); 
       return expr1 + "JUMPF " + falseLabel1And + "\n" + expr2 + "JUMP " + trueLabel2And + "\n"                    
               + "LABEL " + falseLabel1And + "\n" + "PUSHI 0\n" + "LABEL " + trueLabel2And + "\n";
     }
@@ -171,8 +177,8 @@ grammar Calculette;
     private String evalOr(String expr1Type, String expr1, String expr2Type, String expr2){                    
       String falseLabel1Or = getNewLabel();
       String trueLabel1Or = getNewLabel();
-      expr1 = trad(expr1Type, expr1, "bool");
-      expr2 = trad(expr2Type, expr2, "bool"); 
+      expr1 = tradOneElement(expr1Type, expr1, "bool");
+      expr2 = tradOneElement(expr2Type, expr2, "bool"); 
       return expr1 + "JUMPF " + falseLabel1Or + "\n" + "PUSHI 1\n" + "JUMP " + trueLabel1Or + "\n"
              + "LABEL " + falseLabel1Or + expr2 + "LABEL " + trueLabel1Or + "\n";
     }
@@ -181,7 +187,7 @@ grammar Calculette;
     private String evalIfElse(String exprType, String expr, String ifBlock, String elseBlock){                                                                                 
       String elseStartLabel = getNewLabel();                                                                   
       String ifEndLabel = getNewLabel(); 
-      String tradExpr = trad(exprType, expr, "bool"); 
+      String tradExpr = tradOneElement(exprType, expr, "bool"); 
       return tradExpr + "\n" + "JUMPF " + elseStartLabel +"\n" 
              + ifBlock + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
              + elseStartLabel + "\n" + elseBlock + "LABEL " + ifEndLabel + "\n";
@@ -190,7 +196,7 @@ grammar Calculette;
     //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
     private String evalIf(String exprType, String expr, String ifBlock){      
       String ifEndLabel = getNewLabel();                                           
-      String tradExpr = trad(exprType, expr, "bool");                                                      
+      String tradExpr = tradOneElement(exprType, expr, "bool");                                                      
       return tradExpr + "\n" + "JUMPF " + ifEndLabel 
              + "\n" + ifBlock + "LABEL " + ifEndLabel + "\n";
     }
@@ -198,7 +204,7 @@ grammar Calculette;
     //Fonction renvoyant le code mvap pour les return
     private String evalReturn(String exprType, String expr){
       AdresseType at = tablesSymboles.getAdresseType("return");
-      return trad(expr, exprType, at.type)
+      return tradOneElement(expr, exprType, at.type)
              + storeGOrL(expr) + "RETURN\n";
     }                                                                                               
 }
@@ -310,7 +316,7 @@ expression returns [ String type, String code ]
       { 
         String typeRes = "";
         StringBuilder codeRes = new StringBuilder(); 
-        $type = tradTwo($expr.type, $expr.code, $fac.type, $fac.code, typeRes, codeRes);
+        $type = tradTwoElements($expr.type, $expr.code, $fac.type, $fac.code, typeRes, codeRes);
         $code = codeRes.toString() + ($op.text.equals("+") ? "ADD" : "SUB") + "\n";
       } 
 
@@ -338,15 +344,15 @@ expression returns [ String type, String code ]
         { $type = "bool"; $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code); }            
     ;
 
-factor returns [ String type, String code ]
-    :
-      fac = factor 
-      op = ('*'|'/') 
+factor returns [ String type, String code ] //Un facteur est un element constitutif d'un produit
+    :                                       //Ici nous avons l'exemple de la multiplication, la
+      fac = factor                          //divison mais aussi les elements qui sont entre 
+      op = ('*'|'/')                        //parentheses, le non logique...
       pp = preparenthesis
       {
         String typeRes = "";
         StringBuilder codeRes = new StringBuilder();      
-        $type = tradTwo($fac.type, $fac.code, $pp.type, $pp.code, typeRes, codeRes); 
+        $type = tradTwoElements($fac.type, $fac.code, $pp.type, $pp.code, typeRes, codeRes); 
         $code = codeRes.toString() + ($op.text.equals("*") ? "MUL" : "DIV") + "\n";
       }
 
@@ -354,18 +360,18 @@ factor returns [ String type, String code ]
       { $type = $pp.type; $code = $pp.code; }
     ;
 
-cast returns [ String type, String code ]
-    :
+cast returns [ String type, String code ] //Le cast nous permet de reconnaitre un cast explicite dans
+    :                                     //le code afin d'utiliser notre fonction trad
       '('
       ty = TYPE 
       ')' 
       expr = expression        
-      { $type = $ty.text; $code = trad($expr.type, $expr.code, $ty.text); }
+      { $type = $ty.text; $code = tradOneElement($expr.type, $expr.code, $ty.text); }
     ;
 
-preparenthesis returns [ String type, String code ]
-    :
-      '(' //Prise en charge des parentheses
+preparenthesis returns [ String type, String code ] //preparenthesis nous permet de reconnaitre les parentheses
+    :                                               //ainsi que les operations precedent des parentheses
+      '(' //Prise en charge des parentheses         //mais aussi les atomes de l'expression
       expr = expression 
       ')' 
       { $type = $expr.type; $code = $expr.code; }
@@ -380,15 +386,15 @@ preparenthesis returns [ String type, String code ]
 
     | '!' //Prise en charge du non logique
       expr = expression
-      { $type = "bool"; $code = "PUSHI 1\n" + trad($expr.type, $expr.code, $type) + "SUB\n"; }
+      { $type = "bool"; $code = "PUSHI 1\n" + tradOneElement($expr.type, $expr.code, $type) + "SUB\n"; }
 
     | atom //Expressions unitaires
       { $type = $atom.type; $code = $atom.code; }
     ;
 
-atom returns [ String type, String code ]
-    :
-      ent = ENTIER
+atom returns [ String type, String code ] //Les atomes de l'expression sont les elements qui sont "seuls"
+    :                                     //Il y a donc les entiers, float, booleens, id ainsi que les
+      ent = ENTIER                        //appels de fonctions
       { $type = "int"; $code = "PUSHI " + $ent.text + "\n"; }
 
     | flo = FLOAT
@@ -404,16 +410,16 @@ atom returns [ String type, String code ]
         $code = "PUSHG " + at.adresse + "\n";
       }
 
-    | id = IDENTIFIANT //Call d'une fonction
+    | id = IDENTIFIANT //Call d'une fonction avec ses arguments
       '('
       args
       ')'
       { 
         $type = tablesSymboles.getFunction($id.text); 
         String pusher = ($type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
-        $code = pusher + $args.code + "CALL " + $id.text + "\n";
-        for (int i = 0; i < $args.nbArgs; i++){
-          $code += "POP\n"; //On pop tous les arguments lors du call pour executer la fonction       
+        $code = pusher + $args.code + "CALL " + $id.text + "\n";                 //Ajout du code des arguments et du CALL mvap
+        for (int i = 0; i < $args.nbArgs; i++){                                  //On pop tous les arguments lors du call
+          $code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
         }
       }
     ;
@@ -445,13 +451,13 @@ ifElseInstr returns [ String code ] //Prise en charge des if avec ou sans else
 
 loopInstr returns [ String code ] //Prise en charge des boucles en mvap
     :                                                                                
-      'while(' //While loop                                                                                     
+      'while('  //Boucle while                                                                                    
       expression
       ')'
       block
       { $code = evalWhileLoop($expression.type, $expression.code, $block.code); }
 
-    | 'for(' //For loop                                                                         
+    | 'for('    //Boucle for                                                                         
       init = assignation 
       ';'
       expression 
@@ -461,7 +467,7 @@ loopInstr returns [ String code ] //Prise en charge des boucles en mvap
       block     
       { $code = evalForLoop($init.code, $expression.type, $expression.code, $iteration.code, $block.code); }
 
-    | 'repeat' //Repeat until loop                                                                        
+    | 'repeat' //Boucle repeat until                                                                       
       block 
       'until(' 
       expression 
@@ -473,7 +479,7 @@ loopInstr returns [ String code ] //Prise en charge des boucles en mvap
 ===================INPUT & OUTPUT===================
 ==================================================*/
 
-inputInstr returns [ String code ] //Fonction prenant les input avec read()
+inputInstr returns [ String code ] //Fonction prenant les entrees avec read()
     :
       'read('
       id = IDENTIFIANT 
@@ -481,7 +487,7 @@ inputInstr returns [ String code ] //Fonction prenant les input avec read()
       { $code = evalInput($id.text); }
     ;
 
-outputInstr returns [ String code ] //Fonction prenant les output avec write()
+outputInstr returns [ String code ] //Fonction affichant les sorties avec write()
     :
       'write('
       expr = expression 
@@ -575,22 +581,24 @@ COND : '==' | '<' | '>' | '<=' | '>=' | '!=';
 
 TYPE : 'int' | 'float' | 'bool';
 
-ENTIER: ('0' ..'9')+;
+ENTIER: ('0'..'9')+;
 
 FLOAT: ('0'..'9')+'.'('0'..'9')*;
 
-BOOLEAN : 'true' | 'false' ;
+BOOLEAN : 'true' | 'false';
 
-IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*;
+IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*; //IDENTIFIANT en dernier, cela empeche aux IDENTIFIANT d'etre des KEYWORDS
+
+/****************ELEMENTS A IGNORER****************/
 
 NEWLINE: '\r'? '\n' -> skip;
 
 WS: (' ' | '\t')+ -> skip;
 
-STARCOMMENT : ('/*'.?'*/') -> skip;
+MULTILINECOMMENT : '/*'.*?'*/' -> skip;
 
-HASHTAGCOMMENT : '#'~('\r' | '\n')* -> skip;
+SINGLELINECOMMENT : '//'~[\r\n]* -> skip;
 
-SINGLELINECOMMENT : '//'~('\r' | '\n')* -> skip;
+HASHTAGCOMMENT : '#'~[\r\n]* -> skip;
 
 UNMATCH: . -> skip;

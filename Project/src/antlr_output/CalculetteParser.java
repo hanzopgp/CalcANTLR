@@ -20,8 +20,8 @@ public class CalculetteParser extends Parser {
 		T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, T__15=16, T__16=17, 
 		T__17=18, T__18=19, T__19=20, T__20=21, T__21=22, T__22=23, T__23=24, 
 		T__24=25, KEYWORDS=26, COND=27, TYPE=28, ENTIER=29, FLOAT=30, BOOLEAN=31, 
-		IDENTIFIANT=32, NEWLINE=33, WS=34, STARCOMMENT=35, HASHTAGCOMMENT=36, 
-		SINGLELINECOMMENT=37, UNMATCH=38;
+		IDENTIFIANT=32, NEWLINE=33, WS=34, MULTILINECOMMENT=35, SINGLELINECOMMENT=36, 
+		HASHTAGCOMMENT=37, UNMATCH=38;
 	public static final int
 		RULE_calcul = 0, RULE_instruction = 1, RULE_block = 2, RULE_declaration = 3, 
 		RULE_assignation = 4, RULE_expression = 5, RULE_factor = 6, RULE_cast = 7, 
@@ -52,8 +52,8 @@ public class CalculetteParser extends Parser {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, "KEYWORDS", "COND", "TYPE", "ENTIER", "FLOAT", "BOOLEAN", 
-			"IDENTIFIANT", "NEWLINE", "WS", "STARCOMMENT", "HASHTAGCOMMENT", "SINGLELINECOMMENT", 
-			"UNMATCH"
+			"IDENTIFIANT", "NEWLINE", "WS", "MULTILINECOMMENT", "SINGLELINECOMMENT", 
+			"HASHTAGCOMMENT", "UNMATCH"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -107,8 +107,12 @@ public class CalculetteParser extends Parser {
 	    private int _cur_label = 1;                                   //liens var/type et les valeurs dans les adresses
 	    private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles                                
 
+
+	    /****************FONCTIONS CAST****************/
+
+
 	    //Renvoie le code pour un cast simple d'un type a un autre
-	    private String trad(String currentType, String currentExpr, String targetType){ 
+	    private String tradOneElement(String currentType, String currentExpr, String targetType){ 
 	      String res = currentExpr;
 	      switch(targetType){
 	        case "int":                           
@@ -136,14 +140,14 @@ public class CalculetteParser extends Parser {
 	              + "LABEL " + falseLabel + "\n";
 	          break;
 	        default:
-	          System.err.println("ERROR trad");
+	          System.err.println("ERROR tradOneElement");
 	          break;
 	      }
 	      return res;
 	    }
 
 	    //Met au meme type 2 expressions en renvoyant le type et en modifier l'object StringBuilder
-	    private String tradTwo(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
+	    private String tradTwoElements(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
 	      if(type.equals(type2)){               //Operation sur deux expressions de meme type
 	        typeRes = type;
 	        exprRes.append(expr + expr2);
@@ -156,6 +160,8 @@ public class CalculetteParser extends Parser {
 	      }
 	      return typeRes;
 	    }
+
+	    /****************FONCTIONS REFACTORING****************/
 
 	    //Renvoie STOREL ou STOREG suivant l'id traite
 	    private String storeGOrL(String id){
@@ -172,6 +178,8 @@ public class CalculetteParser extends Parser {
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
 	    }
 
+	    /****************FONCTIONS GERANT LA TRADUCTION EN MVAP****************/
+
 	    //Renvoie le code pour une declaration simple
 	    private String evalDeclaration(String type, String id){  
 	      tablesSymboles.putVar(id, type);
@@ -182,13 +190,13 @@ public class CalculetteParser extends Parser {
 	    private String evalDeclarationExpr(String type, String id, String exprType, String expr){
 	      tablesSymboles.putVar(id, type);  
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
-	      return pushIOrF(type) + trad(exprType, expr, at.type) + storeGOrL(id);
+	      return pushIOrF(type) + tradOneElement(exprType, expr, at.type) + storeGOrL(id);
 	    }
 
 	    //Renvoie le code pour une assignation
 	    private String evalAssign(String id, String exprType, String expr){ 
 	      AdresseType at = tablesSymboles.getAdresseType(id);
-	      return trad(exprType, expr, at.type) + storeGOrL(id);
+	      return tradOneElement(exprType, expr, at.type) + storeGOrL(id);
 	    }
 
 	    //Renvoie le code mvap pour chacune des conditions possibles
@@ -217,7 +225,7 @@ public class CalculetteParser extends Parser {
 	    private String evalWhileLoop(String expr, String exprType, String block){ 
 	      String startLabelW = getNewLabel();                                     
 	      String endLabelW = getNewLabel();
-	      String tradExpr = trad(exprType, expr, "bool");
+	      String tradExpr = tradOneElement(exprType, expr, "bool");
 	      return "LABEL " + startLabelW + "\n" + tradExpr + "JUMPF " + endLabelW + "\n"
 	             + block + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
 	    }
@@ -226,7 +234,7 @@ public class CalculetteParser extends Parser {
 	    private String evalForLoop(String init, String exprType, String expr, String iteration, String block){  
 	      String startLabelF = getNewLabel();                                                                    
 	      String endLabelF = getNewLabel();
-	      String tradExpr = trad(exprType, expr, "bool");
+	      String tradExpr = tradOneElement(exprType, expr, "bool");
 	      return init + "LABEL " + startLabelF + "\n" + tradExpr + "JUMPF " + endLabelF + "\n"
 	             + block + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
 	    }
@@ -234,7 +242,7 @@ public class CalculetteParser extends Parser {
 	    //Fonction renvoyant le code mvap pour creer une boucle repeat until
 	    private String evalRepeatLoop(String exprType, String expr, String block){                                                  
 	      String startLabelR = getNewLabel();
-	      String tradExpr = trad(exprType, expr, "bool"); 
+	      String tradExpr = tradOneElement(exprType, expr, "bool"); 
 	      return "LABEL " + startLabelR + "\n" + block 
 	             + tradExpr + "\n" + "JUMPF " + startLabelR + "\n";
 	    }
@@ -259,8 +267,8 @@ public class CalculetteParser extends Parser {
 	    private String evalAnd(String expr1Type, String expr1, String expr2Type, String expr2){                  
 	      String falseLabel1And = getNewLabel();
 	      String trueLabel2And = getNewLabel();
-	      expr1 = trad(expr1Type, expr1, "bool");
-	      expr2 = trad(expr2Type, expr2, "bool"); 
+	      expr1 = tradOneElement(expr1Type, expr1, "bool");
+	      expr2 = tradOneElement(expr2Type, expr2, "bool"); 
 	      return expr1 + "JUMPF " + falseLabel1And + "\n" + expr2 + "JUMP " + trueLabel2And + "\n"                    
 	              + "LABEL " + falseLabel1And + "\n" + "PUSHI 0\n" + "LABEL " + trueLabel2And + "\n";
 	    }
@@ -269,8 +277,8 @@ public class CalculetteParser extends Parser {
 	    private String evalOr(String expr1Type, String expr1, String expr2Type, String expr2){                    
 	      String falseLabel1Or = getNewLabel();
 	      String trueLabel1Or = getNewLabel();
-	      expr1 = trad(expr1Type, expr1, "bool");
-	      expr2 = trad(expr2Type, expr2, "bool"); 
+	      expr1 = tradOneElement(expr1Type, expr1, "bool");
+	      expr2 = tradOneElement(expr2Type, expr2, "bool"); 
 	      return expr1 + "JUMPF " + falseLabel1Or + "\n" + "PUSHI 1\n" + "JUMP " + trueLabel1Or + "\n"
 	             + "LABEL " + falseLabel1Or + expr2 + "LABEL " + trueLabel1Or + "\n";
 	    }
@@ -279,7 +287,7 @@ public class CalculetteParser extends Parser {
 	    private String evalIfElse(String exprType, String expr, String ifBlock, String elseBlock){                                                                                 
 	      String elseStartLabel = getNewLabel();                                                                   
 	      String ifEndLabel = getNewLabel(); 
-	      String tradExpr = trad(exprType, expr, "bool"); 
+	      String tradExpr = tradOneElement(exprType, expr, "bool"); 
 	      return tradExpr + "\n" + "JUMPF " + elseStartLabel +"\n" 
 	             + ifBlock + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
 	             + elseStartLabel + "\n" + elseBlock + "LABEL " + ifEndLabel + "\n";
@@ -288,7 +296,7 @@ public class CalculetteParser extends Parser {
 	    //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
 	    private String evalIf(String exprType, String expr, String ifBlock){      
 	      String ifEndLabel = getNewLabel();                                           
-	      String tradExpr = trad(exprType, expr, "bool");                                                      
+	      String tradExpr = tradOneElement(exprType, expr, "bool");                                                      
 	      return tradExpr + "\n" + "JUMPF " + ifEndLabel 
 	             + "\n" + ifBlock + "LABEL " + ifEndLabel + "\n";
 	    }
@@ -296,7 +304,7 @@ public class CalculetteParser extends Parser {
 	    //Fonction renvoyant le code mvap pour les return
 	    private String evalReturn(String exprType, String expr){
 	      AdresseType at = tablesSymboles.getAdresseType("return");
-	      return trad(expr, exprType, at.type)
+	      return tradOneElement(expr, exprType, at.type)
 	             + storeGOrL(expr) + "RETURN\n";
 	    }                                                                                               
 
@@ -994,7 +1002,7 @@ public class CalculetteParser extends Parser {
 						 
 						                  String typeRes = "";
 						                  StringBuilder codeRes = new StringBuilder(); 
-						                  ((ExpressionContext)_localctx).type =  tradTwo(((ExpressionContext)_localctx).expr.type, ((ExpressionContext)_localctx).expr.code, ((ExpressionContext)_localctx).fac.type, ((ExpressionContext)_localctx).fac.code, typeRes, codeRes);
+						                  ((ExpressionContext)_localctx).type =  tradTwoElements(((ExpressionContext)_localctx).expr.type, ((ExpressionContext)_localctx).expr.code, ((ExpressionContext)_localctx).fac.type, ((ExpressionContext)_localctx).fac.code, typeRes, codeRes);
 						                  ((ExpressionContext)_localctx).code =  codeRes.toString() + ((((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getText():null).equals("+") ? "ADD" : "SUB") + "\n";
 						                
 						}
@@ -1098,7 +1106,7 @@ public class CalculetteParser extends Parser {
 
 					                  String typeRes = "";
 					                  StringBuilder codeRes = new StringBuilder();      
-					                  ((FactorContext)_localctx).type =  tradTwo(((FactorContext)_localctx).fac.type, ((FactorContext)_localctx).fac.code, ((FactorContext)_localctx).pp.type, ((FactorContext)_localctx).pp.code, typeRes, codeRes); 
+					                  ((FactorContext)_localctx).type =  tradTwoElements(((FactorContext)_localctx).fac.type, ((FactorContext)_localctx).fac.code, ((FactorContext)_localctx).pp.type, ((FactorContext)_localctx).pp.code, typeRes, codeRes); 
 					                  ((FactorContext)_localctx).code =  codeRes.toString() + ((((FactorContext)_localctx).op!=null?((FactorContext)_localctx).op.getText():null).equals("*") ? "MUL" : "DIV") + "\n";
 					                
 					}
@@ -1158,7 +1166,7 @@ public class CalculetteParser extends Parser {
 			match(T__12);
 			setState(206);
 			((CastContext)_localctx).expr = expression(0);
-			 ((CastContext)_localctx).type =  (((CastContext)_localctx).ty!=null?((CastContext)_localctx).ty.getText():null); ((CastContext)_localctx).code =  trad(((CastContext)_localctx).expr.type, ((CastContext)_localctx).expr.code, (((CastContext)_localctx).ty!=null?((CastContext)_localctx).ty.getText():null)); 
+			 ((CastContext)_localctx).type =  (((CastContext)_localctx).ty!=null?((CastContext)_localctx).ty.getText():null); ((CastContext)_localctx).code =  tradOneElement(((CastContext)_localctx).expr.type, ((CastContext)_localctx).expr.code, (((CastContext)_localctx).ty!=null?((CastContext)_localctx).ty.getText():null)); 
 			}
 		}
 		catch (RecognitionException re) {
@@ -1247,7 +1255,7 @@ public class CalculetteParser extends Parser {
 				match(T__13);
 				setState(223);
 				((PreparenthesisContext)_localctx).expr = expression(0);
-				 ((PreparenthesisContext)_localctx).type =  "bool"; ((PreparenthesisContext)_localctx).code =  "PUSHI 1\n" + trad(((PreparenthesisContext)_localctx).expr.type, ((PreparenthesisContext)_localctx).expr.code, _localctx.type) + "SUB\n"; 
+				 ((PreparenthesisContext)_localctx).type =  "bool"; ((PreparenthesisContext)_localctx).code =  "PUSHI 1\n" + tradOneElement(((PreparenthesisContext)_localctx).expr.type, ((PreparenthesisContext)_localctx).expr.code, _localctx.type) + "SUB\n"; 
 				}
 				break;
 			case ENTIER:
@@ -1325,7 +1333,7 @@ public class CalculetteParser extends Parser {
 				{
 				setState(233);
 				((AtomContext)_localctx).flo = match(FLOAT);
-				 ((AtomContext)_localctx).type =  "float"; ((AtomContext)_localctx).code =  "PUSHI " + (((AtomContext)_localctx).flo!=null?((AtomContext)_localctx).flo.getText():null) + "\n"; 
+				 ((AtomContext)_localctx).type =  "float"; ((AtomContext)_localctx).code =  "PUSHF " + (((AtomContext)_localctx).flo!=null?((AtomContext)_localctx).flo.getText():null) + "\n"; 
 				}
 				break;
 			case 3:

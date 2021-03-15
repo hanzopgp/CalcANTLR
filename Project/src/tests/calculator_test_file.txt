@@ -1,13 +1,7 @@
 int x
-int y = 42
-int z = 54
-read(x)
-write(x)
-x=10
-read(z)
-write(y) 
-y=x+1
-write(y)
-x=2*y+20
-write(x)
-
+/* Ce fichier contient 
+des exemples de 
+commentaires */
+x=42 // La rÃ©ponse Ã  tout
+/* Et on affiche la rÃ©ponse **/
+write(x) 
