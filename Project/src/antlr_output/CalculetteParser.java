@@ -129,7 +129,7 @@ public class CalculetteParser extends Parser {
 
 	    private void testAddressNotFound(AdresseType at){
 	      nbErrors++;
-	      boolean noAddressTest = at.adresse < 0;
+	      boolean noAddressTest = at.adresse == 0;
 	      boolean noRightTypeTest = !(at.type.equals("int") || at.type.equals("float") || at.type.equals("bool"));
 	      if(noAddressTest || noRightTypeTest){
 	        System.err.println("-->ERROR address, Address can't be found or is empty : [adress:" + at.adresse + ",type:" + at.type + "]");
@@ -216,8 +216,8 @@ public class CalculetteParser extends Parser {
 	    //Renvoie STOREL ou STOREG + l'adresse suivant le type de l'id
 	    private String storeGOrL(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
-	      String storer = (at.adresse < 0) ? "STOREL " : "STOREG ";
-	      String adress = (at.getSize(at.type) == 1) 
+	      String storer = (at.adresse < 0) ? "STOREL " : "STOREG "; //Adresse negatives : float
+	      String adress = (at.getSize(at.type) == 1)                //Adresse positives : int ou bool
 	                    ? tablesSymboles.getAdresseType(id).adresse + "\n"
 	                    : (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; 
 	      return storer + adress;
