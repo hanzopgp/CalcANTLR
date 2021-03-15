@@ -1,6 +1,9 @@
-float y
-float g(float x) {
-	return x*2.
+int x = 7
+while(false) {
+write(x)
+x=x+1
 }
-y=g(11.)+g(5.)*2.
-write(y)
+x = x*x-1
+
+write(x-6)
+x=x-1

@@ -31,9 +31,9 @@ grammar Calculette;
 
     private void testAddressNotFound(AdresseType at){
       nbErrors++;
-      boolean noAddressTest = at.adresse == 0;
+      //boolean noAddressTest = at.adresse == ???;
       boolean noRightTypeTest = !(at.type.equals("int") || at.type.equals("float") || at.type.equals("bool"));
-      if(noAddressTest || noRightTypeTest){
+      if(noRightTypeTest){
         System.err.println("-->ERROR address, Address can't be found or is empty : [adress:" + at.adresse + ",type:" + at.type + "]");
       }
     }
@@ -364,32 +364,32 @@ instruction returns [ String code ] //Ensemble des types d'instructions seules q
       expression finInstruction 
       { $code = $expression.code; }  
 
-      | declaration finInstruction
-        { $code = $declaration.code; }
+    | declaration finInstruction
+      { $code = $declaration.code; }
 
-      | assignation finInstruction
-        { $code = $assignation.code; }
+    | assignation finInstruction
+      { $code = $assignation.code; }
 
-      | outputInstr finInstruction
-        { $code = $outputInstr.code; }
+    | outputInstr finInstruction
+      { $code = $outputInstr.code; }
 
-      | inputInstr finInstruction
-        { $code = $inputInstr.code; }
+    | inputInstr finInstruction
+      { $code = $inputInstr.code; }
 
-      | loopInstr finInstruction
-        { $code = $loopInstr.code; }
+    | loopInstr finInstruction
+      { $code = $loopInstr.code; }
 
-      | ifElseInstr finInstruction
-        { $code = $ifElseInstr.code; }
+    | ifElseInstr finInstruction
+      { $code = $ifElseInstr.code; }
 
-      | block finInstruction
-        { $code = $block.code; }
+    | block finInstruction
+      { $code = $block.code; }
 
-      | returnInstr finInstruction
-        { $code = $returnInstr.code; }
+    | returnInstr finInstruction
+      { $code = $returnInstr.code; }
 
-      | finInstruction 
-        { $code= ""; }
+    | finInstruction 
+      { $code= ""; }
     ;
 
 block returns [ String code ] //Prise en charge des block d'instructions
@@ -411,17 +411,17 @@ declaration returns [ String code ] //Prise en charge des declarations typees
       id = IDENTIFIANT 
       { $code = evalDeclaration($ty.text, $id.text); }
 
-      | ty = TYPE                                                                                
-        id = IDENTIFIANT
-        '='
-        expr = expression
-        { $code = evalDeclarationExpr($ty.text, $id.text, $expr.type, $expr.code); }
+    | ty = TYPE                                                                                
+      id = IDENTIFIANT
+      EQUAL
+      expr = expression
+      { $code = evalDeclarationExpr($ty.text, $id.text, $expr.type, $expr.code); }
     ; 
 
 assignation returns [ String code ] //Assignation d'une valeur a une variable
     : 
       id = IDENTIFIANT
-      '=' 
+      EQUAL 
       expr = expression
       { $code = evalAssign($id.text, $expr.type, $expr.code); }
     ;
@@ -434,7 +434,7 @@ assignation returns [ String code ] //Assignation d'une valeur a une variable
 expression returns [ String type, String code ]
     : 
       expr = expression                                  //Addition et soustraction
-      op = ('+'|'-') 
+      op = ( ADD | SUB ) 
       fac = factor
       { 
         StringBuilder codeRes = new StringBuilder(); 
@@ -442,34 +442,34 @@ expression returns [ String type, String code ]
         $code = codeRes.toString() + evalOp($type, $op.text);
       } 
 
-      | factor                                           //Multiplication, division...
-        { $type = $factor.type; $code = $factor.code; }
+    | factor                                           //Multiplication, division...
+      { $type = $factor.type; $code = $factor.code; }
 
-      | cast                                             //Changement de type
-        { $type = $cast.type; $code = $cast.code; }
+    | cast                                             //Changement de type
+      { $type = $cast.type; $code = $cast.code; }
 
-      | 'true' { $type = "bool"; $code = "PUSHI 1\n"; }  //Differentes conditions dont true
-      | 'false' { $type = "bool"; $code = "PUSHI 0\n"; } //et false
-      | expr1 = expression                               //et conditions en general
-        cond = COND
-        expr2 = expression
-        { $type = "bool"; $code = evalCond($type, $expr1.code, $cond.text, $expr2.code); }
+    | 'true' { $type = "bool"; $code = "PUSHI 1\n"; }  //Differentes conditions dont true
+    | 'false' { $type = "bool"; $code = "PUSHI 0\n"; } //et false
+    | expr1 = expression                               //et conditions en general
+      cond = COND
+      expr2 = expression
+      { $type = "bool"; $code = evalCond($type, $expr1.code, $cond.text, $expr2.code); }
 
-      | expr1 = expression                               //Prise en charge du && logique
-        '&&' 
-        expr2 = expression  
-        { $type = "bool"; $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code); }
+    | expr1 = expression                               //Prise en charge du && logique
+      AND 
+      expr2 = expression  
+      { $type = "bool"; $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code); }
 
-      | expr1 = expression                               //Prise en charge du || logique
-        '||' 
-        expr2 = expression  
-        { $type = "bool"; $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code); }            
+    | expr1 = expression                               //Prise en charge du || logique
+      OR 
+      expr2 = expression  
+      { $type = "bool"; $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code); }            
     ;
 
 factor returns [ String type, String code ] //Un facteur est un element constitutif d'un produit
     :                                       //Ici nous avons l'exemple de la multiplication, la
       fac = factor                          //divison mais aussi les elements qui sont entre 
-      op = ('*'|'/')                        //parentheses, le non logique...
+      op = ( MUL | DIV )                    //parentheses, le non logique...
       pp = preparenthesis
       {
         StringBuilder codeRes = new StringBuilder();      
@@ -497,15 +497,15 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
       ')' 
       { $type = $expr.type; $code = $expr.code; }
 
-    | '-' //Expressions negatives
+    | SUB //Expressions negatives
       pp = preparenthesis
       { $type = $pp.type; $code = evalNegPP($type, $pp.code); }
 
-    | '+' //Expressions positives
+    | ADD //Expressions positives
       pp = preparenthesis
       { $type = $pp.type; $code = $pp.code; }
 
-    | '!' //Prise en charge du non logique
+    | NO //Prise en charge du non logique
       expr = expression
       { $type = "bool"; $code = "PUSHI 1\n" + $expr.code + tradOneElement($expr.type, $type) + "SUB\n"; }
 
@@ -557,13 +557,13 @@ ifElseInstr returns [ String code ] //Prise en charge des if avec ou sans else
       ifblock = block
       { $code = evalIf($expression.type, $expression.code, $ifblock.code); }
 
-      | 'if('
-        expression
-        ')'
-        ifblock = block
-        'else'
-        elseblock = block
-        { $code = evalIfElse($expression.type, $expression.code, $ifblock.code, $elseblock.code); }
+    | 'if('
+      expression
+      ')'
+      ifblock = block
+      'else'
+      elseblock = block
+      { $code = evalIfElse($expression.type, $expression.code, $ifblock.code, $elseblock.code); }
     ;
 
 /*==================================================
@@ -572,28 +572,28 @@ ifElseInstr returns [ String code ] //Prise en charge des if avec ou sans else
 
 loopInstr returns [ String code ] //Prise en charge des boucles en mvap
     :                                                                                
-      'while('  //Boucle while                                                                                    
+     'while('  //Boucle while                                                                                   
       expression
       ')'
-      block
-      { $code = evalWhileLoop($expression.type, $expression.code, $block.code); }
+      instruction //instruction contient les blocks, la boucle fonctionne donc avec une seule instruction ou un block
+      { $code = evalWhileLoop($expression.type, $expression.code, $instruction.code); }
 
-    | 'for('    //Boucle for                                                                         
+    | 'for('    //Boucle for instr                                                                       
       init = assignation 
       ';'
       expression 
       ';' 
       iteration = assignation 
       ')' 
-      block     
-      { $code = evalForLoop($init.code, $expression.type, $expression.code, $iteration.code, $block.code); }
+      instruction     
+      { $code = evalForLoop($init.code, $expression.type, $expression.code, $iteration.code, $instruction.code); }
 
-    | 'repeat' //Boucle repeat until                                                                       
-      block 
+    | 'repeat' //Boucle repeat until instruction                                                                    
+      instruction 
       'until(' 
       expression 
       ')'
-      { $code = evalRepeatLoop($expression.type, $expression.code, $block.code); }
+      { $code = evalRepeatLoop($expression.type, $expression.code, $instruction.code); }
     ;
 
 /*==================================================
@@ -643,7 +643,8 @@ params //Prise en charge des parametres de la fonction, pas de retour car simple
       ty = TYPE 
       id = IDENTIFIANT
       { tablesSymboles.putVar($id.text, $ty.text); } //Reservation des parametres dans la table des symboles
-      ( ',' 
+      ( 
+        COMA 
         ty2 = TYPE 
         id2 = IDENTIFIANT
         { tablesSymboles.putVar($id2.text, $ty2.text); }
@@ -662,7 +663,9 @@ args returns [ int nbArgs, String code ]    //Prise en charge des arguments lors
           }
         }
 
-        ( ',' expr2 = expression
+        ( 
+          COMA 
+          expr2 = expression
           {
             $nbArgs++;
             if($expr.type.equals("float")){
@@ -671,7 +674,6 @@ args returns [ int nbArgs, String code ]    //Prise en charge des arguments lors
             $code += $expr2.code;    
           }
         )*
-
       )?
     ;
 
@@ -697,6 +699,24 @@ finInstruction //Fin d'instruction classique par un retour chariot, un point vir
 
 //On declare ces mots pour empecher l'utilisateur de les utiliser comme IDENTIFIANT
 KEYWORDS  : 'if' |'else' | 'break' | 'while' | 'for' | 'do' | 'repeat' | 'until' | 'function' | 'return' | 'write' | 'read'; 
+
+ADD : '+';
+
+SUB : '-';
+
+MUL : '*';
+
+DIV : '/';
+
+EQUAL : '=';
+
+COMA : ',';
+
+AND : '&&';
+
+OR : '||';
+
+NO : '!';
 
 COND : '==' | '<' | '>' | '<=' | '>=' | '!=';
 
