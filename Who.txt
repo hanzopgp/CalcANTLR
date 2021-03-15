@@ -4,5 +4,5 @@
 fichier g4 : Project/src/Calculette.g4
 fichiers java annexes : Project/src/util
 explication déroulement : README.md
-tests personnels : certains fonctionnent
-benchmarks : failing
+tests personnels : en cours
+benchmarks : ssh down
