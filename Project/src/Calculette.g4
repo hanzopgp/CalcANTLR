@@ -117,11 +117,11 @@ grammar Calculette;
     //Renvoie STOREL ou STOREG suivant le type de l'id
     private String storeGOrL(String id){
       AdresseType at = tablesSymboles.getAdresseType(id); 
-      String str1 = (at.adresse < 0) ? "STOREL " : "STOREG ";
-      String str2 = at.getSize(at.type) == 1 
+      String storer = (at.adresse < 0) ? "STOREL " : "STOREG ";
+      String adress = at.getSize(at.type) == 1 
                     ? tablesSymboles.getAdresseType(id).adresse + "\n" 
                     : (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; 
-      return str1 + str2;
+      return storer + adress;
     }
 
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
@@ -187,6 +187,13 @@ grammar Calculette;
           break;
       }
       return res;
+    }
+
+    private String evalNegPP(String type, String expr){
+      String pusher = (type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHF 0.0\nFSUB\n");
+      String content = expr;
+      String operator = evalOp(type, "-");
+      return pusher + content + operator;
     }
 
     /****************FONCTIONS DECLARATION ASSIGNATION****************/
@@ -493,7 +500,7 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
 
     | '-' //Expressions negatives
       pp = preparenthesis
-      { $type = $pp.type; $code = ($type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHF 0.0\nFSUB\n"); }
+      { $type = $pp.type; $code = evalNegPP($type, $pp.code); }
 
     | '+' //Expressions positives
       pp = preparenthesis
