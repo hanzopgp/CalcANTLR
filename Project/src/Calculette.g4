@@ -29,10 +29,10 @@ grammar Calculette;
           String pushType;
           String equalType;
           if(currentType.equals("float")){    //Passage de float ===> bool
-            pushType = "PUSHF 0\n";
+            pushType = "PUSHF 0.0\n";
             equalType = "FEQUAL\n";
           }else{                              //Passage de int ===> bool
-            pushType = "PUSHI 0.0\n";
+            pushType = "PUSHI 0\n";
             equalType = "EQUAL\n";
           }   
           res += pushType + equalType + "JUMPF " + trueLabel + "\nPUSHI 0\n" 
@@ -73,7 +73,7 @@ grammar Calculette;
       return str1 + str2;
     }
 
-    //Renvoie PUSHI 0 ou PUSHI 0.0 suivant le type en entree
+    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
     private String pushIOrF(String type){
       return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
     }
@@ -378,7 +378,7 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
 
     | '-' //Expressions negatives
       pp = preparenthesis
-      { $type = $pp.type; $code = ($type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHI 0.0\nFSUB\n"); }
+      { $type = $pp.type; $code = ($type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHF 0.0\nFSUB\n"); }
 
     | '+' //Expressions positives
       pp = preparenthesis

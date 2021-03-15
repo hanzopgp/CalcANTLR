@@ -104,12 +104,10 @@ public class CalculetteParser extends Parser {
 
 
 	    private TablesSymboles tablesSymboles = new TablesSymboles(); //On utilise la table de symboles pour garder les
-	    private int _cur_label = 1;                                   //liens var/type et les valeurs dans les adresses
+	    private int _cur_label = 1;                                   //liens id/type et les valeurs dans les adresses
 	    private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles                                
 
-
 	    /****************FONCTIONS CAST****************/
-
 
 	    //Renvoie le code pour un cast simple d'un type a un autre
 	    private String tradOneElement(String currentType, String currentExpr, String targetType){ 
@@ -129,10 +127,10 @@ public class CalculetteParser extends Parser {
 	          String pushType;
 	          String equalType;
 	          if(currentType.equals("float")){    //Passage de float ===> bool
-	            pushType = "PUSHF 0\n";
+	            pushType = "PUSHF 0.0\n";
 	            equalType = "FEQUAL\n";
 	          }else{                              //Passage de int ===> bool
-	            pushType = "PUSHI 0.0\n";
+	            pushType = "PUSHI 0\n";
 	            equalType = "EQUAL\n";
 	          }   
 	          res += pushType + equalType + "JUMPF " + trueLabel + "\nPUSHI 0\n" 
@@ -163,7 +161,7 @@ public class CalculetteParser extends Parser {
 
 	    /****************FONCTIONS REFACTORING****************/
 
-	    //Renvoie STOREL ou STOREG suivant l'id traite
+	    //Renvoie STOREL ou STOREG suivant le type de l'id
 	    private String storeGOrL(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
 	      String str1 = (at.adresse < 0) ? "STOREL " : "STOREG ";
@@ -173,27 +171,27 @@ public class CalculetteParser extends Parser {
 	      return str1 + str2;
 	    }
 
-	    //Renvoie PUSHI 0 ou PUSHI 0.0 suivant le type traite
+	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrF(String type){
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
 	    }
 
 	    /****************FONCTIONS GERANT LA TRADUCTION EN MVAP****************/
 
-	    //Renvoie le code pour une declaration simple
+	    //Renvoie le code pour une declaration simple suivant le type de l'id
 	    private String evalDeclaration(String type, String id){  
 	      tablesSymboles.putVar(id, type);
 	      return pushIOrF(type); 
 	    }
 
-	    //Renvoie le code pour une declaration assignation
+	    //Renvoie le code pour une declaration + assignation suivant le type de l'id
 	    private String evalDeclarationExpr(String type, String id, String exprType, String expr){
 	      tablesSymboles.putVar(id, type);  
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
 	      return pushIOrF(type) + tradOneElement(exprType, expr, at.type) + storeGOrL(id);
 	    }
 
-	    //Renvoie le code pour une assignation
+	    //Renvoie le code pour une assignation suivant le type de l'id
 	    private String evalAssign(String id, String exprType, String expr){ 
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      return tradOneElement(exprType, expr, at.type) + storeGOrL(id);
@@ -247,7 +245,7 @@ public class CalculetteParser extends Parser {
 	             + tradExpr + "\n" + "JUMPF " + startLabelR + "\n";
 	    }
 
-	    //Fonction renvoyant le code mvap pour utiliser read
+	    //Fonction renvoyant le code mvap pour utiliser read suivant le type de l'id
 	    private String evalInput(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      String str1 = at.type.equals("int") ? "READ\n" : "READF\n";
@@ -258,9 +256,9 @@ public class CalculetteParser extends Parser {
 	    //Fonction renvoyant le code mvap pour utiliser write
 	    private String evalOutput(String type){
 	      String str = (type.equals("int")) || (type.equals("bool")) 
-	                   ? "WRITE\nPOP\n"
-	                   : "WRITEF\nPOP\nPOP\n";
-	      return str;
+	                   ? "WRITE\nPOP\n"        //Un seul POP normal pour l'output
+	                   : "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float car les float 
+	      return str;                          //prennent plus de place dans la stack machine
 	    }
 
 	     //Fonction renvoyant le code apres avoir tester
@@ -1235,7 +1233,7 @@ public class CalculetteParser extends Parser {
 				match(T__4);
 				setState(215);
 				((PreparenthesisContext)_localctx).pp = preparenthesis();
-				 ((PreparenthesisContext)_localctx).type =  ((PreparenthesisContext)_localctx).pp.type; ((PreparenthesisContext)_localctx).code =  (_localctx.type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHI 0.0\nFSUB\n"); 
+				 ((PreparenthesisContext)_localctx).type =  ((PreparenthesisContext)_localctx).pp.type; ((PreparenthesisContext)_localctx).code =  (_localctx.type.equals("int") ? "PUSHI 0\nSUB\n" : "PUSHF 0.0\nFSUB\n"); 
 				}
 				break;
 			case T__3:
@@ -1370,9 +1368,9 @@ public class CalculetteParser extends Parser {
 				 
 				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null)); 
 				        String pusher = (_localctx.type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
-				        ((AtomContext)_localctx).code =  pusher + ((AtomContext)_localctx).args.code + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";
-				        for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){
-				          _localctx.code += "POP\n"; //On pop tous les arguments lors du call pour executer la fonction       
+				        ((AtomContext)_localctx).code =  pusher + ((AtomContext)_localctx).args.code + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";                 //Ajout du code des arguments et du CALL mvap
+				        for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){                                  //On pop tous les arguments lors du call
+				          _localctx.code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
 				        }
 				      
 				}

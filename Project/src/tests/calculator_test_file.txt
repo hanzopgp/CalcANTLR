@@ -1,7 +1,36 @@
 int x
-/* Ce fichier contient 
-des exemples de 
-commentaires */
-x=42 // La rÃ©ponse Ã  tout
-/* Et on affiche la rÃ©ponse **/
+float f
+bool b
+
+b = false
+x = (int) b
+f = (float) b
+write(b)
+write(x)
+write(f)
+
+b = true
+x = (int) b
+f = (float) b
+write(b) 
 write(x) 
+write(f)
+
+f = 42.
+x = (int) f
+b = (bool) f
+write(f) 
+write(x) 
+# Le comportement en Ã©criture d'une variable boolÃ©enne intialisÃ©e autrement que par true et false n'est pas normÃ©
+# On insiste juste pour que le cast d'une expression en tant que  boolÃ©en se comporte comme false ssi l'expression vaut 0 (int) ou 0. (float) 
+if ( b ) write(1) 
+else write(0)
+
+f = 0.
+x = (int) f
+b = (bool) f
+write(f)
+write(x) 
+# Le comportement en Ã©criture d'une variable boolÃ©enne intialisÃ©e autrement que par true et false n'est pas normÃ©
+if ( ! b ) write(0) 
+else write(1) 
