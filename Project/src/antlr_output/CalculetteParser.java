@@ -180,58 +180,60 @@ public class CalculetteParser extends Parser {
 
 	    //Renvoie le code mvap pour chacune des operations possibles en prenant en compte le type
 	    private String evalOp(String type, String op){
-	      if(type.equals("int") || type.equals("bool")){
-	        switch(op){
-	        case "+" :
-	          return "ADD\n";
-	        case "-" :
-	          return "SUB\n";
-	        case "*" :
-	          return "MUL\n";
-	        case "/" :
-	          return "DIV\n";
-	        default :
-	          System.err.println("ERROR evalOpIntBool");
-	          return "";
-	        }
-	      }                                      
-	      else{
-	        switch(op){
-	        case "+" :
-	          return "ADDF\n";
-	        case "-" :
-	          return "SUBF\n";
-	        case "*" :
-	          return "MULF\n";
-	        case "/" :
-	          return "DIVF\n";
-	        default :
-	          System.err.println("ERROR evalOpFloat");
-	          return "";
-	        }
+	      String res = "";
+	      if(type.equals("float")){ //Si type float alors 
+	        res += "F";             //FADD FSUB ... pour la stack machine
 	      }
+	      switch(op){
+	        case "+" :
+	          res += "ADD\n";
+	          break;
+	        case "-" :
+	          res += "SUB\n";
+	          break;
+	        case "*" :
+	          res += "MUL\n";
+	          break;
+	        case "/" :
+	          res += "DIV\n";
+	          break;
+	        default :
+	          System.err.println("ERROR evalOp");
+	          break;
+	      }   
+	      return res;                                   
 	    }
 
 	    //Renvoie le code mvap pour chacune des conditions possibles
-	    private String evalCond(String exp1, String cond, String exp2){  
-	      String res = exp1 + exp2;                                     
+	    private String evalCond(String type, String exp1, String cond, String exp2){  
+	      String res = exp1 + exp2;  
+	      if(type.equals("float")){ //Si type float alors
+	        res += "F";             //FEQUAL FINFEQ ... pour la stack machine
+	      }                                   
 	      switch(cond){
 	        case "==" :
-	          return res + "EQUAL\n";
+	          res += "EQUAL\n";
+	          break;
 	        case "<=" :
-	          return res + "INFEQ\n";
+	          res += "INFEQ\n";
+	          break;
 	        case ">=" :
-	          return res + "SUPEQ\n";
+	          res += "SUPEQ\n";
+	          break;
 	        case "<" :
-	          return res + "INF\n";
+	          res += "INF\n";
+	          break;
 	        case ">" :
-	          return res + "SUP\n";
+	          res += "SUP\n";
+	          break;
 	        case "!=" :
-	          return res + "NEQ\n";
+	          res += "NEQ\n";
+	          break;
 	        default :
 	          System.err.println("ERROR evalCond");
-	          return "";
+	          break;
 	      }
+	      return res;
 	    }
 
 	    /****************FONCTIONS DECLARATION ASSIGNATION****************/
@@ -988,7 +990,7 @@ public class CalculetteParser extends Parser {
 						((ExpressionContext)_localctx).cond = match(COND);
 						setState(166);
 						((ExpressionContext)_localctx).expr2 = expression(4);
-						 ((ExpressionContext)_localctx).type =  "bool"; ((ExpressionContext)_localctx).code =  evalCond(((ExpressionContext)_localctx).expr1.code, (((ExpressionContext)_localctx).cond!=null?((ExpressionContext)_localctx).cond.getText():null), ((ExpressionContext)_localctx).expr2.code); 
+						 ((ExpressionContext)_localctx).type =  "bool"; ((ExpressionContext)_localctx).code =  evalCond(_localctx.type, ((ExpressionContext)_localctx).expr1.code, (((ExpressionContext)_localctx).cond!=null?((ExpressionContext)_localctx).cond.getText():null), ((ExpressionContext)_localctx).expr2.code); 
 						}
 						break;
 					case 2:
@@ -1046,7 +1048,7 @@ public class CalculetteParser extends Parser {
 						                  String typeRes = "";
 						                  StringBuilder codeRes = new StringBuilder(); 
 						                  ((ExpressionContext)_localctx).type =  tradTwoElements(((ExpressionContext)_localctx).expr.type, ((ExpressionContext)_localctx).expr.code, ((ExpressionContext)_localctx).fac.type, ((ExpressionContext)_localctx).fac.code, typeRes, codeRes);
-						                  ((ExpressionContext)_localctx).code =  codeRes.toString() + evalOp(_localctx.type, (((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getText():null));;
+						                  ((ExpressionContext)_localctx).code =  codeRes.toString() + evalOp(_localctx.type, (((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getText():null));
 						                
 						}
 						break;
