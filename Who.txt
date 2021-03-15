@@ -1,7 +1,8 @@
 21510242 DURAND Enzo
 21810620 TIEM Hugo
 
-fichier g4 : Project/src/
+fichier g4 : Project/src/Calculette.g4
 fichiers java annexes : Project/src/util
 explication déroulement : README.md
-benchmarks : aucun pour le moment
+tests personnels : certains fonctionnent
+benchmarks : failing
