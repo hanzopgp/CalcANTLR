@@ -227,31 +227,31 @@ grammar Calculette;
     /*******************FONCTIONS BOUCLES*******************/
 
     //Fonction renvoyant le code mvap pour creer une boucle while
-    private String evalWhileLoop(String exprType, String expr, String block){ 
+    private String evalWhileLoop(String exprType, String expr, String instructions){ 
       String startLabelW = getNewLabel();                                     
       String endLabelW = getNewLabel();
       expr += tradOneElement(exprType, "bool");
-      testEmptyStringErrors(exprType, expr, block);
+      testEmptyStringErrors(exprType, expr, instructions);
       return "LABEL " + startLabelW + "\n" + expr + "JUMPF " + endLabelW + "\n"
-             + block + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
+             + instructions + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
     }
 
     //Fonction renvoyant le code mvap pour creer une boucle for
-    private String evalForLoop(String init, String exprType, String expr, String iteration, String block){  
+    private String evalForLoop(String init, String exprType, String expr, String iteration, String instructions){  
       String startLabelF = getNewLabel();                                                                    
       String endLabelF = getNewLabel();
       expr += tradOneElement(exprType, "bool");
-      testEmptyStringErrors(init, exprType, expr, iteration, block);
+      testEmptyStringErrors(init, exprType, expr, iteration, instructions);
       return init + "LABEL " + startLabelF + "\n" + expr + "JUMPF " + endLabelF + "\n"
-             + block + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
+             + instructions + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
     }
 
     //Fonction renvoyant le code mvap pour creer une boucle repeat until
-    private String evalRepeatLoop(String exprType, String expr, String block){                                                  
+    private String evalRepeatLoop(String exprType, String expr, String instructions){                                                  
       String startLabelR = getNewLabel();
       expr += tradOneElement(exprType, "bool"); 
-      testEmptyStringErrors(exprType, expr, block);
-      return "LABEL " + startLabelR + "\n" + block 
+      testEmptyStringErrors(exprType, expr, instructions);
+      return "LABEL " + startLabelR + "\n" + instructions 
              + expr + "\n" + "JUMPF " + startLabelR + "\n";
     }
 
@@ -302,23 +302,23 @@ grammar Calculette;
     /*******************FONCTIONS BRANCHEMENTS*******************/
 
     //Fonction renvoyant le code mvap lors d'un branchement if else
-    private String evalIfElse(String exprType, String expr, String ifBlock, String elseBlock){                                                                                 
+    private String evalIfElse(String exprType, String expr, String ifInstructions, String elseInstructions){                                                                                 
       String elseStartLabel = getNewLabel();                                                                   
       String ifEndLabel = getNewLabel(); 
       expr += tradOneElement(exprType, "bool"); 
-      testEmptyStringErrors(exprType, expr, ifBlock, elseBlock);
+      testEmptyStringErrors(exprType, expr, ifInstructions, elseInstructions);
       return expr + "\n" + "JUMPF " + elseStartLabel +"\n" 
-             + ifBlock + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
-             + elseStartLabel + "\n" + elseBlock + "LABEL " + ifEndLabel + "\n";
+             + ifInstructions + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
+             + elseStartLabel + "\n" + elseInstructions + "LABEL " + ifEndLabel + "\n";
     }
 
     //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
-    private String evalIf(String exprType, String expr, String ifBlock){      
+    private String evalIf(String exprType, String expr, String ifInstructions){      
       String ifEndLabel = getNewLabel();                                           
       expr += tradOneElement(exprType, "bool"); 
-      testEmptyStringErrors(exprType, expr, ifBlock);                                                     
+      testEmptyStringErrors(exprType, expr, ifInstructions);                                                     
       return expr + "\n" + "JUMPF " + ifEndLabel 
-             + "\n" + ifBlock + "LABEL " + ifEndLabel + "\n";
+             + "\n" + ifInstructions + "LABEL " + ifEndLabel + "\n";
     }
 
     /*******************FONCTION RETURN*******************/
@@ -554,16 +554,16 @@ ifElseInstr returns [ String code ] //Prise en charge des if avec ou sans else
       'if('
       expression
       ')'
-      ifblock = block
-      { $code = evalIf($expression.type, $expression.code, $ifblock.code); }
+      ifinstr = instruction                                                  //instruction contient les blocks, les branchements 
+      { $code = evalIf($expression.type, $expression.code, $ifinstr.code); } //fonctionnent donc avec une seule instruction ou un block
 
     | 'if('
       expression
       ')'
-      ifblock = block
+      ifinstr = instruction
       'else'
-      elseblock = block
-      { $code = evalIfElse($expression.type, $expression.code, $ifblock.code, $elseblock.code); }
+      elseinstr = instruction
+      { $code = evalIfElse($expression.type, $expression.code, $ifinstr.code, $elseinstr.code); }
     ;
 
 /*==================================================
@@ -631,7 +631,7 @@ fonction returns [ String code ]            //Prise en charge des fonctions
       params? //Il peut ne pas y avoir de parametre dans la fonction
       ')' 
       { tablesSymboles.newFunction($id.text, $ty.text); }
-      block
+      block //On precise block car une instruction sans bracket n'est pas accepte comme avec les branchements et boucles
       {
         $code = "LABEL " + $id.text;
         $code += $block.code;
