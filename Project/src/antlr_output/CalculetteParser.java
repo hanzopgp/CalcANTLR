@@ -118,10 +118,10 @@ public class CalculetteParser extends Parser {
 	    }*/
 
 	    private void testEmptyStringErrors(String ... strings){
-	      nbErrors++;
 	      for(String s : strings){
 	        if(s.isEmpty()){
-	          System.err.println("-->ERROR empty string, found : " + s);
+	          nbErrors++;
+	          System.err.println("-->ERROR empty string");
 	          break;
 	        }
 	      }
@@ -132,7 +132,7 @@ public class CalculetteParser extends Parser {
 	      boolean noAddressTest = at.adresse < 0;
 	      boolean noRightTypeTest = !(at.type.equals("int") || at.type.equals("float") || at.type.equals("bool"));
 	      if(noAddressTest || noRightTypeTest){
-	        System.err.println("-->ERROR address, Address can't be find or is empty : [adress:" + at.adresse + ",type:" + at.type + "]");
+	        System.err.println("-->ERROR address, Address can't be found or is empty : [adress:" + at.adresse + ",type:" + at.type + "]");
 	      }
 	    }
 
