@@ -97,7 +97,56 @@ public class CalculetteLexer extends Lexer {
 
 	    private TablesSymboles tablesSymboles = new TablesSymboles(); //On utilise la table de symboles pour garder les
 	    private int _cur_label = 1;                                   //liens id/type et les valeurs dans les adresses
-	    private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles                                
+	    private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles 
+	    private int nbErrors = 0;                                     //Compteur d'erreurs a la compilation 
+	    //private ArrayList<String> errors = new ArrayList();           //Liste des erreurs                              
+
+	    /****************FONCTIONS DEBUG****************/
+
+	    /*private void printErrors(){
+	      for(String s : errors){
+	        System.out.println(s);
+	      }
+	    }*/
+
+	    private void testEmptyStringErrors(String ... strings){
+	      nbErrors++;
+	      for(String s : strings){
+	        if(s.isEmpty()){
+	          System.err.println("-->ERROR empty string, found : " + s);
+	          break;
+	        }
+	      }
+	    }
+
+	    private void testAddressNotFound(AdresseType at){
+	      nbErrors++;
+	      boolean noAddressTest = at.adresse < 0;
+	      boolean noRightTypeTest = !(at.type.equals("int") || at.type.equals("float") || at.type.equals("bool"));
+	      if(noAddressTest || noRightTypeTest){
+	        System.err.println("-->ERROR address, Address can't be find or is empty : [adress:" + at.adresse + ",type:" + at.type + "]");
+	      }
+	    }
+
+	    private void triggerOperatorError(String op){
+	      nbErrors++;
+	      System.err.println("-->ERROR operator, found : " + op + ", expected : '+','-','*','/'");
+	    }
+
+	    private void triggerConditionError(String cond){
+	      nbErrors++;
+	      System.err.println("-->ERROR condition, found : " + cond + ", expected : '==','<=','>=','<','>','!='");
+	    }
+
+	    private void triggerCastError(String targetType){
+	      nbErrors++;
+	      System.err.println("-->ERROR cast, found : " + targetType + ", expected : 'int','float','bool'");
+	    }
+
+	    private void triggerAutoCastError(String type, String type2){
+	      nbErrors++;
+	      System.err.println("-->ERROR auto-cast, found : [" + type + "," + type2 + "], expected : 'int','float','bool'");
+	    }
 
 	    /****************FONCTIONS CAST****************/
 
@@ -130,7 +179,7 @@ public class CalculetteLexer extends Lexer {
 	              + "LABEL " + falseLabel + "\n";
 	          break;
 	        default:
-	          System.err.println("ERROR tradOneElement");
+	          triggerCastError(targetType);
 	          break;
 	      }
 	      return res;
@@ -147,6 +196,8 @@ public class CalculetteLexer extends Lexer {
 	      }else if(type2.equals("float")){      //Passage de int + float ===> float
 	        typeRes = "float";
 	        exprRes.append(expr + "ITOF\n" + expr2);
+	      }else{
+	        triggerAutoCastError(type, type2);
 	      }
 	      return typeRes;
 	    }
@@ -190,7 +241,7 @@ public class CalculetteLexer extends Lexer {
 	          res += "DIV\n";
 	          break;
 	        default :
-	          System.err.println("ERROR evalOp");
+	          triggerOperatorError(op);
 	          break;
 	      }   
 	      return res;                                   
@@ -222,7 +273,7 @@ public class CalculetteLexer extends Lexer {
 	          res += "NEQ\n";
 	          break;
 	        default :
-	          System.err.println("ERROR evalCond");
+	          triggerConditionError(cond);
 	          break;
 	      }
 	      return res;
@@ -233,6 +284,7 @@ public class CalculetteLexer extends Lexer {
 	    //Renvoie le code pour une declaration simple suivant le type de l'id
 	    private String evalDeclaration(String type, String id){  
 	      tablesSymboles.putVar(id, type);
+	      testEmptyStringErrors(type, id);
 	      return pushIOrF(type); 
 	    }
 
@@ -240,22 +292,27 @@ public class CalculetteLexer extends Lexer {
 	    private String evalDeclarationExpr(String type, String id, String exprType, String expr){
 	      tablesSymboles.putVar(id, type);  
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
+	      testAddressNotFound(at);
+	      testEmptyStringErrors(type, id, exprType, expr);
 	      return pushIOrF(type) + expr + tradOneElement(exprType, at.type) + storeGOrL(id);
 	    }
 
 	    //Renvoie le code pour une assignation suivant le type de l'id
 	    private String evalAssign(String id, String exprType, String expr){ 
 	      AdresseType at = tablesSymboles.getAdresseType(id);
+	      testAddressNotFound(at);
+	      testEmptyStringErrors(id, exprType, expr);
 	      return expr + tradOneElement(exprType, at.type) + storeGOrL(id);
 	    }
 
 	    /*******************FONCTIONS BOUCLES*******************/
 
 	    //Fonction renvoyant le code mvap pour creer une boucle while
-	    private String evalWhileLoop(String expr, String exprType, String block){ 
+	    private String evalWhileLoop(String exprType, String expr, String block){ 
 	      String startLabelW = getNewLabel();                                     
 	      String endLabelW = getNewLabel();
 	      expr += tradOneElement(exprType, "bool");
+	      testEmptyStringErrors(exprType, expr, block);
 	      return "LABEL " + startLabelW + "\n" + expr + "JUMPF " + endLabelW + "\n"
 	             + block + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
 	    }
@@ -265,6 +322,7 @@ public class CalculetteLexer extends Lexer {
 	      String startLabelF = getNewLabel();                                                                    
 	      String endLabelF = getNewLabel();
 	      expr += tradOneElement(exprType, "bool");
+	      testEmptyStringErrors(init, exprType, expr, iteration, block);
 	      return init + "LABEL " + startLabelF + "\n" + expr + "JUMPF " + endLabelF + "\n"
 	             + block + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
 	    }
@@ -273,6 +331,7 @@ public class CalculetteLexer extends Lexer {
 	    private String evalRepeatLoop(String exprType, String expr, String block){                                                  
 	      String startLabelR = getNewLabel();
 	      expr += tradOneElement(exprType, "bool"); 
+	      testEmptyStringErrors(exprType, expr, block);
 	      return "LABEL " + startLabelR + "\n" + block 
 	             + expr + "\n" + "JUMPF " + startLabelR + "\n";
 	    }
@@ -284,6 +343,8 @@ public class CalculetteLexer extends Lexer {
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      String str1 = at.type.equals("int") ? "READ\n" : "READF\n";
 	      String str2 = storeGOrL(id);
+	      testAddressNotFound(at);
+	      testEmptyStringErrors(id, str1, str2);
 	      return str1 + str2;
 	    }
 
@@ -291,8 +352,9 @@ public class CalculetteLexer extends Lexer {
 	    private String evalOutput(String type){
 	      String str = (type.equals("int")) || (type.equals("bool")) 
 	                   ? "WRITE\nPOP\n"        //Un seul POP normal pour l'output
-	                   : "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float car les float 
-	      return str;                          //prennent plus de place dans la stack machine
+	                   : "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float 
+	      testEmptyStringErrors(type);         //car les float prennent plus de place dans la stack machine
+	      return str;
 	    }
 
 	    /*******************FONCTIONS LOGIQUE*******************/
@@ -303,6 +365,7 @@ public class CalculetteLexer extends Lexer {
 	      String trueLabel2And = getNewLabel();
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
+	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
 	      return expr1 + "JUMPF " + falseLabel1And + "\n" + expr2 + "JUMP " + trueLabel2And + "\n"                    
 	              + "LABEL " + falseLabel1And + "\n" + "PUSHI 0\n" + "LABEL " + trueLabel2And + "\n";
 	    }
@@ -313,6 +376,7 @@ public class CalculetteLexer extends Lexer {
 	      String trueLabel1Or = getNewLabel();
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
+	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
 	      return expr1 + "JUMPF " + falseLabel1Or + "\n" + "PUSHI 1\n" + "JUMP " + trueLabel1Or + "\n"
 	             + "LABEL " + falseLabel1Or + expr2 + "LABEL " + trueLabel1Or + "\n";
 	    }
@@ -324,6 +388,7 @@ public class CalculetteLexer extends Lexer {
 	      String elseStartLabel = getNewLabel();                                                                   
 	      String ifEndLabel = getNewLabel(); 
 	      expr += tradOneElement(exprType, "bool"); 
+	      testEmptyStringErrors(exprType, expr, ifBlock, elseBlock);
 	      return expr + "\n" + "JUMPF " + elseStartLabel +"\n" 
 	             + ifBlock + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
 	             + elseStartLabel + "\n" + elseBlock + "LABEL " + ifEndLabel + "\n";
@@ -332,7 +397,8 @@ public class CalculetteLexer extends Lexer {
 	    //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
 	    private String evalIf(String exprType, String expr, String ifBlock){      
 	      String ifEndLabel = getNewLabel();                                           
-	      expr += tradOneElement(exprType, "bool");                                                      
+	      expr += tradOneElement(exprType, "bool"); 
+	      testEmptyStringErrors(exprType, expr, ifBlock);                                                     
 	      return expr + "\n" + "JUMPF " + ifEndLabel 
 	             + "\n" + ifBlock + "LABEL " + ifEndLabel + "\n";
 	    }
@@ -342,6 +408,8 @@ public class CalculetteLexer extends Lexer {
 	    //Fonction renvoyant le code mvap pour les return
 	    private String evalReturn(String exprType, String expr){
 	      AdresseType at = tablesSymboles.getAdresseType("return");
+	      testAddressNotFound(at);
+	      testEmptyStringErrors(exprType, expr);
 	      return expr + tradOneElement(exprType, at.type) + storeGOrL(expr) + "RETURN\n";
 	    }                                                                                               
 
