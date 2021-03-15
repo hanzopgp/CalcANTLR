@@ -194,7 +194,8 @@ public class CalculetteParser extends Parser {
 	    }
 
 	    //Met au meme type 2 expressions en renvoyant le type et en modifier l'object StringBuilder
-	    private String tradTwoElements(String type, String expr, String type2, String expr2, String typeRes, StringBuilder exprRes){
+	    private String tradTwoElements(String type, String expr, String type2, String expr2, StringBuilder exprRes){
+	      String typeRes = "";
 	      if(type.equals(type2)){               //Operation sur deux expressions de meme type
 	        typeRes = type;
 	        exprRes.append(expr + expr2);
@@ -216,8 +217,8 @@ public class CalculetteParser extends Parser {
 	    private String storeGOrL(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
 	      String storer = (at.adresse < 0) ? "STOREL " : "STOREG ";
-	      String adress = at.getSize(at.type) == 1 
-	                    ? tablesSymboles.getAdresseType(id).adresse + "\n" 
+	      String adress = (at.getSize(at.type) == 1) 
+	                    ? tablesSymboles.getAdresseType(id).adresse + "\n"
 	                    : (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; 
 	      return storer + adress;
 	    }
@@ -365,12 +366,11 @@ public class CalculetteParser extends Parser {
 
 	    //Fonction renvoyant le code mvap pour utiliser write
 	    private String evalOutput(String type){
-	      String str = (type.equals("int")) || (type.equals("bool")) 
+	      testEmptyStringErrors(type);
+	      return (type.equals("int")) || (type.equals("bool")) 
 	                   ? "WRITE\nPOP\n"        //Un seul POP normal pour l'output
-	                   : "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float 
-	      testEmptyStringErrors(type);         //car les float prennent plus de place dans la stack machine
-	      return str;
-	    }
+	                   : "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float  
+	    }                                      //car les float prennent plus de place dans la stack machine
 
 	    /*******************FONCTIONS LOGIQUE*******************/
 
@@ -1120,9 +1120,8 @@ public class CalculetteParser extends Parser {
 						setState(181);
 						((ExpressionContext)_localctx).fac = ((ExpressionContext)_localctx).factor = factor(0);
 						 
-						                  String typeRes = "";
 						                  StringBuilder codeRes = new StringBuilder(); 
-						                  ((ExpressionContext)_localctx).type =  tradTwoElements(((ExpressionContext)_localctx).expr.type, ((ExpressionContext)_localctx).expr.code, ((ExpressionContext)_localctx).fac.type, ((ExpressionContext)_localctx).fac.code, typeRes, codeRes);
+						                  ((ExpressionContext)_localctx).type =  tradTwoElements(((ExpressionContext)_localctx).expr.type, ((ExpressionContext)_localctx).expr.code, ((ExpressionContext)_localctx).fac.type, ((ExpressionContext)_localctx).fac.code, codeRes);
 						                  ((ExpressionContext)_localctx).code =  codeRes.toString() + evalOp(_localctx.type, (((ExpressionContext)_localctx).op!=null?((ExpressionContext)_localctx).op.getText():null));
 						                
 						}
@@ -1224,9 +1223,8 @@ public class CalculetteParser extends Parser {
 					setState(195);
 					((FactorContext)_localctx).pp = preparenthesis();
 
-					                  String typeRes = "";
 					                  StringBuilder codeRes = new StringBuilder();      
-					                  ((FactorContext)_localctx).type =  tradTwoElements(((FactorContext)_localctx).fac.type, ((FactorContext)_localctx).fac.code, ((FactorContext)_localctx).pp.type, ((FactorContext)_localctx).pp.code, typeRes, codeRes); 
+					                  ((FactorContext)_localctx).type =  tradTwoElements(((FactorContext)_localctx).fac.type, ((FactorContext)_localctx).fac.code, ((FactorContext)_localctx).pp.type, ((FactorContext)_localctx).pp.code, codeRes); 
 					                  ((FactorContext)_localctx).code =  codeRes.toString() + evalOp(_localctx.type, (((FactorContext)_localctx).op!=null?((FactorContext)_localctx).op.getText():null));
 					                
 					}
