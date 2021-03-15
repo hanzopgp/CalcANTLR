@@ -239,10 +239,7 @@ calcul returns [ String code ]
 instruction returns [ String code ] //Ensemble des types d'instructions seules que l'on peut rencontrer                                                   
     :                               
       expression finInstruction 
-      { $code = $expression.code; }
- 
-      | finInstruction 
-        { $code= ""; }
+      { $code = $expression.code; }  
 
       | declaration finInstruction
         { $code = $declaration.code; }
@@ -267,6 +264,9 @@ instruction returns [ String code ] //Ensemble des types d'instructions seules q
 
       | returnInstr finInstruction
         { $code = $returnInstr.code; }
+
+      | finInstruction 
+        { $code= ""; }
     ;
 
 block returns [ String code ] //Prise en charge des block d'instructions
