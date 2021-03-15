@@ -19,6 +19,7 @@
 
 ## Project architecture
 
+<pre><code>
 CalcANTLR/
 ├── Project/
 │   	├── src/
@@ -34,6 +35,7 @@ CalcANTLR/
 ├── README.md		          
 ├── Who.txt
 └── Licence  
+</pre></code>
 
 ## Commands
 
