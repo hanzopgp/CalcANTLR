@@ -341,7 +341,7 @@ calcul returns [ String code ]
 @init{ $code = new String(); }       //Initialisation de $code qui contiendra le code mvap
 @after{ 
   System.out.println($code); 
-  System.out.println("-/!\ Found " + nbErrors + " errors in code /!\-");
+  System.out.println("!!! Found " + nbErrors + " errors in code !!!");
 }
     : 
       (declaration { $code += $declaration.code; })* //On commence un fichier de code par les declaration
