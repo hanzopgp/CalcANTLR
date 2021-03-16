@@ -115,14 +115,15 @@ grammar Calculette;
 
     /****************FONCTIONS REFACTORING****************/
 
-    //Renvoie STOREL ou STOREG + l'adresse suivant le type de l'id
+    //Renvoie STOREG ou STOREL + l'adresse suivant le type de l'id
     private String storeGOrL(String id){
       AdresseType at = tablesSymboles.getAdresseType(id); 
-      String storer = (at.adresse < 0) ? "STOREL " : "STOREG "; //Adresse negatives : float
-      String adress = (at.getSize(at.type) == 1)                //Adresse positives : int ou bool
-                    ? tablesSymboles.getAdresseType(id).adresse + "\n"
-                    : (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; 
-      return storer + adress;
+      String storer = (at.adresse > 0) ? "STOREG " : "STOREL "; //Adresses positives : int ou bool, Adresses negatives : float
+      String res = (at.getSize(at.type) == 1)                
+                   ? storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
+                   : storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
+                            + storer + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //store 2 elements
+      return res;
     }
 
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
@@ -338,21 +339,24 @@ grammar Calculette;
 
 calcul returns [ String code ]
 @init{ $code = new String(); }       //Initialisation de $code qui contiendra le code mvap
-@after{ System.out.println($code); } //et l'affichera a la fin
+@after{ 
+  System.out.println($code); 
+  System.out.println("-/!\ Found " + nbErrors + " errors in code /!\-");
+}
     : 
-      (declaration { $code += $declaration.code; })*  //On commence un fichier de code par les declaration
-      { $code += "JUMP " + "Main\n"; }
+      (declaration { $code += $declaration.code; })* //On commence un fichier de code par les declaration
+      { $code += "JUMP " + "Main\n"; }               //Apres les declarations globales on passe au main
 
       NEWLINE*
 
-      (fonction { $code += $fonction.code; })*        //Puis par les fonctions
+      (fonction { $code += $fonction.code; })*       //Puis par les declarations de fonctions
       
       NEWLINE*
 
-      { $code += "LABEL " + "Main\n"; }               //Et les instructions
-      (instruction { $code += $instruction.code; })*
+      { $code += "LABEL " + "Main\n"; }              //Apres les declarations nous arrivons au main ou nous
+      (instruction { $code += $instruction.code; })* //avons les differentes instructions du main
 
-      { $code += "HALT \n"; }                         //Puis par un HALT
+      { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
     ;
 
 /*==================================================
@@ -702,8 +706,7 @@ finInstruction //Fin d'instruction classique par un retour chariot, un point vir
 ========================LEXER=======================
 ==================================================*/
 
-//On declare ces mots pour empecher l'utilisateur de les utiliser comme IDENTIFIANT
-KEYWORDS  : 'if' |'else' | 'break' | 'while' | 'for' | 'do' | 'repeat' | 'until' | 'function' | 'return' | 'write' | 'read'; 
+KEYWORDS  : 'if' |'else' | 'break' | 'while' | 'for' | 'repeat' | 'until' | 'write' | 'read' | 'return'; 
 
 ADD : '+';
 
@@ -735,13 +738,13 @@ FLOAT: ('0'..'9')+'.'('0'..'9')*;
 
 BOOLEAN : 'true' | 'false';
 
-IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*; //IDENTIFIANT en dernier, cela empeche aux IDENTIFIANT d'etre des KEYWORDS
+IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*; //IDENTIFIANT en dernier, cela empeche aux IDENTIFIANT d'etre d'etre des KEYWORDS, TYPE...
 
 /****************ELEMENTS A IGNORER****************/
 
-NEWLINE: '\r'? '\n' -> skip;
+NEWLINE: '\r'? '\n' -> skip; //Retour a la ligne et espacement entre les lignes
 
-WS: (' ' | '\t')+ -> skip;
+WS: (' ' | '\t')+ -> skip; //Tabulation et espace inutiles
 
 MULTILINECOMMENT : '/*'.*?'*/' -> skip;
 
@@ -749,4 +752,4 @@ SINGLELINECOMMENT : '//'~[\r\n]* -> skip;
 
 HASHTAGCOMMENT : '#'~[\r\n]* -> skip;
 
-UNMATCH: . -> skip;
+UNMATCH: . -> skip; //Tous ce qui n'a pas ete cite avant est automatiquement ignore
