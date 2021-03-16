@@ -41,7 +41,7 @@ public class CalculetteParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'{'", "'}'", "'true'", "'false'", "'('", "')'", "'if'", "'else'", 
-			"'while'", "'for'", "'repeat'", "'until'", "'read('", "'write('", "'return'", 
+			"'while'", "'for'", "'repeat'", "'until'", "'read'", "'write'", "'return'", 
 			null, "'+'", "'-'", "'*'", "'/'", "'='", "','", "';'", "'&&'", "'||'", 
 			"'!'"
 		};
@@ -182,8 +182,13 @@ public class CalculetteParser extends Parser {
 	            pushType = "PUSHI 0\n";
 	            equalType = "EQUAL\n";
 	          }   
-	          res += pushType + equalType + "JUMPF " + trueLabel + "\nPUSHI 0\n" 
-	              + "JUMP " + falseLabel + "\nLABEL " + trueLabel + "\nPUSHI 1\n" 
+	          res += pushType 
+	              + equalType 
+	              + "JUMPF " + trueLabel + "\n"
+	              + "PUSHI 0\n" 
+	              + "JUMP " + falseLabel + "\n"
+	              + "LABEL " + trueLabel + "\n"
+	              + "PUSHI 1\n" 
 	              + "LABEL " + falseLabel + "\n";
 	          break;
 	        default:
@@ -215,8 +220,8 @@ public class CalculetteParser extends Parser {
 
 	    //Renvoie STOREG ou STOREL + l'adresse suivant le type de l'id
 	    private String storeGOrL(String id){
-	      AdresseType at = tablesSymboles.getAdresseType(id); 
-	      String storer = (at.adresse > 0) ? "STOREG " : "STOREL "; //Adresses positives : int ou bool, Adresses negatives : float
+	      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
+	      String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
 	      String res = (at.getSize(at.type) == 1)                
 	                   ? storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
 	                   : storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -224,8 +229,24 @@ public class CalculetteParser extends Parser {
 	      return res;
 	    }
 
+	    //Renvoie PUSHG 0 ou PUSHL 0 suivant le type en entree
+	    private String pushGOrL(String id){
+	      AdresseType at = tablesSymboles.getAdresseType(id);     //Adresses positives : variables globales,
+	      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL "; //Adresses negatives : variables locales
+	      String res = (at.getSize(at.type) == 1)                
+	                   ? pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
+	                   : pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
+	                            + pusher + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //store 2 elements
+	      return res;
+	    }
+
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrF(String type){
+	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI " : "PUSHF "); 
+	    }
+
+	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
+	    private String pushIOrFZero(String type){
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
 	    }
 
@@ -291,7 +312,7 @@ public class CalculetteParser extends Parser {
 
 	    //Renvoie le code mvap lors d'une negation unitaire
 	    private String evalNegPP(String type, String expr){
-	      String pusher = (type.equals("int") ? "PUSHI 0\n" : "PUSHF 0.0\n");
+	      String pusher = pushIOrFZero(type);
 	      String content = expr;
 	      String operator = evalOp(type, "-");
 	      return pusher + content + operator;
@@ -303,7 +324,7 @@ public class CalculetteParser extends Parser {
 	    private String evalDeclaration(String type, String id){  
 	      tablesSymboles.putVar(id, type);
 	      testEmptyStringErrors(type, id);
-	      return pushIOrF(type); 
+	      return pushIOrFZero(type) + storeGOrL(id); 
 	    }
 
 	    //Renvoie le code pour une declaration + assignation suivant le type de l'id
@@ -312,7 +333,7 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(type, id, exprType, expr);
-	      return pushIOrF(type) + expr + tradOneElement(exprType, at.type) + storeGOrL(id);
+	      return expr + tradOneElement(exprType, at.type) + storeGOrL(id);
 	    }
 
 	    //Renvoie le code pour une assignation suivant le type de l'id
@@ -331,8 +352,13 @@ public class CalculetteParser extends Parser {
 	      String endLabelW = getNewLabel();
 	      expr += tradOneElement(exprType, "bool");
 	      testEmptyStringErrors(exprType, expr, instructions);
-	      return "LABEL " + startLabelW + "\n" + expr + "JUMPF " + endLabelW + "\n"
-	             + instructions + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
+	      return "LABEL " 
+	             + startLabelW + "\n" 
+	             + expr 
+	             + "JUMPF " + endLabelW + "\n"
+	             + instructions 
+	             + "JUMP " + startLabelW + "\n" 
+	             + "LABEL " + endLabelW + "\n";
 	    }
 
 	    //Fonction renvoyant le code mvap pour creer une boucle for
@@ -341,8 +367,14 @@ public class CalculetteParser extends Parser {
 	      String endLabelF = getNewLabel();
 	      expr += tradOneElement(exprType, "bool");
 	      testEmptyStringErrors(init, exprType, expr, iteration, instructions);
-	      return init + "LABEL " + startLabelF + "\n" + expr + "JUMPF " + endLabelF + "\n"
-	             + instructions + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
+	      return init 
+	             + "LABEL " + startLabelF + "\n" 
+	             + expr 
+	             + "JUMPF " + endLabelF + "\n"
+	             + instructions 
+	             + iteration 
+	             + "JUMP " + startLabelF + "\n" 
+	             + "LABEL " + endLabelF + "\n";
 	    }
 
 	    //Fonction renvoyant le code mvap pour creer une boucle repeat until
@@ -350,8 +382,10 @@ public class CalculetteParser extends Parser {
 	      String startLabelR = getNewLabel();
 	      expr += tradOneElement(exprType, "bool"); 
 	      testEmptyStringErrors(exprType, expr, instructions);
-	      return "LABEL " + startLabelR + "\n" + instructions 
-	             + expr + "\n" + "JUMPF " + startLabelR + "\n";
+	      return "LABEL " + startLabelR + "\n" 
+	             + instructions 
+	             + expr 
+	             + "JUMPF " + startLabelR + "\n";
 	    }
 
 	    /*******************FONCTIONS INPUT OUTPUT*******************/
@@ -383,8 +417,13 @@ public class CalculetteParser extends Parser {
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-	      return expr1 + "JUMPF " + falseLabel1And + "\n" + expr2 + "JUMP " + trueLabel2And + "\n"                    
-	              + "LABEL " + falseLabel1And + "\n" + "PUSHI 0\n" + "LABEL " + trueLabel2And + "\n";
+	      return expr1 
+	             + "JUMPF " + falseLabel1And + "\n" 
+	             + expr2 
+	             + "JUMP " + trueLabel2And + "\n"                    
+	             + "LABEL " + falseLabel1And + "\n" 
+	             + "PUSHI 0\n" 
+	             + "LABEL " + trueLabel2And + "\n";
 	    }
 
 	    //Fonction renvoyant le code apres avoir tester
@@ -394,8 +433,13 @@ public class CalculetteParser extends Parser {
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-	      return expr1 + "JUMPF " + falseLabel1Or + "\n" + "PUSHI 1\n" + "JUMP " + trueLabel1Or + "\n"
-	             + "LABEL " + falseLabel1Or + expr2 + "LABEL " + trueLabel1Or + "\n";
+	      return expr1 
+	             + "JUMPF " + falseLabel1Or + "\n" 
+	             + "PUSHI 1\n" 
+	             + "JUMP " + trueLabel1Or + "\n"
+	             + "LABEL " + falseLabel1Or 
+	             + expr2 
+	             + "LABEL " + trueLabel1Or + "\n";
 	    }
 
 	    /*******************FONCTIONS BRANCHEMENTS*******************/
@@ -404,20 +448,26 @@ public class CalculetteParser extends Parser {
 	    private String evalIfElse(String exprType, String expr, String ifInstructions, String elseInstructions){                                                                                 
 	      String elseStartLabel = getNewLabel();                                                                   
 	      String ifEndLabel = getNewLabel(); 
-	      expr += tradOneElement(exprType, "bool"); 
+	      //expr += tradOneElement(exprType, "bool"); 
 	      testEmptyStringErrors(exprType, expr, ifInstructions, elseInstructions);
-	      return expr + "\n" + "JUMPF " + elseStartLabel +"\n" 
-	             + ifInstructions + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
-	             + elseStartLabel + "\n" + elseInstructions + "LABEL " + ifEndLabel + "\n";
+	      return expr 
+	             + "JUMPF " + elseStartLabel +"\n" 
+	             + ifInstructions + "\n" 
+	             + "JUMP " + ifEndLabel + "\n" 
+	             + "LABEL " + elseStartLabel + "\n" 
+	             + elseInstructions 
+	             + "LABEL " + ifEndLabel + "\n";
 	    }
 
 	    //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
 	    private String evalIf(String exprType, String expr, String ifInstructions){      
 	      String ifEndLabel = getNewLabel();                                           
-	      expr += tradOneElement(exprType, "bool"); 
+	      //expr += tradOneElement(exprType, "bool"); 
 	      testEmptyStringErrors(exprType, expr, ifInstructions);                                                     
-	      return expr + "\n" + "JUMPF " + ifEndLabel 
-	             + "\n" + ifInstructions + "LABEL " + ifEndLabel + "\n";
+	      return expr 
+	             + "JUMPF " + ifEndLabel + "\n" 
+	             + ifInstructions 
+	             + "LABEL " + ifEndLabel + "\n";
 	    }
 
 	    /*******************FONCTION RETURN*******************/
@@ -427,7 +477,10 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType("return");
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(exprType, expr);
-	      return expr + tradOneElement(exprType, at.type) + storeGOrL(expr) + "RETURN\n";
+	      return expr 
+	             + tradOneElement(exprType, at.type) 
+	             + storeGOrL(expr) 
+	             + "RETURN\n";
 	    }                                                                                               
 
 	public CalculetteParser(TokenStream input) {
@@ -573,7 +626,7 @@ public class CalculetteParser extends Parser {
 			_ctx.stop = _input.LT(-1);
 			 
 			  System.out.println(_localctx.code); 
-			  System.out.println("!!! Found " + nbErrors + " errors in code !!!");
+			  System.out.println("#!!! Found " + nbErrors + " errors in code !!!"); //Commentaire hashtag pour eviter erreur compilation
 
 		}
 		catch (RecognitionException re) {
@@ -1389,7 +1442,10 @@ public class CalculetteParser extends Parser {
 				match(NO);
 				setState(223);
 				((PreparenthesisContext)_localctx).expr = expression(0);
-				 ((PreparenthesisContext)_localctx).type =  "bool"; ((PreparenthesisContext)_localctx).code =  "PUSHI 1\n" + ((PreparenthesisContext)_localctx).expr.code + tradOneElement(((PreparenthesisContext)_localctx).expr.type, _localctx.type) + "SUB\n"; 
+				 ((PreparenthesisContext)_localctx).type =  "bool"; ((PreparenthesisContext)_localctx).code =  "PUSHI 1\n" 
+				                              + ((PreparenthesisContext)_localctx).expr.code 
+				                              + tradOneElement(((PreparenthesisContext)_localctx).expr.type, _localctx.type) 
+				                              + "SUB\n"; 
 				}
 				break;
 			case ENTIER:
@@ -1486,7 +1542,7 @@ public class CalculetteParser extends Parser {
 				 
 				        AdresseType at = tablesSymboles.getAdresseType((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null)); 
 				        ((AtomContext)_localctx).type =  at.type;
-				        ((AtomContext)_localctx).code =  "PUSHG " + at.adresse + "\n";
+				        ((AtomContext)_localctx).code =  pushGOrL((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null));
 				      
 				}
 				break;
@@ -1504,7 +1560,9 @@ public class CalculetteParser extends Parser {
 				 
 				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null)); 
 				        String pusher = (_localctx.type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
-				        ((AtomContext)_localctx).code =  pusher + ((AtomContext)_localctx).args.code + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";                 //Ajout du code des arguments et du CALL mvap
+				        ((AtomContext)_localctx).code =  pusher 
+				              + ((AtomContext)_localctx).args.code 
+				              + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";                 //Ajout du code des arguments et du CALL mvap
 				        for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){                                  //On pop tous les arguments lors du call
 				          _localctx.code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
 				        }
@@ -1592,7 +1650,7 @@ public class CalculetteParser extends Parser {
 				match(T__7);
 				setState(260);
 				((IfElseInstrContext)_localctx).elseinstr = instruction();
-				 ((IfElseInstrContext)_localctx).code =  evalIfElse(((IfElseInstrContext)_localctx).expression.type, ((IfElseInstrContext)_localctx).expression.code, ((IfElseInstrContext)_localctx).ifinstr.code, ((IfElseInstrContext)_localctx).elseinstr.code); 
+				 ((IfElseInstrContext)_localctx).code =  evalIfElse(((IfElseInstrContext)_localctx).expression.type, ((IfElseInstrContext)_localctx).expression.code, ((IfElseInstrContext)_localctx).ifinstr.code, ((IfElseInstrContext)_localctx).elseinstr.code);  System.err.println("ERROR IFELSE"); 
 				}
 				break;
 			}
@@ -1751,8 +1809,10 @@ public class CalculetteParser extends Parser {
 			setState(293);
 			match(T__12);
 			setState(294);
-			((InputInstrContext)_localctx).id = match(IDENTIFIANT);
+			match(T__4);
 			setState(295);
+			((InputInstrContext)_localctx).id = match(IDENTIFIANT);
+			setState(296);
 			match(T__5);
 			 ((InputInstrContext)_localctx).code =  evalInput((((InputInstrContext)_localctx).id!=null?((InputInstrContext)_localctx).id.getText():null)); 
 			}
@@ -1794,11 +1854,13 @@ public class CalculetteParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(298);
-			match(T__13);
 			setState(299);
-			((OutputInstrContext)_localctx).expr = expression(0);
+			match(T__13);
 			setState(300);
+			match(T__4);
+			setState(301);
+			((OutputInstrContext)_localctx).expr = expression(0);
+			setState(302);
 			match(T__5);
 			 ((OutputInstrContext)_localctx).code =  ((OutputInstrContext)_localctx).expr.code + evalOutput(((OutputInstrContext)_localctx).expr.type); 
 			}
@@ -1849,27 +1911,27 @@ public class CalculetteParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(303);
+			setState(305);
 			((FonctionContext)_localctx).ty = match(TYPE);
 			 tablesSymboles.putVar("return", (((FonctionContext)_localctx).ty!=null?((FonctionContext)_localctx).ty.getText():null)); 
-			setState(305);
+			setState(307);
 			((FonctionContext)_localctx).id = match(IDENTIFIANT);
-			setState(306);
-			match(T__4);
 			setState(308);
+			match(T__4);
+			setState(310);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==TYPE) {
 				{
-				setState(307);
+				setState(309);
 				params();
 				}
 			}
 
-			setState(310);
+			setState(312);
 			match(T__5);
 			 tablesSymboles.newFunction((((FonctionContext)_localctx).id!=null?((FonctionContext)_localctx).id.getText():null), (((FonctionContext)_localctx).ty!=null?((FonctionContext)_localctx).ty.getText():null)); 
-			setState(312);
+			setState(314);
 			((FonctionContext)_localctx).block = block();
 
 			        ((FonctionContext)_localctx).code =  "LABEL " + (((FonctionContext)_localctx).id!=null?((FonctionContext)_localctx).id.getText():null);
@@ -1928,27 +1990,27 @@ public class CalculetteParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(315);
+			setState(317);
 			((ParamsContext)_localctx).ty = match(TYPE);
-			setState(316);
+			setState(318);
 			((ParamsContext)_localctx).id = match(IDENTIFIANT);
 			 tablesSymboles.putVar((((ParamsContext)_localctx).id!=null?((ParamsContext)_localctx).id.getText():null), (((ParamsContext)_localctx).ty!=null?((ParamsContext)_localctx).ty.getText():null)); 
-			setState(324);
+			setState(326);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				setState(318);
-				match(COMMA);
-				setState(319);
-				((ParamsContext)_localctx).ty2 = match(TYPE);
 				setState(320);
+				match(COMMA);
+				setState(321);
+				((ParamsContext)_localctx).ty2 = match(TYPE);
+				setState(322);
 				((ParamsContext)_localctx).id2 = match(IDENTIFIANT);
 				 tablesSymboles.putVar((((ParamsContext)_localctx).id2!=null?((ParamsContext)_localctx).id2.getText():null), (((ParamsContext)_localctx).ty2!=null?((ParamsContext)_localctx).ty2.getText():null)); 
 				}
 				}
-				setState(326);
+				setState(328);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -2002,12 +2064,12 @@ public class CalculetteParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(338);
+			setState(340);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << ADD) | (1L << SUB) | (1L << NO) | (1L << ENTIER) | (1L << FLOAT) | (1L << BOOLEAN) | (1L << IDENTIFIANT))) != 0)) {
 				{
-				setState(327);
+				setState(329);
 				((ArgsContext)_localctx).expr = expression(0);
 
 				          _localctx.nbArgs++;           //Incrementation du nombre d'arguments
@@ -2016,15 +2078,15 @@ public class CalculetteParser extends Parser {
 				            _localctx.nbArgs++;
 				          }
 				        
-				setState(335);
+				setState(337);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==COMMA) {
 					{
 					{
-					setState(329);
+					setState(331);
 					match(COMMA);
-					setState(330);
+					setState(332);
 					((ArgsContext)_localctx).expr2 = expression(0);
 
 					            _localctx.nbArgs++;
@@ -2035,7 +2097,7 @@ public class CalculetteParser extends Parser {
 					          
 					}
 					}
-					setState(337);
+					setState(339);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
@@ -2081,9 +2143,9 @@ public class CalculetteParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(340);
+			setState(342);
 			match(T__14);
-			setState(341);
+			setState(343);
 			((ReturnInstrContext)_localctx).expr = expression(0);
 			 ((ReturnInstrContext)_localctx).code =  evalReturn(((ReturnInstrContext)_localctx).expr.type, ((ReturnInstrContext)_localctx).expr.code); 
 			}
@@ -2130,7 +2192,7 @@ public class CalculetteParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(345); 
+			setState(347); 
 			_errHandler.sync(this);
 			_alt = 1;
 			do {
@@ -2138,7 +2200,7 @@ public class CalculetteParser extends Parser {
 				case 1:
 					{
 					{
-					setState(344);
+					setState(346);
 					_la = _input.LA(1);
 					if ( !(_la==SEMICOLON || _la==NEWLINE) ) {
 					_errHandler.recoverInline(this);
@@ -2154,7 +2216,7 @@ public class CalculetteParser extends Parser {
 				default:
 					throw new NoViableAltException(this);
 				}
-				setState(347); 
+				setState(349); 
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,21,_ctx);
 			} while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -2202,7 +2264,7 @@ public class CalculetteParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3(\u0160\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3(\u0162\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\3\2\3\2\3\2\7\2,\n\2\f\2\16\2/\13\2\3\2\3\2\7\2\63"+
@@ -2222,16 +2284,16 @@ public class CalculetteParser extends Parser {
 		"\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\5\f\u010a\n\f"+
 		"\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3"+
 		"\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\5\r\u0126\n\r\3\16\3\16\3\16\3\16\3"+
-		"\16\3\17\3\17\3\17\3\17\3\17\3\20\3\20\3\20\3\20\3\20\5\20\u0137\n\20"+
-		"\3\20\3\20\3\20\3\20\3\20\3\21\3\21\3\21\3\21\3\21\3\21\3\21\7\21\u0145"+
-		"\n\21\f\21\16\21\u0148\13\21\3\22\3\22\3\22\3\22\3\22\3\22\7\22\u0150"+
-		"\n\22\f\22\16\22\u0153\13\22\5\22\u0155\n\22\3\23\3\23\3\23\3\23\3\24"+
-		"\6\24\u015c\n\24\r\24\16\24\u015d\3\24\2\4\f\16\25\2\4\6\b\n\f\16\20\22"+
-		"\24\26\30\32\34\36 \"$&\2\5\3\2\23\24\3\2\25\26\4\2\31\31##\2\u0175\2"+
-		"-\3\2\2\2\4w\3\2\2\2\6y\3\2\2\2\b\u0092\3\2\2\2\n\u0094\3\2\2\2\f\u00a4"+
+		"\16\3\16\3\17\3\17\3\17\3\17\3\17\3\17\3\20\3\20\3\20\3\20\3\20\5\20\u0139"+
+		"\n\20\3\20\3\20\3\20\3\20\3\20\3\21\3\21\3\21\3\21\3\21\3\21\3\21\7\21"+
+		"\u0147\n\21\f\21\16\21\u014a\13\21\3\22\3\22\3\22\3\22\3\22\3\22\7\22"+
+		"\u0152\n\22\f\22\16\22\u0155\13\22\5\22\u0157\n\22\3\23\3\23\3\23\3\23"+
+		"\3\24\6\24\u015e\n\24\r\24\16\24\u015f\3\24\2\4\f\16\25\2\4\6\b\n\f\16"+
+		"\20\22\24\26\30\32\34\36 \"$&\2\5\3\2\23\24\3\2\25\26\4\2\31\31##\2\u0177"+
+		"\2-\3\2\2\2\4w\3\2\2\2\6y\3\2\2\2\b\u0092\3\2\2\2\n\u0094\3\2\2\2\f\u00a4"+
 		"\3\2\2\2\16\u00bf\3\2\2\2\20\u00cd\3\2\2\2\22\u00e7\3\2\2\2\24\u00f7\3"+
-		"\2\2\2\26\u0109\3\2\2\2\30\u0125\3\2\2\2\32\u0127\3\2\2\2\34\u012c\3\2"+
-		"\2\2\36\u0131\3\2\2\2 \u013d\3\2\2\2\"\u0154\3\2\2\2$\u0156\3\2\2\2&\u015b"+
+		"\2\2\2\26\u0109\3\2\2\2\30\u0125\3\2\2\2\32\u0127\3\2\2\2\34\u012d\3\2"+
+		"\2\2\36\u0133\3\2\2\2 \u013f\3\2\2\2\"\u0156\3\2\2\2$\u0158\3\2\2\2&\u015d"+
 		"\3\2\2\2()\5\b\5\2)*\b\2\1\2*,\3\2\2\2+(\3\2\2\2,/\3\2\2\2-+\3\2\2\2-"+
 		".\3\2\2\2.\60\3\2\2\2/-\3\2\2\2\60\64\b\2\1\2\61\63\7#\2\2\62\61\3\2\2"+
 		"\2\63\66\3\2\2\2\64\62\3\2\2\2\64\65\3\2\2\2\65<\3\2\2\2\66\64\3\2\2\2"+
@@ -2301,25 +2363,25 @@ public class CalculetteParser extends Parser {
 		"\3\2\u011f\u0120\7\16\2\2\u0120\u0121\7\7\2\2\u0121\u0122\5\f\7\2\u0122"+
 		"\u0123\7\b\2\2\u0123\u0124\b\r\1\2\u0124\u0126\3\2\2\2\u0125\u010b\3\2"+
 		"\2\2\u0125\u0112\3\2\2\2\u0125\u011d\3\2\2\2\u0126\31\3\2\2\2\u0127\u0128"+
-		"\7\17\2\2\u0128\u0129\7\"\2\2\u0129\u012a\7\b\2\2\u012a\u012b\b\16\1\2"+
-		"\u012b\33\3\2\2\2\u012c\u012d\7\20\2\2\u012d\u012e\5\f\7\2\u012e\u012f"+
-		"\7\b\2\2\u012f\u0130\b\17\1\2\u0130\35\3\2\2\2\u0131\u0132\7\36\2\2\u0132"+
-		"\u0133\b\20\1\2\u0133\u0134\7\"\2\2\u0134\u0136\7\7\2\2\u0135\u0137\5"+
-		" \21\2\u0136\u0135\3\2\2\2\u0136\u0137\3\2\2\2\u0137\u0138\3\2\2\2\u0138"+
-		"\u0139\7\b\2\2\u0139\u013a\b\20\1\2\u013a\u013b\5\6\4\2\u013b\u013c\b"+
-		"\20\1\2\u013c\37\3\2\2\2\u013d\u013e\7\36\2\2\u013e\u013f\7\"\2\2\u013f"+
-		"\u0146\b\21\1\2\u0140\u0141\7\30\2\2\u0141\u0142\7\36\2\2\u0142\u0143"+
-		"\7\"\2\2\u0143\u0145\b\21\1\2\u0144\u0140\3\2\2\2\u0145\u0148\3\2\2\2"+
-		"\u0146\u0144\3\2\2\2\u0146\u0147\3\2\2\2\u0147!\3\2\2\2\u0148\u0146\3"+
-		"\2\2\2\u0149\u014a\5\f\7\2\u014a\u0151\b\22\1\2\u014b\u014c\7\30\2\2\u014c"+
-		"\u014d\5\f\7\2\u014d\u014e\b\22\1\2\u014e\u0150\3\2\2\2\u014f\u014b\3"+
-		"\2\2\2\u0150\u0153\3\2\2\2\u0151\u014f\3\2\2\2\u0151\u0152\3\2\2\2\u0152"+
-		"\u0155\3\2\2\2\u0153\u0151\3\2\2\2\u0154\u0149\3\2\2\2\u0154\u0155\3\2"+
-		"\2\2\u0155#\3\2\2\2\u0156\u0157\7\21\2\2\u0157\u0158\5\f\7\2\u0158\u0159"+
-		"\b\23\1\2\u0159%\3\2\2\2\u015a\u015c\t\4\2\2\u015b\u015a\3\2\2\2\u015c"+
-		"\u015d\3\2\2\2\u015d\u015b\3\2\2\2\u015d\u015e\3\2\2\2\u015e\'\3\2\2\2"+
-		"\30-\64<BKw\177\u0086\u0092\u00a4\u00ba\u00bc\u00ca\u00e7\u00f7\u0109"+
-		"\u0125\u0136\u0146\u0151\u0154\u015d";
+		"\7\17\2\2\u0128\u0129\7\7\2\2\u0129\u012a\7\"\2\2\u012a\u012b\7\b\2\2"+
+		"\u012b\u012c\b\16\1\2\u012c\33\3\2\2\2\u012d\u012e\7\20\2\2\u012e\u012f"+
+		"\7\7\2\2\u012f\u0130\5\f\7\2\u0130\u0131\7\b\2\2\u0131\u0132\b\17\1\2"+
+		"\u0132\35\3\2\2\2\u0133\u0134\7\36\2\2\u0134\u0135\b\20\1\2\u0135\u0136"+
+		"\7\"\2\2\u0136\u0138\7\7\2\2\u0137\u0139\5 \21\2\u0138\u0137\3\2\2\2\u0138"+
+		"\u0139\3\2\2\2\u0139\u013a\3\2\2\2\u013a\u013b\7\b\2\2\u013b\u013c\b\20"+
+		"\1\2\u013c\u013d\5\6\4\2\u013d\u013e\b\20\1\2\u013e\37\3\2\2\2\u013f\u0140"+
+		"\7\36\2\2\u0140\u0141\7\"\2\2\u0141\u0148\b\21\1\2\u0142\u0143\7\30\2"+
+		"\2\u0143\u0144\7\36\2\2\u0144\u0145\7\"\2\2\u0145\u0147\b\21\1\2\u0146"+
+		"\u0142\3\2\2\2\u0147\u014a\3\2\2\2\u0148\u0146\3\2\2\2\u0148\u0149\3\2"+
+		"\2\2\u0149!\3\2\2\2\u014a\u0148\3\2\2\2\u014b\u014c\5\f\7\2\u014c\u0153"+
+		"\b\22\1\2\u014d\u014e\7\30\2\2\u014e\u014f\5\f\7\2\u014f\u0150\b\22\1"+
+		"\2\u0150\u0152\3\2\2\2\u0151\u014d\3\2\2\2\u0152\u0155\3\2\2\2\u0153\u0151"+
+		"\3\2\2\2\u0153\u0154\3\2\2\2\u0154\u0157\3\2\2\2\u0155\u0153\3\2\2\2\u0156"+
+		"\u014b\3\2\2\2\u0156\u0157\3\2\2\2\u0157#\3\2\2\2\u0158\u0159\7\21\2\2"+
+		"\u0159\u015a\5\f\7\2\u015a\u015b\b\23\1\2\u015b%\3\2\2\2\u015c\u015e\t"+
+		"\4\2\2\u015d\u015c\3\2\2\2\u015e\u015f\3\2\2\2\u015f\u015d\3\2\2\2\u015f"+
+		"\u0160\3\2\2\2\u0160\'\3\2\2\2\30-\64<BKw\177\u0086\u0092\u00a4\u00ba"+
+		"\u00bc\u00ca\u00e7\u00f7\u0109\u0125\u0138\u0148\u0153\u0156\u015f";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

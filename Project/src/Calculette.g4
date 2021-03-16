@@ -84,8 +84,13 @@ grammar Calculette;
             pushType = "PUSHI 0\n";
             equalType = "EQUAL\n";
           }   
-          res += pushType + equalType + "JUMPF " + trueLabel + "\nPUSHI 0\n" 
-              + "JUMP " + falseLabel + "\nLABEL " + trueLabel + "\nPUSHI 1\n" 
+          res += pushType 
+              + equalType 
+              + "JUMPF " + trueLabel + "\n"
+              + "PUSHI 0\n" 
+              + "JUMP " + falseLabel + "\n"
+              + "LABEL " + trueLabel + "\n"
+              + "PUSHI 1\n" 
               + "LABEL " + falseLabel + "\n";
           break;
         default:
@@ -117,8 +122,8 @@ grammar Calculette;
 
     //Renvoie STOREG ou STOREL + l'adresse suivant le type de l'id
     private String storeGOrL(String id){
-      AdresseType at = tablesSymboles.getAdresseType(id); 
-      String storer = (at.adresse > 0) ? "STOREG " : "STOREL "; //Adresses positives : int ou bool, Adresses negatives : float
+      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
+      String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
       String res = (at.getSize(at.type) == 1)                
                    ? storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
                    : storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -126,8 +131,24 @@ grammar Calculette;
       return res;
     }
 
+    //Renvoie PUSHG 0 ou PUSHL 0 suivant le type en entree
+    private String pushGOrL(String id){
+      AdresseType at = tablesSymboles.getAdresseType(id);     //Adresses positives : variables globales,
+      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL "; //Adresses negatives : variables locales
+      String res = (at.getSize(at.type) == 1)                
+                   ? pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
+                   : pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
+                            + pusher + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //store 2 elements
+      return res;
+    }
+
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
     private String pushIOrF(String type){
+      return ((type.equals("int") || type.equals("bool")) ? "PUSHI " : "PUSHF "); 
+    }
+
+    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
+    private String pushIOrFZero(String type){
       return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
     }
 
@@ -193,7 +214,7 @@ grammar Calculette;
 
     //Renvoie le code mvap lors d'une negation unitaire
     private String evalNegPP(String type, String expr){
-      String pusher = (type.equals("int") ? "PUSHI 0\n" : "PUSHF 0.0\n");
+      String pusher = pushIOrFZero(type);
       String content = expr;
       String operator = evalOp(type, "-");
       return pusher + content + operator;
@@ -205,7 +226,7 @@ grammar Calculette;
     private String evalDeclaration(String type, String id){  
       tablesSymboles.putVar(id, type);
       testEmptyStringErrors(type, id);
-      return pushIOrF(type); 
+      return pushIOrFZero(type) + storeGOrL(id); 
     }
 
     //Renvoie le code pour une declaration + assignation suivant le type de l'id
@@ -214,7 +235,7 @@ grammar Calculette;
       AdresseType at = tablesSymboles.getAdresseType(id); 
       testAddressNotFound(at);
       testEmptyStringErrors(type, id, exprType, expr);
-      return pushIOrF(type) + expr + tradOneElement(exprType, at.type) + storeGOrL(id);
+      return expr + tradOneElement(exprType, at.type) + storeGOrL(id);
     }
 
     //Renvoie le code pour une assignation suivant le type de l'id
@@ -233,8 +254,13 @@ grammar Calculette;
       String endLabelW = getNewLabel();
       expr += tradOneElement(exprType, "bool");
       testEmptyStringErrors(exprType, expr, instructions);
-      return "LABEL " + startLabelW + "\n" + expr + "JUMPF " + endLabelW + "\n"
-             + instructions + "JUMP " + startLabelW + "\n" + "LABEL " + endLabelW + "\n";
+      return "LABEL " 
+             + startLabelW + "\n" 
+             + expr 
+             + "JUMPF " + endLabelW + "\n"
+             + instructions 
+             + "JUMP " + startLabelW + "\n" 
+             + "LABEL " + endLabelW + "\n";
     }
 
     //Fonction renvoyant le code mvap pour creer une boucle for
@@ -243,8 +269,14 @@ grammar Calculette;
       String endLabelF = getNewLabel();
       expr += tradOneElement(exprType, "bool");
       testEmptyStringErrors(init, exprType, expr, iteration, instructions);
-      return init + "LABEL " + startLabelF + "\n" + expr + "JUMPF " + endLabelF + "\n"
-             + instructions + iteration + "JUMP " + startLabelF + "\n" + "LABEL " + endLabelF + "\n";
+      return init 
+             + "LABEL " + startLabelF + "\n" 
+             + expr 
+             + "JUMPF " + endLabelF + "\n"
+             + instructions 
+             + iteration 
+             + "JUMP " + startLabelF + "\n" 
+             + "LABEL " + endLabelF + "\n";
     }
 
     //Fonction renvoyant le code mvap pour creer une boucle repeat until
@@ -252,8 +284,10 @@ grammar Calculette;
       String startLabelR = getNewLabel();
       expr += tradOneElement(exprType, "bool"); 
       testEmptyStringErrors(exprType, expr, instructions);
-      return "LABEL " + startLabelR + "\n" + instructions 
-             + expr + "\n" + "JUMPF " + startLabelR + "\n";
+      return "LABEL " + startLabelR + "\n" 
+             + instructions 
+             + expr 
+             + "JUMPF " + startLabelR + "\n";
     }
 
     /*******************FONCTIONS INPUT OUTPUT*******************/
@@ -285,8 +319,13 @@ grammar Calculette;
       expr1 += tradOneElement(expr1Type, "bool");
       expr2 += tradOneElement(expr2Type, "bool"); 
       testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-      return expr1 + "JUMPF " + falseLabel1And + "\n" + expr2 + "JUMP " + trueLabel2And + "\n"                    
-              + "LABEL " + falseLabel1And + "\n" + "PUSHI 0\n" + "LABEL " + trueLabel2And + "\n";
+      return expr1 
+             + "JUMPF " + falseLabel1And + "\n" 
+             + expr2 
+             + "JUMP " + trueLabel2And + "\n"                    
+             + "LABEL " + falseLabel1And + "\n" 
+             + "PUSHI 0\n" 
+             + "LABEL " + trueLabel2And + "\n";
     }
 
     //Fonction renvoyant le code apres avoir tester
@@ -296,8 +335,13 @@ grammar Calculette;
       expr1 += tradOneElement(expr1Type, "bool");
       expr2 += tradOneElement(expr2Type, "bool"); 
       testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-      return expr1 + "JUMPF " + falseLabel1Or + "\n" + "PUSHI 1\n" + "JUMP " + trueLabel1Or + "\n"
-             + "LABEL " + falseLabel1Or + expr2 + "LABEL " + trueLabel1Or + "\n";
+      return expr1 
+             + "JUMPF " + falseLabel1Or + "\n" 
+             + "PUSHI 1\n" 
+             + "JUMP " + trueLabel1Or + "\n"
+             + "LABEL " + falseLabel1Or 
+             + expr2 
+             + "LABEL " + trueLabel1Or + "\n";
     }
 
     /*******************FONCTIONS BRANCHEMENTS*******************/
@@ -308,9 +352,13 @@ grammar Calculette;
       String ifEndLabel = getNewLabel(); 
       expr += tradOneElement(exprType, "bool"); 
       testEmptyStringErrors(exprType, expr, ifInstructions, elseInstructions);
-      return expr + "\n" + "JUMPF " + elseStartLabel +"\n" 
-             + ifInstructions + "\n" + "JUMP " + ifEndLabel + "\n" + "LABEL " 
-             + elseStartLabel + "\n" + elseInstructions + "LABEL " + ifEndLabel + "\n";
+      return expr 
+             + "JUMPF " + elseStartLabel +"\n" 
+             + ifInstructions + "\n" 
+             + "JUMP " + ifEndLabel + "\n" 
+             + "LABEL " + elseStartLabel + "\n" 
+             + elseInstructions 
+             + "LABEL " + ifEndLabel + "\n";
     }
 
     //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
@@ -318,8 +366,10 @@ grammar Calculette;
       String ifEndLabel = getNewLabel();                                           
       expr += tradOneElement(exprType, "bool"); 
       testEmptyStringErrors(exprType, expr, ifInstructions);                                                     
-      return expr + "\n" + "JUMPF " + ifEndLabel 
-             + "\n" + ifInstructions + "LABEL " + ifEndLabel + "\n";
+      return expr 
+             + "JUMPF " + ifEndLabel + "\n" 
+             + ifInstructions 
+             + "LABEL " + ifEndLabel + "\n";
     }
 
     /*******************FONCTION RETURN*******************/
@@ -329,7 +379,10 @@ grammar Calculette;
       AdresseType at = tablesSymboles.getAdresseType("return");
       testAddressNotFound(at);
       testEmptyStringErrors(exprType, expr);
-      return expr + tradOneElement(exprType, at.type) + storeGOrL(expr) + "RETURN\n";
+      return expr 
+             + tradOneElement(exprType, at.type) 
+             + storeGOrL(expr) 
+             + "RETURN\n";
     }                                                                                               
 }
 
@@ -341,7 +394,7 @@ calcul returns [ String code ]
 @init{ $code = new String(); }       //Initialisation de $code qui contiendra le code mvap
 @after{ 
   System.out.println($code); 
-  System.out.println("!!! Found " + nbErrors + " errors in code !!!");
+  System.out.println("#!!! Found " + nbErrors + " errors in code !!!"); //Commentaire hashtag pour eviter erreur compilation
 }
     : 
       (declaration { $code += $declaration.code; })* //On commence un fichier de code par les declaration
@@ -511,7 +564,10 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
 
     | NO //Prise en charge du non logique
       expr = expression
-      { $type = "bool"; $code = "PUSHI 1\n" + $expr.code + tradOneElement($expr.type, $type) + "SUB\n"; }
+      { $type = "bool"; $code = "PUSHI 1\n" 
+                              + $expr.code 
+                              + tradOneElement($expr.type, $type) 
+                              + "SUB\n"; }
 
     | atom //Expressions unitaires
       { $type = $atom.type; $code = $atom.code; }
@@ -532,7 +588,7 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       { 
         AdresseType at = tablesSymboles.getAdresseType($id.text); 
         $type = at.type;
-        $code = "PUSHG " + at.adresse + "\n";
+        $code = pushGOrL($id.text);
       }
 
     | id = IDENTIFIANT //Call d'une fonction avec ses arguments
@@ -542,7 +598,9 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       { 
         $type = tablesSymboles.getFunction($id.text); 
         String pusher = ($type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
-        $code = pusher + $args.code + "CALL " + $id.text + "\n";                 //Ajout du code des arguments et du CALL mvap
+        $code = pusher 
+              + $args.code 
+              + "CALL " + $id.text + "\n";                 //Ajout du code des arguments et du CALL mvap
         for (int i = 0; i < $args.nbArgs; i++){                                  //On pop tous les arguments lors du call
           $code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
         }
@@ -611,7 +669,8 @@ loopInstr returns [ String code ] //Prise en charge des boucles en mvap
 
 inputInstr returns [ String code ] //Fonction prenant les entrees avec read()
     :
-      'read('
+      'read'
+      '('
       id = IDENTIFIANT 
       ')' 
       { $code = evalInput($id.text); }
@@ -619,7 +678,8 @@ inputInstr returns [ String code ] //Fonction prenant les entrees avec read()
 
 outputInstr returns [ String code ] //Fonction affichant les sorties avec write()
     :
-      'write('
+      'write'
+      '('
       expr = expression 
       ')' 
       { $code = $expr.code + evalOutput($expr.type); }
