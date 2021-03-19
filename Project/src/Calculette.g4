@@ -269,7 +269,7 @@ grammar Calculette;
     private String evalDeclaration(String type, String id){  
       tablesSymboles.putVar(id, type);
       testEmptyStringErrors(type, id);
-      return pushIOrFZero(type) + storeGOrL(id); 
+      return pushIOrFZero(type) /*+ storeGOrL(id)*/; 
     }
 
     //Renvoie le code pour une declaration + assignation suivant le type de l'id
@@ -278,7 +278,7 @@ grammar Calculette;
       AdresseType at = tablesSymboles.getAdresseType(id); 
       testAddressNotFound(at);
       testEmptyStringErrors(type, id, exprType, expr);
-      return expr + tradOneElement(exprType, at.type) + storeGOrL(id);
+      return expr + tradOneElement(exprType, at.type) /*+ storeGOrL(id)*/;
     }
 
     //Renvoie le code pour une assignation suivant le type de l'id
