@@ -544,10 +544,10 @@ instruction returns [ String code ] //Ensemble des types d'instructions seules q
     | inputInstr finInstruction
       { $code = $inputInstr.code; }
 
-    | loopInstr finInstruction
+    | loopInstr
       { $code = $loopInstr.code; }
 
-    | ifElseInstr finInstruction
+    | ifElseInstr
       { $code = $ifElseInstr.code; }
 
     | block finInstruction

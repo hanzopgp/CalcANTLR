@@ -480,11 +480,11 @@ public class CalculetteLexer extends Lexer {
 	    private String evalInput(String id){
 	      mvapStackSize += 1;
 	      AdresseType at = tablesSymboles.getAdresseType(id);
-	      String str1 = at.type.equals("int") ? "READ\n" : "READF\n";
-	      String str2 = storeGOrL(id);
+	      String reader = at.type.equals("int") ? "READ\n" : "READF\n";
+	      String storer = storeGOrL(id);
 	      testAddressNotFound(at);
-	      testEmptyStringErrors(id, str1, str2);
-	      return str1 + str2;
+	      testEmptyStringErrors(id, reader, storer);
+	      return reader + storer;
 	    }
 
 	    //Fonction renvoyant le code mvap pour utiliser write
