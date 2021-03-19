@@ -9,7 +9,8 @@ grammar Calculette;
     private int _cur_label = 1;                                   //liens id/type et les valeurs dans les adresses
     private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles 
     private int nbErrors = 0;                                     //Compteur d'erreurs a la compilation 
-    //private ArrayList<String> errors = new ArrayList();           //Liste des erreurs                              
+    //private ArrayList<String> errors = new ArrayList();         //Liste des erreurs 
+    private int pushCount = 0;                             
 
     /****************FONCTIONS DEBUG****************/
 
@@ -92,6 +93,7 @@ grammar Calculette;
               + "LABEL " + trueLabel + "\n"
               + "PUSHI 1\n" 
               + "LABEL " + falseLabel + "\n";
+          pushCount += 3;
           break;
         default:
           triggerCastError(targetType);
@@ -124,6 +126,7 @@ grammar Calculette;
     private String storeGOrL(String id){
       AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
       String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
+      pushCount += 1;
       String res = (at.getSize(at.type) == 1)                
                    ? storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
                    : storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -133,8 +136,9 @@ grammar Calculette;
 
     //Renvoie PUSHG 0 ou PUSHL 0 suivant le type en entree
     private String pushGOrL(String id){
-      AdresseType at = tablesSymboles.getAdresseType(id);     //Adresses positives : variables globales,
+      AdresseType at = tablesSymboles.getAdresseType(id);      //Adresses positives : variables globales,
       String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL "; //Adresses negatives : variables locales
+      pushCount -= 1;
       String res = (at.getSize(at.type) == 1)                
                    ? pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
                    : pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -144,11 +148,13 @@ grammar Calculette;
 
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
     private String pushIOrF(String type){
+      pushCount += 1;
       return ((type.equals("int") || type.equals("bool")) ? "PUSHI " : "PUSHF "); 
     }
 
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
     private String pushIOrFZero(String type){
+      pushCount += 1;
       return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
     }
 
@@ -305,10 +311,16 @@ grammar Calculette;
     //Fonction renvoyant le code mvap pour utiliser write
     private String evalOutput(String type){
       testEmptyStringErrors(type);
-      return (type.equals("int")) || (type.equals("bool")) 
-                   ? "WRITE\nPOP\n"        //Un seul POP normal pour l'output
-                   : "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float  
-    }                                      //car les float prennent plus de place dans la stack machine
+      String res = "";
+      if((type.equals("int")) || (type.equals("bool"))){
+        res = "WRITE\nPOP\n";       //Un seul POP normal pour l'output
+        pushCount -= 1;
+      }else{
+        res = "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float car les float 
+        pushCount -= 2;             //prennent plus de place dans la stack machine
+      }                             
+      return res;
+    }                                      
 
     /*******************FONCTIONS LOGIQUE*******************/
 
@@ -319,6 +331,7 @@ grammar Calculette;
       expr1 += tradOneElement(expr1Type, "bool");
       expr2 += tradOneElement(expr2Type, "bool"); 
       testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
+      pushCount += 1;
       return expr1 
              + "JUMPF " + falseLabel1And + "\n" 
              + expr2 
@@ -335,6 +348,7 @@ grammar Calculette;
       expr1 += tradOneElement(expr1Type, "bool");
       expr2 += tradOneElement(expr2Type, "bool"); 
       testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
+      pushCount += 1;
       return expr1 
              + "JUMPF " + falseLabel1Or + "\n" 
              + "PUSHI 1\n" 
@@ -394,6 +408,7 @@ calcul returns [ String code ]
 @init{ $code = new String(); }       //Initialisation de $code qui contiendra le code mvap
 @after{ 
   System.out.println($code); 
+  System.out.println("#pushCount : " + pushCount);
   System.out.println("#!!! Found " + nbErrors + " errors in code !!!"); //Commentaire hashtag pour eviter erreur compilation
 }
     : 
@@ -408,6 +423,9 @@ calcul returns [ String code ]
 
       { $code += "LABEL " + "Main\n"; }              //Apres les declarations nous arrivons au main ou nous
       (instruction { $code += $instruction.code; })* //avons les differentes instructions du main
+
+
+      { $code += "FREE " + pushCount + "\n"; }
 
       { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
     ;
@@ -490,7 +508,7 @@ assignation returns [ String code ] //Assignation d'une valeur a une variable
 
 expression returns [ String type, String code ]
     : 
-      expr = expression                                  //Addition et soustraction
+      expr = expression                                                 //Addition et soustraction
       op = ( ADD | SUB ) 
       fac = factor
       { 
@@ -499,34 +517,34 @@ expression returns [ String type, String code ]
         $code = codeRes.toString() + evalOp($type, $op.text);
       } 
 
-    | factor                                           //Multiplication, division...
+    | factor                                                           //Multiplication, division...
       { $type = $factor.type; $code = $factor.code; }
 
-    | cast                                             //Changement de type
+    | cast                                                             //Changement de type
       { $type = $cast.type; $code = $cast.code; }
 
-    | 'true' { $type = "bool"; $code = "PUSHI 1\n"; }  //Differentes conditions dont true
-    | 'false' { $type = "bool"; $code = "PUSHI 0\n"; } //et false
-    | expr1 = expression                               //et conditions en general
+    | 'true' { $type = "bool"; $code = "PUSHI 1\n"; pushCount += 1; }  //Differentes conditions dont true
+    | 'false' { $type = "bool"; $code = "PUSHI 0\n"; pushCount += 1; } //et false
+    | expr1 = expression                                               //et conditions en general
       cond = COND
       expr2 = expression
       { $type = "bool"; $code = evalCond($type, $expr1.code, $cond.text, $expr2.code); }
 
-    | expr1 = expression                               //Prise en charge du && logique
+    | expr1 = expression                                               //Prise en charge du && logique
       AND 
       expr2 = expression  
       { $type = "bool"; $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code); }
 
-    | expr1 = expression                               //Prise en charge du || logique
+    | expr1 = expression                                               //Prise en charge du || logique
       OR 
       expr2 = expression  
       { $type = "bool"; $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code); }            
     ;
 
-factor returns [ String type, String code ] //Un facteur est un element constitutif d'un produit
-    :                                       //Ici nous avons l'exemple de la multiplication, la
-      fac = factor                          //divison mais aussi les elements qui sont entre 
-      op = ( MUL | DIV )                    //parentheses, le non logique...
+factor returns [ String type, String code ]                           //Un facteur est un element constitutif d'un produit
+    :                                                                 //Ici nous avons l'exemple de la multiplication, la
+      fac = factor                                                    //divison mais aussi les elements qui sont entre 
+      op = ( MUL | DIV )                                              //parentheses, le non logique...
       pp = preparenthesis
       {
         StringBuilder codeRes = new StringBuilder();      
@@ -567,7 +585,8 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
       { $type = "bool"; $code = "PUSHI 1\n" 
                               + $expr.code 
                               + tradOneElement($expr.type, $type) 
-                              + "SUB\n"; }
+                              + "SUB\n"; 
+                              pushCount += 1; }
 
     | atom //Expressions unitaires
       { $type = $atom.type; $code = $atom.code; }
@@ -576,13 +595,13 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
 atom returns [ String type, String code ] //Les atomes de l'expression sont les elements qui sont "seuls"
     :                                     //Il y a donc les entiers, float, booleens, id ainsi que les
       ent = ENTIER                        //appels de fonctions
-      { $type = "int"; $code = "PUSHI " + $ent.text + "\n"; }
+      { $type = "int"; $code = "PUSHI " + $ent.text + "\n"; pushCount += 1; }
 
     | flo = FLOAT
-      { $type = "float"; $code = "PUSHF " + $flo.text + "\n"; }
+      { $type = "float"; $code = "PUSHF " + $flo.text + "\n"; pushCount += 1; }
 
     | boo = BOOLEAN
-      { $type = "bool"; $code = ($boo.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); }
+      { $type = "bool"; $code = ($boo.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); pushCount += 1; }
 
     | id = IDENTIFIANT
       { 
@@ -598,12 +617,14 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       { 
         $type = tablesSymboles.getFunction($id.text); 
         String pusher = ($type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
+        pushCount += 1;
         $code = pusher 
               + $args.code 
-              + "CALL " + $id.text + "\n";                 //Ajout du code des arguments et du CALL mvap
+              + "CALL " + $id.text + "\n";                                       //Ajout du code des arguments et du CALL mvap
         for (int i = 0; i < $args.nbArgs; i++){                                  //On pop tous les arguments lors du call
           $code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
         }
+        pushCount -= $args.nbArgs;
       }
     ;
 

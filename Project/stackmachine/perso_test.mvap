@@ -6,6 +6,8 @@ STOREG 0
 PUSHG 0
 WRITE
 POP
+FREE 1
 HALT 
 
+#pushCount : 1
 #!!! Found 1 errors in code !!!

@@ -98,7 +98,8 @@ public class CalculetteLexer extends Lexer {
 	    private int _cur_label = 1;                                   //liens id/type et les valeurs dans les adresses
 	    private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles 
 	    private int nbErrors = 0;                                     //Compteur d'erreurs a la compilation 
-	    //private ArrayList<String> errors = new ArrayList();           //Liste des erreurs                              
+	    //private ArrayList<String> errors = new ArrayList();         //Liste des erreurs 
+	    private int pushCount = 0;                             
 
 	    /****************FONCTIONS DEBUG****************/
 
@@ -181,6 +182,7 @@ public class CalculetteLexer extends Lexer {
 	              + "LABEL " + trueLabel + "\n"
 	              + "PUSHI 1\n" 
 	              + "LABEL " + falseLabel + "\n";
+	          pushCount += 3;
 	          break;
 	        default:
 	          triggerCastError(targetType);
@@ -213,6 +215,7 @@ public class CalculetteLexer extends Lexer {
 	    private String storeGOrL(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
 	      String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
+	      pushCount += 1;
 	      String res = (at.getSize(at.type) == 1)                
 	                   ? storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
 	                   : storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -222,8 +225,9 @@ public class CalculetteLexer extends Lexer {
 
 	    //Renvoie PUSHG 0 ou PUSHL 0 suivant le type en entree
 	    private String pushGOrL(String id){
-	      AdresseType at = tablesSymboles.getAdresseType(id);     //Adresses positives : variables globales,
+	      AdresseType at = tablesSymboles.getAdresseType(id);      //Adresses positives : variables globales,
 	      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL "; //Adresses negatives : variables locales
+	      pushCount -= 1;
 	      String res = (at.getSize(at.type) == 1)                
 	                   ? pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
 	                   : pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -233,11 +237,13 @@ public class CalculetteLexer extends Lexer {
 
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrF(String type){
+	      pushCount += 1;
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI " : "PUSHF "); 
 	    }
 
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrFZero(String type){
+	      pushCount += 1;
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
 	    }
 
@@ -394,10 +400,16 @@ public class CalculetteLexer extends Lexer {
 	    //Fonction renvoyant le code mvap pour utiliser write
 	    private String evalOutput(String type){
 	      testEmptyStringErrors(type);
-	      return (type.equals("int")) || (type.equals("bool")) 
-	                   ? "WRITE\nPOP\n"        //Un seul POP normal pour l'output
-	                   : "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float  
-	    }                                      //car les float prennent plus de place dans la stack machine
+	      String res = "";
+	      if((type.equals("int")) || (type.equals("bool"))){
+	        res = "WRITE\nPOP\n";       //Un seul POP normal pour l'output
+	        pushCount -= 1;
+	      }else{
+	        res = "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float car les float 
+	        pushCount -= 2;             //prennent plus de place dans la stack machine
+	      }                             
+	      return res;
+	    }                                      
 
 	    /*******************FONCTIONS LOGIQUE*******************/
 
@@ -408,6 +420,7 @@ public class CalculetteLexer extends Lexer {
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
+	      pushCount += 1;
 	      return expr1 
 	             + "JUMPF " + falseLabel1And + "\n" 
 	             + expr2 
@@ -424,6 +437,7 @@ public class CalculetteLexer extends Lexer {
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
+	      pushCount += 1;
 	      return expr1 
 	             + "JUMPF " + falseLabel1Or + "\n" 
 	             + "PUSHI 1\n" 
