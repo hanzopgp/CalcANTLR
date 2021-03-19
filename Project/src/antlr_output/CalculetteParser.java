@@ -203,7 +203,7 @@ public class CalculetteParser extends Parser {
 	          String equalType;
 	          if(currentType.equals("float")){    //Passage de float ===> bool
 	            pushType = "PUSHF 0.0\n";
-	            equalType = "FEQUAL\n";
+	            equalType = "FEQUAL\n"; 
 	          }else{                              //Passage de int ===> bool
 	            pushType = "PUSHI 0\n";
 	            equalType = "EQUAL\n";
@@ -284,14 +284,28 @@ public class CalculetteParser extends Parser {
 
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrF(String type){
-	      mvapStackSize += 1;
-	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI " : "PUSHF "); 
+	      String res = "";
+	      if(type.equals("int") || type.equals("bool")){
+	        mvapStackSize += 1;
+	        res = "PUSHI ";
+	      }else{
+	        mvapStackSize += 2;
+	        res = "PUSHF ";
+	      }
+	      return res;
 	    }
 
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrFZero(String type){
-	      mvapStackSize += 1;
-	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
+	      String res = "";
+	      if(type.equals("int") || type.equals("bool")){
+	        res = "PUSHI 0\n";
+	        mvapStackSize += 1;
+	      }else{
+	        res = "PUSHF 0.0\n";
+	        mvapStackSize += 2;
+	      }
+	      return res;
 	    }
 
 	    /****************FONCTIONS OPERATORS****************/
@@ -299,9 +313,10 @@ public class CalculetteParser extends Parser {
 	    //Renvoie le code mvap pour chacune des operations possibles en prenant en compte le type
 	    private String evalOp(String type, String op){
 	      String res = "";
-	      mvapStackSize -= 1;
+	      mvapStackSize -= 1;       //1 element en moins car les operations change 2 elements en 1 element
 	      if(type.equals("float")){ //Si type float alors 
-	        res += "F";             //FADD FSUB ... pour la stack machine
+	        res += "F";             //FADD FSUB ... pour la stack machine*
+	        mvapStackSize -= 1;     //1 element en moins dans la pile car float prend 2 places
 	      }
 	      switch(op){
 	        case "+" :
@@ -329,6 +344,7 @@ public class CalculetteParser extends Parser {
 	      String res = exp1 + exp2;  
 	      if(type.equals("float")){ //Si type float alors
 	        res += "F";             //FEQUAL FINFEQ ... pour la stack machine
+	        mvapStackSize -= 1;
 	      }                                   
 	      switch(cond){
 	        case "==" :
@@ -454,7 +470,7 @@ public class CalculetteParser extends Parser {
 	    private String evalOutput(String type){
 	      testEmptyStringErrors(type);
 	      String res = "";
-	      if((type.equals("int")) || (type.equals("bool"))){
+	      if(type.equals("int") || (type.equals("bool"))){
 	        res = "WRITE\nPOP\n";       //Un seul POP normal pour l'output
 	        mvapStackSize -= 1;
 	      }else{
@@ -1544,7 +1560,6 @@ public class CalculetteParser extends Parser {
 				                              + ((PreparenthesisContext)_localctx).expr.code 
 				                              + tradOneElement(((PreparenthesisContext)_localctx).expr.type, _localctx.type) 
 				                              + "SUB\n"; 
-				                        mvapStackSize += 1; 
 				}
 				break;
 			case ENTIER:
@@ -1622,7 +1637,7 @@ public class CalculetteParser extends Parser {
 				{
 				setState(239);
 				((AtomContext)_localctx).flo = match(FLOAT);
-				 ((AtomContext)_localctx).type =  "float"; ((AtomContext)_localctx).code =  "PUSHF " + (((AtomContext)_localctx).flo!=null?((AtomContext)_localctx).flo.getText():null) + "\n"; mvapStackSize += 1; 
+				 ((AtomContext)_localctx).type =  "float"; ((AtomContext)_localctx).code =  "PUSHF " + (((AtomContext)_localctx).flo!=null?((AtomContext)_localctx).flo.getText():null) + "\n"; mvapStackSize += 2; 
 				}
 				break;
 			case 3:
@@ -1658,15 +1673,21 @@ public class CalculetteParser extends Parser {
 				match(T__5);
 				 
 				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null)); 
-				        String pusher = (_localctx.type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
-				        mvapStackSize += 1;
+				        String pusher = "";
+				        if(_localctx.type.equals("int")){ //Push un nombre random pour memoire float ou int
+				          pusher = "PUSHI 666\n";
+				          mvapStackSize += 1;
+				        }else{
+				          pusher = "PUSHF 0.666\n";
+				          mvapStackSize += 2;
+				        }
 				        ((AtomContext)_localctx).code =  pusher 
 				              + ((AtomContext)_localctx).args.code 
 				              + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";                                       //Ajout du code des arguments et du CALL mvap
 				        for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){                                  //On pop tous les arguments lors du call
 				          _localctx.code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
 				        }
-				        mvapStackSize -= ((AtomContext)_localctx).args.nbArgs;
+				        mvapStackSize -= ((AtomContext)_localctx).args.nbArgs;                                           //Chaque pop fait retrecir la taille de 1
 				      
 				}
 				break;

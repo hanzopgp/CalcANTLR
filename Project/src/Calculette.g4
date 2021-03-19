@@ -105,7 +105,7 @@ grammar Calculette;
           String equalType;
           if(currentType.equals("float")){    //Passage de float ===> bool
             pushType = "PUSHF 0.0\n";
-            equalType = "FEQUAL\n";
+            equalType = "FEQUAL\n"; 
           }else{                              //Passage de int ===> bool
             pushType = "PUSHI 0\n";
             equalType = "EQUAL\n";
@@ -186,14 +186,28 @@ grammar Calculette;
 
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
     private String pushIOrF(String type){
-      mvapStackSize += 1;
-      return ((type.equals("int") || type.equals("bool")) ? "PUSHI " : "PUSHF "); 
+      String res = "";
+      if(type.equals("int") || type.equals("bool")){
+        mvapStackSize += 1;
+        res = "PUSHI ";
+      }else{
+        mvapStackSize += 2;
+        res = "PUSHF ";
+      }
+      return res;
     }
 
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
     private String pushIOrFZero(String type){
-      mvapStackSize += 1;
-      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
+      String res = "";
+      if(type.equals("int") || type.equals("bool")){
+        res = "PUSHI 0\n";
+        mvapStackSize += 1;
+      }else{
+        res = "PUSHF 0.0\n";
+        mvapStackSize += 2;
+      }
+      return res;
     }
 
     /****************FONCTIONS OPERATORS****************/
@@ -201,9 +215,10 @@ grammar Calculette;
     //Renvoie le code mvap pour chacune des operations possibles en prenant en compte le type
     private String evalOp(String type, String op){
       String res = "";
-      mvapStackSize -= 1;
+      mvapStackSize -= 1;       //1 element en moins car les operations change 2 elements en 1 element
       if(type.equals("float")){ //Si type float alors 
-        res += "F";             //FADD FSUB ... pour la stack machine
+        res += "F";             //FADD FSUB ... pour la stack machine*
+        mvapStackSize -= 1;     //1 element en moins dans la pile car float prend 2 places
       }
       switch(op){
         case "+" :
@@ -231,6 +246,7 @@ grammar Calculette;
       String res = exp1 + exp2;  
       if(type.equals("float")){ //Si type float alors
         res += "F";             //FEQUAL FINFEQ ... pour la stack machine
+        mvapStackSize -= 1;
       }                                   
       switch(cond){
         case "==" :
@@ -356,7 +372,7 @@ grammar Calculette;
     private String evalOutput(String type){
       testEmptyStringErrors(type);
       String res = "";
-      if((type.equals("int")) || (type.equals("bool"))){
+      if(type.equals("int") || (type.equals("bool"))){
         res = "WRITE\nPOP\n";       //Un seul POP normal pour l'output
         mvapStackSize -= 1;
       }else{
@@ -554,7 +570,7 @@ assignation returns [ String code ] //Assignation d'une valeur a une variable
 
 expression returns [ String type, String code ]
     : 
-      expr = expression                                                 //Addition et soustraction
+      expr = expression                                                     //Addition et soustraction
       op = ( ADD | SUB ) 
       fac = factor
       { 
@@ -563,34 +579,34 @@ expression returns [ String type, String code ]
         $code = codeRes.toString() + evalOp($type, $op.text);
       } 
 
-    | factor                                                           //Multiplication, division...
+    | factor                                                               //Multiplication, division...
       { $type = $factor.type; $code = $factor.code; }
 
-    | cast                                                             //Changement de type
+    | cast                                                                 //Changement de type
       { $type = $cast.type; $code = $cast.code; }
 
     | 'true' { $type = "bool"; $code = "PUSHI 1\n"; mvapStackSize += 1; }  //Differentes conditions dont true
     | 'false' { $type = "bool"; $code = "PUSHI 0\n"; mvapStackSize += 1; } //et false
-    | expr1 = expression                                               //et conditions en general
+    | expr1 = expression                                                   //et conditions en general
       cond = COND
       expr2 = expression
       { $type = "bool"; $code = evalCond($type, $expr1.code, $cond.text, $expr2.code); }
 
-    | expr1 = expression                                               //Prise en charge du && logique
+    | expr1 = expression                                                   //Prise en charge du && logique
       AND 
       expr2 = expression  
       { $type = "bool"; $code = evalAnd($expr1.type, $expr1.code, $expr2.type, $expr2.code); }
 
-    | expr1 = expression                                               //Prise en charge du || logique
+    | expr1 = expression                                                   //Prise en charge du || logique
       OR 
       expr2 = expression  
       { $type = "bool"; $code = evalOr($expr1.type, $expr1.code, $expr2.type, $expr2.code); }            
     ;
 
-factor returns [ String type, String code ]                           //Un facteur est un element constitutif d'un produit
-    :                                                                 //Ici nous avons l'exemple de la multiplication, la
-      fac = factor                                                    //divison mais aussi les elements qui sont entre 
-      op = ( MUL | DIV )                                              //parentheses, le non logique...
+factor returns [ String type, String code ] //Un facteur est un element constitutif d'un produit
+    :                                       //Ici nous avons l'exemple de la multiplication, la
+      fac = factor                          //divison mais aussi les elements qui sont entre 
+      op = ( MUL | DIV )                    //parentheses, le non logique...
       pp = preparenthesis
       {
         StringBuilder codeRes = new StringBuilder();      
@@ -631,8 +647,7 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
       { $type = "bool"; $code = "PUSHI 1\n" 
                               + $expr.code 
                               + tradOneElement($expr.type, $type) 
-                              + "SUB\n"; 
-                        mvapStackSize += 1; }
+                              + "SUB\n"; }
 
     | atom //Expressions unitaires
       { $type = $atom.type; $code = $atom.code; }
@@ -644,7 +659,7 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       { $type = "int"; $code = "PUSHI " + $ent.text + "\n"; mvapStackSize += 1; }
 
     | flo = FLOAT
-      { $type = "float"; $code = "PUSHF " + $flo.text + "\n"; mvapStackSize += 1; }
+      { $type = "float"; $code = "PUSHF " + $flo.text + "\n"; mvapStackSize += 2; }
 
     | boo = BOOLEAN
       { $type = "bool"; $code = ($boo.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); mvapStackSize += 1; }
@@ -662,15 +677,21 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       ')'
       { 
         $type = tablesSymboles.getFunction($id.text); 
-        String pusher = ($type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
-        mvapStackSize += 1;
+        String pusher = "";
+        if($type.equals("int")){ //Push un nombre random pour memoire float ou int
+          pusher = "PUSHI 666\n";
+          mvapStackSize += 1;
+        }else{
+          pusher = "PUSHF 0.666\n";
+          mvapStackSize += 2;
+        }
         $code = pusher 
               + $args.code 
               + "CALL " + $id.text + "\n";                                       //Ajout du code des arguments et du CALL mvap
         for (int i = 0; i < $args.nbArgs; i++){                                  //On pop tous les arguments lors du call
           $code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
         }
-        mvapStackSize -= $args.nbArgs;
+        mvapStackSize -= $args.nbArgs;                                           //Chaque pop fait retrecir la taille de 1
       }
     ;
 
