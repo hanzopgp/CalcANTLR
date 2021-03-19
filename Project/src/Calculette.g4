@@ -159,8 +159,8 @@ grammar Calculette;
         res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
       }else{
         mvapStackSize += 2;
-        res = storer + at.adresse + "\n"                                       //Alors que les float ont besoin de deux
-            + storer + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //places il faut donc store 2 elements
+        res = storer + (at.adresse + 1) + "\n"                                       //Alors que les float ont besoin de deux
+            + storer + at.adresse + "\n"; //places il faut donc store 2 elements
       }
       return res;
     }
@@ -324,7 +324,7 @@ grammar Calculette;
       AdresseType at = tablesSymboles.getAdresseType(id); 
       testAddressNotFound(at);
       testEmptyStringErrors(type, id, exprType, expr);
-      return expr + tradOneElement(exprType, at.type) /*+ storeGOrL(id)*/;
+      return expr /*+ storeGOrL(id)*/;
     }
 
     //Renvoie le code pour une assignation suivant le type de l'id
@@ -578,12 +578,14 @@ declaration returns [ String code ] //Prise en charge des declarations typees
     :
       ty = TYPE 
       id = IDENTIFIANT 
+      finInstruction
       { $code = evalDeclaration($ty.text, $id.text); }
 
     | ty = TYPE                                                                                
       id = IDENTIFIANT
       EQUAL
       expr = expression
+      finInstruction
       { $code = evalDeclarationExpr($ty.text, $id.text, $expr.type, $expr.code); }
     ; 
 

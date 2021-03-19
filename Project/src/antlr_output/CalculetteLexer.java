@@ -249,8 +249,8 @@ public class CalculetteLexer extends Lexer {
 	        res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
 	      }else{
 	        mvapStackSize += 2;
-	        res = storer + at.adresse + "\n"                                       //Alors que les float ont besoin de deux
-	            + storer + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //places il faut donc store 2 elements
+	        res = storer + (at.adresse + 1) + "\n"                                       //Alors que les float ont besoin de deux
+	            + storer + at.adresse + "\n"; //places il faut donc store 2 elements
 	      }
 	      return res;
 	    }
@@ -414,7 +414,7 @@ public class CalculetteLexer extends Lexer {
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(type, id, exprType, expr);
-	      return expr + tradOneElement(exprType, at.type) /*+ storeGOrL(id)*/;
+	      return expr /*+ storeGOrL(id)*/;
 	    }
 
 	    //Renvoie le code pour une assignation suivant le type de l'id
