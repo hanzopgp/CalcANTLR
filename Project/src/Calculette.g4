@@ -5,11 +5,12 @@ grammar Calculette;
 ==================================================*/
 
 @members {
-    private TablesSymboles tablesSymboles = new TablesSymboles(); //On utilise la table de symboles pour garder les
-    private int _cur_label = 1;                                   //liens id/type et les valeurs dans les adresses
-    private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles 
+    private TablesSymboles tablesSymboles = new TablesSymboles();           //On utilise la table de symboles pour garder les
+    private int _cur_label = 1;                                             //liens id/type et les valeurs dans les adresses
+    private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
+    //private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
     
-    private int nbErrorsEmptyString = 0;                          //Comptage des erreurs
+    private int nbErrorsEmptyString = 0;                                     //Comptage des erreurs
     private int nbErrorsAddress = 0;                              
     private int nbErrorsOperator = 0;                             
     private int nbErrorsCondition = 0;                            
@@ -20,13 +21,13 @@ grammar Calculette;
             + nbErrorsOperator + nbErrorsCondition 
             + nbErrorsCast + nbErrorsAutoCast;  
 
-    //private ArrayList<String> errors = new ArrayList();         //Liste des erreurs 
-    private int mvapStackSize = 0;                                //On garde la taille de la pile pour pouvoir la vider 
+    //private ArrayList<String> errors = new ArrayList();                   //Liste des erreurs 
+    private int mvapStackSize = 0;                                          //On garde la taille de la pile pour pouvoir la vider 
 
     /****************FONCTIONS DEBUG****************/
 
     private void printFinalDisplay(){
-      System.out.println("#mvapStackSize : " + mvapStackSize); //Commentaires hashtag pour eviter erreur compilation de la stack machine
+      System.out.println("#mvapStackSize : " + mvapStackSize);              //Commentaires hashtag pour eviter erreur compilation de la stack machine
       if(nbErrorsTotal > 0){
         System.out.println("#!!! Found " + nbErrorsTotal + " total errors in code !!!"); 
         System.out.println("#!!! Found " + nbErrorsAddress + " address errors in code !!!"); 
@@ -99,8 +100,8 @@ grammar Calculette;
           res += "ITOF\n";                    //Passage de int ===> float
           break;                             
         case "bool":                          
-          String trueLabel = getNewLabel();
-          String falseLabel = getNewLabel();                           
+          String trueLabel = getNewLabel("true");
+          String falseLabel = getNewLabel("false");                           
           String pushType;
           String equalType;
           if(currentType.equals("float")){    //Passage de float ===> bool
@@ -240,6 +241,32 @@ grammar Calculette;
       return res;                                   
     }
 
+    //Renvoie le code approprier pour incrementer une variable
+    private String evalIncrement(String id, String incr){
+      AdresseType at = tablesSymboles.getAdresseType(id);
+      testAddressNotFound(at);
+      testEmptyStringErrors(id, incr);
+      String pusher = pushGOrL(id);
+      String storer = storeGOrL(id);
+      String incrementer = "";
+      if(incr.equals("++")){
+        if(at.type.equals("float")){
+          incrementer = "PUSHF 1.0\nFSUB\n";
+          mvapStackSize += 1;
+        }else{
+          incrementer = "PUSHI 1\nSUB\n";
+        }  
+      }else if(incr.equals("--")){
+        if(at.type.equals("float")){
+          incrementer = "PUSHF 1.0\nFSUB\n";
+          mvapStackSize += 1;
+        }else{
+          incrementer = "PUSHI 1\nSUB\n";
+        }   
+      }
+      return pusher + incrementer + storer;
+    }
+
     //Renvoie le code mvap pour chacune des conditions possibles
     private String evalCond(String type, String exp1, String cond, String exp2){  
       mvapStackSize -= 1;
@@ -312,13 +339,12 @@ grammar Calculette;
 
     //Fonction renvoyant le code mvap pour creer une boucle while
     private String evalWhileLoop(String exprType, String expr, String instructions){ 
-      String startLabelW = getNewLabel();                                     
-      String endLabelW = getNewLabel();
+      String startLabelW = getNewLabel("startWhile");                                     
+      String endLabelW = getNewLabel("endWhile");
       expr += tradOneElement(exprType, "bool");
       mvapStackSize -= 1;
       testEmptyStringErrors(exprType, expr, instructions);
-      return "LABEL " 
-             + startLabelW + "\n" 
+      return "LABEL " + startLabelW + "\n" 
              + expr 
              + "JUMPF " + endLabelW + "\n"
              + instructions 
@@ -328,8 +354,8 @@ grammar Calculette;
 
     //Fonction renvoyant le code mvap pour creer une boucle for
     private String evalForLoop(String init, String exprType, String expr, String iteration, String instructions){  
-      String startLabelF = getNewLabel();                                                                    
-      String endLabelF = getNewLabel();
+      String startLabelF = getNewLabel("startFor");                                                                    
+      String endLabelF = getNewLabel("endFor");
       expr += tradOneElement(exprType, "bool");
       mvapStackSize -= 1;
       testEmptyStringErrors(init, exprType, expr, iteration, instructions);
@@ -345,14 +371,17 @@ grammar Calculette;
 
     //Fonction renvoyant le code mvap pour creer une boucle repeat until
     private String evalRepeatLoop(String exprType, String expr, String instructions){                                                  
-      String startLabelR = getNewLabel();
+      String startLabelR = getNewLabel("startRepeat");
+      String endLabelR = getNewLabel("endRepeat");
       expr += tradOneElement(exprType, "bool"); 
       mvapStackSize -= 1;
       testEmptyStringErrors(exprType, expr, instructions);
       return "LABEL " + startLabelR + "\n" 
              + instructions 
              + expr 
-             + "JUMPF " + startLabelR + "\n";
+             + "JUMPF " + startLabelR + "\n"
+             + "JUMP "+ endLabelR + "\n"
+             + "LABEL "+ endLabelR + "\n";
     }
 
     /*******************FONCTIONS INPUT OUTPUT*******************/
@@ -361,11 +390,11 @@ grammar Calculette;
     private String evalInput(String id){
       mvapStackSize += 1;
       AdresseType at = tablesSymboles.getAdresseType(id);
-      String str1 = at.type.equals("int") ? "READ\n" : "READF\n";
-      String str2 = storeGOrL(id);
+      String reader = at.type.equals("int") ? "READ\n" : "READF\n";
+      String storer = storeGOrL(id);
       testAddressNotFound(at);
-      testEmptyStringErrors(id, str1, str2);
-      return str1 + str2;
+      testEmptyStringErrors(id, reader, storer);
+      return reader + storer;
     }
 
     //Fonction renvoyant le code mvap pour utiliser write
@@ -386,8 +415,8 @@ grammar Calculette;
 
     //Fonction renvoyant le code apres avoir tester
     private String evalAnd(String expr1Type, String expr1, String expr2Type, String expr2){                  
-      String falseLabel1And = getNewLabel();
-      String trueLabel2And = getNewLabel();
+      String falseLabel1And = getNewLabel("false1And");
+      String trueLabel2And = getNewLabel("true2And");
       expr1 += tradOneElement(expr1Type, "bool");
       expr2 += tradOneElement(expr2Type, "bool"); 
       testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
@@ -402,8 +431,8 @@ grammar Calculette;
 
     //Fonction renvoyant le code apres avoir tester
     private String evalOr(String expr1Type, String expr1, String expr2Type, String expr2){                    
-      String falseLabel1Or = getNewLabel();
-      String trueLabel1Or = getNewLabel();
+      String falseLabel1Or = getNewLabel("false1Or");
+      String trueLabel1Or = getNewLabel("true1Or");
       expr1 += tradOneElement(expr1Type, "bool");
       expr2 += tradOneElement(expr2Type, "bool"); 
       testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
@@ -420,8 +449,8 @@ grammar Calculette;
 
     //Fonction renvoyant le code mvap lors d'un branchement if else
     private String evalIfElse(String exprType, String expr, String ifInstructions, String elseInstructions){                                                                                 
-      String elseStartLabel = getNewLabel();                                                                   
-      String ifEndLabel = getNewLabel(); 
+      String elseStartLabel = getNewLabel("startIfElse");                                                                   
+      String ifEndLabel = getNewLabel("endIfElse"); 
       expr += tradOneElement(exprType, "bool"); 
       testEmptyStringErrors(exprType, expr, ifInstructions, elseInstructions);
       mvapStackSize -= 1;
@@ -431,18 +460,20 @@ grammar Calculette;
              + "JUMP " + ifEndLabel + "\n" 
              + "LABEL " + elseStartLabel + "\n" 
              + elseInstructions 
+             + "JUMP " + ifEndLabel + "\n"
              + "LABEL " + ifEndLabel + "\n";
     }
 
     //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
     private String evalIf(String exprType, String expr, String ifInstructions){      
-      String ifEndLabel = getNewLabel();                                           
+      String ifEndLabel = getNewLabel("ifOnly");                                           
       expr += tradOneElement(exprType, "bool"); 
       testEmptyStringErrors(exprType, expr, ifInstructions);  
       mvapStackSize -= 1;                                                   
       return expr 
              + "JUMPF " + ifEndLabel + "\n" 
              + ifInstructions 
+             + "JUMP " + ifEndLabel + "\n"
              + "LABEL " + ifEndLabel + "\n";
     }
 
@@ -533,6 +564,7 @@ block returns [ String code ] //Prise en charge des block d'instructions
 @init{ $code = new String(); }                                                                   
     :
       '{'
+      NEWLINE?
       (instruction { $code += $instruction.code; })*
       '}'
       NEWLINE*
@@ -561,6 +593,10 @@ assignation returns [ String code ] //Assignation d'une valeur a une variable
       EQUAL 
       expr = expression
       { $code = evalAssign($id.text, $expr.type, $expr.code); }
+
+    | id = IDENTIFIANT
+      incr = INCREMENTS
+      { $code = evalIncrement($id.text, $incr.text); }
     ;
 
 
@@ -863,6 +899,8 @@ SUB : '-';
 MUL : '*';
 
 DIV : '/';
+
+INCREMENTS : '++' | '--';
 
 EQUAL : '=';
 
