@@ -10,7 +10,7 @@ grammar Calculette;
     private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles 
     private int nbErrors = 0;                                     //Compteur d'erreurs a la compilation 
     //private ArrayList<String> errors = new ArrayList();         //Liste des erreurs 
-    private int pushCount = 0;                             
+    private int mvapStackSize = 0;                             
 
     /****************FONCTIONS DEBUG****************/
 
@@ -93,7 +93,7 @@ grammar Calculette;
               + "LABEL " + trueLabel + "\n"
               + "PUSHI 1\n" 
               + "LABEL " + falseLabel + "\n";
-          pushCount += 3;
+          mvapStackSize += 3;
           break;
         default:
           triggerCastError(targetType);
@@ -126,7 +126,7 @@ grammar Calculette;
     private String storeGOrL(String id){
       AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
       String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
-      pushCount += 1;
+      mvapStackSize -= 1;
       String res = (at.getSize(at.type) == 1)                
                    ? storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
                    : storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -138,7 +138,7 @@ grammar Calculette;
     private String pushGOrL(String id){
       AdresseType at = tablesSymboles.getAdresseType(id);      //Adresses positives : variables globales,
       String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL "; //Adresses negatives : variables locales
-      pushCount -= 1;
+      mvapStackSize += 1;
       String res = (at.getSize(at.type) == 1)                
                    ? pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
                    : pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -148,13 +148,13 @@ grammar Calculette;
 
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
     private String pushIOrF(String type){
-      pushCount += 1;
+      mvapStackSize += 1;
       return ((type.equals("int") || type.equals("bool")) ? "PUSHI " : "PUSHF "); 
     }
 
     //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
     private String pushIOrFZero(String type){
-      pushCount += 1;
+      mvapStackSize += 1;
       return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
     }
 
@@ -163,6 +163,7 @@ grammar Calculette;
     //Renvoie le code mvap pour chacune des operations possibles en prenant en compte le type
     private String evalOp(String type, String op){
       String res = "";
+      mvapStackSize -= 1;
       if(type.equals("float")){ //Si type float alors 
         res += "F";             //FADD FSUB ... pour la stack machine
       }
@@ -300,6 +301,7 @@ grammar Calculette;
 
     //Fonction renvoyant le code mvap pour utiliser read suivant le type de l'id
     private String evalInput(String id){
+      mvapStackSize += 1;
       AdresseType at = tablesSymboles.getAdresseType(id);
       String str1 = at.type.equals("int") ? "READ\n" : "READF\n";
       String str2 = storeGOrL(id);
@@ -314,10 +316,10 @@ grammar Calculette;
       String res = "";
       if((type.equals("int")) || (type.equals("bool"))){
         res = "WRITE\nPOP\n";       //Un seul POP normal pour l'output
-        pushCount -= 1;
+        mvapStackSize -= 1;
       }else{
         res = "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float car les float 
-        pushCount -= 2;             //prennent plus de place dans la stack machine
+        mvapStackSize -= 2;             //prennent plus de place dans la stack machine
       }                             
       return res;
     }                                      
@@ -331,7 +333,7 @@ grammar Calculette;
       expr1 += tradOneElement(expr1Type, "bool");
       expr2 += tradOneElement(expr2Type, "bool"); 
       testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-      pushCount += 1;
+      mvapStackSize += 1;
       return expr1 
              + "JUMPF " + falseLabel1And + "\n" 
              + expr2 
@@ -348,7 +350,7 @@ grammar Calculette;
       expr1 += tradOneElement(expr1Type, "bool");
       expr2 += tradOneElement(expr2Type, "bool"); 
       testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-      pushCount += 1;
+      mvapStackSize += 1;
       return expr1 
              + "JUMPF " + falseLabel1Or + "\n" 
              + "PUSHI 1\n" 
@@ -408,7 +410,7 @@ calcul returns [ String code ]
 @init{ $code = new String(); }       //Initialisation de $code qui contiendra le code mvap
 @after{ 
   System.out.println($code); 
-  System.out.println("#pushCount : " + pushCount);
+  System.out.println("#mvapStackSize : " + mvapStackSize);
   System.out.println("#!!! Found " + nbErrors + " errors in code !!!"); //Commentaire hashtag pour eviter erreur compilation
 }
     : 
@@ -425,7 +427,7 @@ calcul returns [ String code ]
       (instruction { $code += $instruction.code; })* //avons les differentes instructions du main
 
 
-      { $code += "FREE " + pushCount + "\n"; }
+      { $code += "FREE " + mvapStackSize + "\n"; }
 
       { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
     ;
@@ -523,8 +525,8 @@ expression returns [ String type, String code ]
     | cast                                                             //Changement de type
       { $type = $cast.type; $code = $cast.code; }
 
-    | 'true' { $type = "bool"; $code = "PUSHI 1\n"; pushCount += 1; }  //Differentes conditions dont true
-    | 'false' { $type = "bool"; $code = "PUSHI 0\n"; pushCount += 1; } //et false
+    | 'true' { $type = "bool"; $code = "PUSHI 1\n"; mvapStackSize += 1; }  //Differentes conditions dont true
+    | 'false' { $type = "bool"; $code = "PUSHI 0\n"; mvapStackSize += 1; } //et false
     | expr1 = expression                                               //et conditions en general
       cond = COND
       expr2 = expression
@@ -586,7 +588,7 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
                               + $expr.code 
                               + tradOneElement($expr.type, $type) 
                               + "SUB\n"; 
-                              pushCount += 1; }
+                              mvapStackSize += 1; }
 
     | atom //Expressions unitaires
       { $type = $atom.type; $code = $atom.code; }
@@ -595,13 +597,13 @@ preparenthesis returns [ String type, String code ] //preparenthesis nous permet
 atom returns [ String type, String code ] //Les atomes de l'expression sont les elements qui sont "seuls"
     :                                     //Il y a donc les entiers, float, booleens, id ainsi que les
       ent = ENTIER                        //appels de fonctions
-      { $type = "int"; $code = "PUSHI " + $ent.text + "\n"; pushCount += 1; }
+      { $type = "int"; $code = "PUSHI " + $ent.text + "\n"; mvapStackSize += 1; }
 
     | flo = FLOAT
-      { $type = "float"; $code = "PUSHF " + $flo.text + "\n"; pushCount += 1; }
+      { $type = "float"; $code = "PUSHF " + $flo.text + "\n"; mvapStackSize += 1; }
 
     | boo = BOOLEAN
-      { $type = "bool"; $code = ($boo.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); pushCount += 1; }
+      { $type = "bool"; $code = ($boo.text.equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); mvapStackSize += 1; }
 
     | id = IDENTIFIANT
       { 
@@ -617,14 +619,14 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       { 
         $type = tablesSymboles.getFunction($id.text); 
         String pusher = ($type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
-        pushCount += 1;
+        mvapStackSize += 1;
         $code = pusher 
               + $args.code 
               + "CALL " + $id.text + "\n";                                       //Ajout du code des arguments et du CALL mvap
         for (int i = 0; i < $args.nbArgs; i++){                                  //On pop tous les arguments lors du call
           $code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
         }
-        pushCount -= $args.nbArgs;
+        mvapStackSize -= $args.nbArgs;
       }
     ;
 

@@ -108,7 +108,7 @@ public class CalculetteParser extends Parser {
 	    private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles 
 	    private int nbErrors = 0;                                     //Compteur d'erreurs a la compilation 
 	    //private ArrayList<String> errors = new ArrayList();         //Liste des erreurs 
-	    private int pushCount = 0;                             
+	    private int mvapStackSize = 0;                             
 
 	    /****************FONCTIONS DEBUG****************/
 
@@ -191,7 +191,7 @@ public class CalculetteParser extends Parser {
 	              + "LABEL " + trueLabel + "\n"
 	              + "PUSHI 1\n" 
 	              + "LABEL " + falseLabel + "\n";
-	          pushCount += 3;
+	          mvapStackSize += 3;
 	          break;
 	        default:
 	          triggerCastError(targetType);
@@ -224,7 +224,7 @@ public class CalculetteParser extends Parser {
 	    private String storeGOrL(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
 	      String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
-	      pushCount += 1;
+	      mvapStackSize -= 1;
 	      String res = (at.getSize(at.type) == 1)                
 	                   ? storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
 	                   : storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -236,7 +236,7 @@ public class CalculetteParser extends Parser {
 	    private String pushGOrL(String id){
 	      AdresseType at = tablesSymboles.getAdresseType(id);      //Adresses positives : variables globales,
 	      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL "; //Adresses negatives : variables locales
-	      pushCount -= 1;
+	      mvapStackSize += 1;
 	      String res = (at.getSize(at.type) == 1)                
 	                   ? pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
 	                   : pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
@@ -246,13 +246,13 @@ public class CalculetteParser extends Parser {
 
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrF(String type){
-	      pushCount += 1;
+	      mvapStackSize += 1;
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI " : "PUSHF "); 
 	    }
 
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrFZero(String type){
-	      pushCount += 1;
+	      mvapStackSize += 1;
 	      return ((type.equals("int") || type.equals("bool")) ? "PUSHI 0\n" : "PUSHF 0.0\n"); 
 	    }
 
@@ -261,6 +261,7 @@ public class CalculetteParser extends Parser {
 	    //Renvoie le code mvap pour chacune des operations possibles en prenant en compte le type
 	    private String evalOp(String type, String op){
 	      String res = "";
+	      mvapStackSize -= 1;
 	      if(type.equals("float")){ //Si type float alors 
 	        res += "F";             //FADD FSUB ... pour la stack machine
 	      }
@@ -398,6 +399,7 @@ public class CalculetteParser extends Parser {
 
 	    //Fonction renvoyant le code mvap pour utiliser read suivant le type de l'id
 	    private String evalInput(String id){
+	      mvapStackSize += 1;
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      String str1 = at.type.equals("int") ? "READ\n" : "READF\n";
 	      String str2 = storeGOrL(id);
@@ -412,10 +414,10 @@ public class CalculetteParser extends Parser {
 	      String res = "";
 	      if((type.equals("int")) || (type.equals("bool"))){
 	        res = "WRITE\nPOP\n";       //Un seul POP normal pour l'output
-	        pushCount -= 1;
+	        mvapStackSize -= 1;
 	      }else{
 	        res = "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float car les float 
-	        pushCount -= 2;             //prennent plus de place dans la stack machine
+	        mvapStackSize -= 2;             //prennent plus de place dans la stack machine
 	      }                             
 	      return res;
 	    }                                      
@@ -429,7 +431,7 @@ public class CalculetteParser extends Parser {
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-	      pushCount += 1;
+	      mvapStackSize += 1;
 	      return expr1 
 	             + "JUMPF " + falseLabel1And + "\n" 
 	             + expr2 
@@ -446,7 +448,7 @@ public class CalculetteParser extends Parser {
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-	      pushCount += 1;
+	      mvapStackSize += 1;
 	      return expr1 
 	             + "JUMPF " + falseLabel1Or + "\n" 
 	             + "PUSHI 1\n" 
@@ -635,13 +637,13 @@ public class CalculetteParser extends Parser {
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			 _localctx.code += "FREE " + pushCount + "\n"; 
+			 _localctx.code += "FREE " + mvapStackSize + "\n"; 
 			 _localctx.code += "HALT \n"; 
 			}
 			_ctx.stop = _input.LT(-1);
 			 
 			  System.out.println(_localctx.code); 
-			  System.out.println("#pushCount : " + pushCount);
+			  System.out.println("#mvapStackSize : " + mvapStackSize);
 			  System.out.println("#!!! Found " + nbErrors + " errors in code !!!"); //Commentaire hashtag pour eviter erreur compilation
 
 		}
@@ -1110,14 +1112,14 @@ public class CalculetteParser extends Parser {
 				{
 				setState(159);
 				match(T__2);
-				 ((ExpressionContext)_localctx).type =  "bool"; ((ExpressionContext)_localctx).code =  "PUSHI 1\n"; pushCount += 1; 
+				 ((ExpressionContext)_localctx).type =  "bool"; ((ExpressionContext)_localctx).code =  "PUSHI 1\n"; mvapStackSize += 1; 
 				}
 				break;
 			case 4:
 				{
 				setState(161);
 				match(T__3);
-				 ((ExpressionContext)_localctx).type =  "bool"; ((ExpressionContext)_localctx).code =  "PUSHI 0\n"; pushCount += 1; 
+				 ((ExpressionContext)_localctx).type =  "bool"; ((ExpressionContext)_localctx).code =  "PUSHI 0\n"; mvapStackSize += 1; 
 				}
 				break;
 			}
@@ -1462,7 +1464,7 @@ public class CalculetteParser extends Parser {
 				                              + ((PreparenthesisContext)_localctx).expr.code 
 				                              + tradOneElement(((PreparenthesisContext)_localctx).expr.type, _localctx.type) 
 				                              + "SUB\n"; 
-				                              pushCount += 1; 
+				                              mvapStackSize += 1; 
 				}
 				break;
 			case ENTIER:
@@ -1532,7 +1534,7 @@ public class CalculetteParser extends Parser {
 				{
 				setState(232);
 				((AtomContext)_localctx).ent = match(ENTIER);
-				 ((AtomContext)_localctx).type =  "int"; ((AtomContext)_localctx).code =  "PUSHI " + (((AtomContext)_localctx).ent!=null?((AtomContext)_localctx).ent.getText():null) + "\n"; pushCount += 1; 
+				 ((AtomContext)_localctx).type =  "int"; ((AtomContext)_localctx).code =  "PUSHI " + (((AtomContext)_localctx).ent!=null?((AtomContext)_localctx).ent.getText():null) + "\n"; mvapStackSize += 1; 
 				}
 				break;
 			case 2:
@@ -1540,7 +1542,7 @@ public class CalculetteParser extends Parser {
 				{
 				setState(234);
 				((AtomContext)_localctx).flo = match(FLOAT);
-				 ((AtomContext)_localctx).type =  "float"; ((AtomContext)_localctx).code =  "PUSHF " + (((AtomContext)_localctx).flo!=null?((AtomContext)_localctx).flo.getText():null) + "\n"; pushCount += 1; 
+				 ((AtomContext)_localctx).type =  "float"; ((AtomContext)_localctx).code =  "PUSHF " + (((AtomContext)_localctx).flo!=null?((AtomContext)_localctx).flo.getText():null) + "\n"; mvapStackSize += 1; 
 				}
 				break;
 			case 3:
@@ -1548,7 +1550,7 @@ public class CalculetteParser extends Parser {
 				{
 				setState(236);
 				((AtomContext)_localctx).boo = match(BOOLEAN);
-				 ((AtomContext)_localctx).type =  "bool"; ((AtomContext)_localctx).code =  ((((AtomContext)_localctx).boo!=null?((AtomContext)_localctx).boo.getText():null).equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); pushCount += 1; 
+				 ((AtomContext)_localctx).type =  "bool"; ((AtomContext)_localctx).code =  ((((AtomContext)_localctx).boo!=null?((AtomContext)_localctx).boo.getText():null).equals("true") ? "PUSHI 1\n" : "PUSHI 0\n"); mvapStackSize += 1; 
 				}
 				break;
 			case 4:
@@ -1577,14 +1579,14 @@ public class CalculetteParser extends Parser {
 				 
 				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null)); 
 				        String pusher = (_localctx.type.equals("int") ? "PUSHI 666\n" : "PUSHF 0.666\n"); //Push un nombre random pour memoire float ou int
-				        pushCount += 1;
+				        mvapStackSize += 1;
 				        ((AtomContext)_localctx).code =  pusher 
 				              + ((AtomContext)_localctx).args.code 
 				              + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";                                       //Ajout du code des arguments et du CALL mvap
 				        for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){                                  //On pop tous les arguments lors du call
 				          _localctx.code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
 				        }
-				        pushCount -= ((AtomContext)_localctx).args.nbArgs;
+				        mvapStackSize -= ((AtomContext)_localctx).args.nbArgs;
 				      
 				}
 				break;
