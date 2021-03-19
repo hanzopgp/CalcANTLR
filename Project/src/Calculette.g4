@@ -153,8 +153,8 @@ grammar Calculette;
       String res = "";
       AdresseType at = tablesSymboles.getAdresseType(id);        //Adresses positives : variables globales,
       String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
-      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool"));
-      if(isIntOrBool){
+      boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
+      if(isIntOrBoolOrReturn){
         mvapStackSize += 1;
         res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
       }else{
@@ -484,9 +484,9 @@ grammar Calculette;
       AdresseType at = tablesSymboles.getAdresseType("return");
       testAddressNotFound(at);
       testEmptyStringErrors(exprType, expr);
+      expr += tradOneElement(exprType, at.type);
       return expr 
-             + tradOneElement(exprType, at.type) 
-             + storeGOrL(expr) 
+             + "STOREL " + at.adresse + "\n"
              + "RETURN\n";
     }                                                                                               
 }
@@ -711,23 +711,28 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       '('
       args
       ')'
-      { 
-        $type = tablesSymboles.getFunction($id.text); 
+      {
+        $type = tablesSymboles.getFunction($id.text);   //Recupere le type de la fonction appelee
         String pusher = "";
-        if($type.equals("int")){ //Push un nombre random pour memoire float ou int
-          pusher = "PUSHI 666\n";
+        if($type.equals("int")){                        //Push un nombre random pour memoire float ou int
+          pusher = "PUSHI 667\n";
           mvapStackSize += 1;
         }else{
-          pusher = "PUSHF 0.666\n";
+          pusher = "PUSHF 0.667\n";
           mvapStackSize += 2;
         }
-        $code = pusher 
-              + $args.code 
-              + "CALL " + $id.text + "\n";                                       //Ajout du code des arguments et du CALL mvap
-        for (int i = 0; i < $args.nbArgs; i++){                                  //On pop tous les arguments lors du call
-          $code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
-        }
-        mvapStackSize -= $args.nbArgs;                                           //Chaque pop fait retrecir la taille de 1
+        if($args.nbArgs > 0){                           //Si il y a des arguments
+          $code = pusher 
+                + $args.code 
+                + "CALL " + $id.text + "\n";            //Ajout du code des arguments et du CALL mvap
+          for (int i = 0; i < $args.nbArgs; i++){       //On pop tous les arguments lors du call
+            $code += "POP\n";                           //pour les utiliser pendant l'appel de la fonction       
+          }
+          mvapStackSize -= $args.nbArgs;                //Chaque pop fait retrecir la taille de 1
+        }else{                                          //Si pas d'arguments
+          $code = pusher 
+                + "CALL " + $id.text + "\n";            //Ajout du code et du CALL mvap
+        }     
       }
     ;
 
@@ -823,7 +828,7 @@ fonction returns [ String code ]            //Prise en charge des fonctions
       '('
       params? //Il peut ne pas y avoir de parametre dans la fonction
       ')' 
-      { tablesSymboles.newFunction($id.text, $ty.text); }
+      { tablesSymboles.newFunction( $id.text, $ty.text); }
       block   //On precise block car une instruction sans bracket n'est pas accepte comme avec les branchements et boucles
       {
         $code = "LABEL " + $id.text + "\n";

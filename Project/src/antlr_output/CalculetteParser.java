@@ -251,8 +251,8 @@ public class CalculetteParser extends Parser {
 	      String res = "";
 	      AdresseType at = tablesSymboles.getAdresseType(id);        //Adresses positives : variables globales,
 	      String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
-	      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool"));
-	      if(isIntOrBool){
+	      boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
+	      if(isIntOrBoolOrReturn){
 	        mvapStackSize += 1;
 	        res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
 	      }else{
@@ -582,9 +582,9 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType("return");
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(exprType, expr);
+	      expr += tradOneElement(exprType, at.type);
 	      return expr 
-	             + tradOneElement(exprType, at.type) 
-	             + storeGOrL(expr) 
+	             + "STOREL " + at.adresse + "\n"
 	             + "RETURN\n";
 	    }                                                                                               
 
@@ -1725,23 +1725,28 @@ public class CalculetteParser extends Parser {
 				((AtomContext)_localctx).args = args();
 				setState(253);
 				match(T__5);
-				 
-				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null)); 
+
+				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null));   //Recupere le type de la fonction appelee
 				        String pusher = "";
-				        if(_localctx.type.equals("int")){ //Push un nombre random pour memoire float ou int
-				          pusher = "PUSHI 666\n";
+				        if(_localctx.type.equals("int")){                        //Push un nombre random pour memoire float ou int
+				          pusher = "PUSHI 667\n";
 				          mvapStackSize += 1;
 				        }else{
-				          pusher = "PUSHF 0.666\n";
+				          pusher = "PUSHF 0.667\n";
 				          mvapStackSize += 2;
 				        }
-				        ((AtomContext)_localctx).code =  pusher 
-				              + ((AtomContext)_localctx).args.code 
-				              + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";                                       //Ajout du code des arguments et du CALL mvap
-				        for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){                                  //On pop tous les arguments lors du call
-				          _localctx.code += "POP\n";                                                      //pour les utiliser pendant l'appel de la fonction       
-				        }
-				        mvapStackSize -= ((AtomContext)_localctx).args.nbArgs;                                           //Chaque pop fait retrecir la taille de 1
+				        if(((AtomContext)_localctx).args.nbArgs > 0){                           //Si il y a des arguments
+				          ((AtomContext)_localctx).code =  pusher 
+				                + ((AtomContext)_localctx).args.code 
+				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code des arguments et du CALL mvap
+				          for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){       //On pop tous les arguments lors du call
+				            _localctx.code += "POP\n";                           //pour les utiliser pendant l'appel de la fonction       
+				          }
+				          mvapStackSize -= ((AtomContext)_localctx).args.nbArgs;                //Chaque pop fait retrecir la taille de 1
+				        }else{                                          //Si pas d'arguments
+				          ((AtomContext)_localctx).code =  pusher 
+				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code et du CALL mvap
+				        }     
 				      
 				}
 				break;
@@ -2106,7 +2111,7 @@ public class CalculetteParser extends Parser {
 
 			setState(323);
 			match(T__5);
-			 tablesSymboles.newFunction((((FonctionContext)_localctx).id!=null?((FonctionContext)_localctx).id.getText():null), (((FonctionContext)_localctx).ty!=null?((FonctionContext)_localctx).ty.getText():null)); 
+			 tablesSymboles.newFunction( (((FonctionContext)_localctx).id!=null?((FonctionContext)_localctx).id.getText():null), (((FonctionContext)_localctx).ty!=null?((FonctionContext)_localctx).ty.getText():null)); 
 			setState(325);
 			((FonctionContext)_localctx).block = block();
 

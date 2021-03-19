@@ -243,8 +243,8 @@ public class CalculetteLexer extends Lexer {
 	      String res = "";
 	      AdresseType at = tablesSymboles.getAdresseType(id);        //Adresses positives : variables globales,
 	      String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
-	      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool"));
-	      if(isIntOrBool){
+	      boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
+	      if(isIntOrBoolOrReturn){
 	        mvapStackSize += 1;
 	        res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
 	      }else{
@@ -574,9 +574,9 @@ public class CalculetteLexer extends Lexer {
 	      AdresseType at = tablesSymboles.getAdresseType("return");
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(exprType, expr);
+	      expr += tradOneElement(exprType, at.type);
 	      return expr 
-	             + tradOneElement(exprType, at.type) 
-	             + storeGOrL(expr) 
+	             + "STOREL " + at.adresse + "\n"
 	             + "RETURN\n";
 	    }                                                                                               
 
