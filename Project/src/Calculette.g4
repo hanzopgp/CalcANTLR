@@ -802,7 +802,7 @@ IDENTIFIANT: ('a'..'z' | 'A'..'Z')+('0'..'9')*; //IDENTIFIANT en dernier, cela e
 
 /****************ELEMENTS A IGNORER****************/
 
-NEWLINE: '\r'? '\n' -> skip; //Retour a la ligne et espacement entre les lignes
+NEWLINE: '\r'? '\n'; //Retour a la ligne et espacement entre les lignes
 
 WS: (' ' | '\t')+ -> skip; //Tabulation et espace inutiles
 

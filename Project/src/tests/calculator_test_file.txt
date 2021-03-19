@@ -6,7 +6,7 @@ int z = 1
 
 read(x) 
 
-if(y==0) {
+if(y==0){
 write(z)
 }
 else{ write(y)}

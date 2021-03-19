@@ -448,7 +448,7 @@ public class CalculetteParser extends Parser {
 	    private String evalIfElse(String exprType, String expr, String ifInstructions, String elseInstructions){                                                                                 
 	      String elseStartLabel = getNewLabel();                                                                   
 	      String ifEndLabel = getNewLabel(); 
-	      //expr += tradOneElement(exprType, "bool"); 
+	      expr += tradOneElement(exprType, "bool"); 
 	      testEmptyStringErrors(exprType, expr, ifInstructions, elseInstructions);
 	      return expr 
 	             + "JUMPF " + elseStartLabel +"\n" 
@@ -462,7 +462,7 @@ public class CalculetteParser extends Parser {
 	    //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
 	    private String evalIf(String exprType, String expr, String ifInstructions){      
 	      String ifEndLabel = getNewLabel();                                           
-	      //expr += tradOneElement(exprType, "bool"); 
+	      expr += tradOneElement(exprType, "bool"); 
 	      testEmptyStringErrors(exprType, expr, ifInstructions);                                                     
 	      return expr 
 	             + "JUMPF " + ifEndLabel + "\n" 
@@ -1650,7 +1650,7 @@ public class CalculetteParser extends Parser {
 				match(T__7);
 				setState(260);
 				((IfElseInstrContext)_localctx).elseinstr = instruction();
-				 ((IfElseInstrContext)_localctx).code =  evalIfElse(((IfElseInstrContext)_localctx).expression.type, ((IfElseInstrContext)_localctx).expression.code, ((IfElseInstrContext)_localctx).ifinstr.code, ((IfElseInstrContext)_localctx).elseinstr.code);  System.err.println("ERROR IFELSE"); 
+				 ((IfElseInstrContext)_localctx).code =  evalIfElse(((IfElseInstrContext)_localctx).expression.type, ((IfElseInstrContext)_localctx).expression.code, ((IfElseInstrContext)_localctx).ifinstr.code, ((IfElseInstrContext)_localctx).elseinstr.code); 
 				}
 				break;
 			}
