@@ -23,7 +23,6 @@ PUSHG 0
 MUL
 WRITE
 POP
-FREE 4
 HALT 
 
 #mvapStackSize : 4

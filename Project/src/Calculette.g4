@@ -487,7 +487,7 @@ maincode returns [ String code ]
       (instruction { $code += $instruction.code; })* //avons les differentes instructions du main
 
 
-      { $code += "FREE " + mvapStackSize + "\n"; }
+      /*{ $code += "FREE " + mvapStackSize + "\n"; }*/ //Ne fonctionne pas dans tous les cas...
 
       { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
     ;
