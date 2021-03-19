@@ -15,13 +15,25 @@ public class CalculetteBaseListener implements CalculetteListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCalcul(CalculetteParser.CalculContext ctx) { }
+	@Override public void enterStart(CalculetteParser.StartContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCalcul(CalculetteParser.CalculContext ctx) { }
+	@Override public void exitStart(CalculetteParser.StartContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMaincode(CalculetteParser.MaincodeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMaincode(CalculetteParser.MaincodeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

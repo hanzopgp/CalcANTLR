@@ -13,7 +13,7 @@ public class MainCalculette {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         CalculetteParser parser = new CalculetteParser(tokens);
         try {
-            parser.calcul();
+            parser.start();
         } catch (RecognitionException e) {
             e.printStackTrace();
         } catch (Exception e) {

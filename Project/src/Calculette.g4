@@ -406,13 +406,13 @@ grammar Calculette;
 ================AXIOME DE DEPART====================
 ==================================================*/
 
-start : code EOF;
+start : maincode EOF;
 
 /*==================================================
 ===============FONCTION PRINCIPALE==================
 ==================================================*/
 
-code returns [ String code ]
+maincode returns [ String code ]
 @init{ $code = new String(); }       //Initialisation de $code qui contiendra le code mvap
 @after{ 
   System.out.println($code); 

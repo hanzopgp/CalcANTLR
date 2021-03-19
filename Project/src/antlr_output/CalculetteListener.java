@@ -7,15 +7,25 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  */
 public interface CalculetteListener extends ParseTreeListener {
 	/**
-	 * Enter a parse tree produced by {@link CalculetteParser#calcul}.
+	 * Enter a parse tree produced by {@link CalculetteParser#start}.
 	 * @param ctx the parse tree
 	 */
-	void enterCalcul(CalculetteParser.CalculContext ctx);
+	void enterStart(CalculetteParser.StartContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link CalculetteParser#calcul}.
+	 * Exit a parse tree produced by {@link CalculetteParser#start}.
 	 * @param ctx the parse tree
 	 */
-	void exitCalcul(CalculetteParser.CalculContext ctx);
+	void exitStart(CalculetteParser.StartContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link CalculetteParser#maincode}.
+	 * @param ctx the parse tree
+	 */
+	void enterMaincode(CalculetteParser.MaincodeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CalculetteParser#maincode}.
+	 * @param ctx the parse tree
+	 */
+	void exitMaincode(CalculetteParser.MaincodeContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link CalculetteParser#instruction}.
 	 * @param ctx the parse tree
