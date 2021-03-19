@@ -406,7 +406,7 @@ grammar Calculette;
 ================AXIOME DE DEPART====================
 ==================================================*/
 
-calcul returns [ String code ]
+start returns [ String code ]
 @init{ $code = new String(); }       //Initialisation de $code qui contiendra le code mvap
 @after{ 
   System.out.println($code); 
