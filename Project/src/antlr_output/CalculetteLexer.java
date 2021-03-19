@@ -315,7 +315,7 @@ public class CalculetteLexer extends Lexer {
 	    private String evalDeclaration(String type, String id){  
 	      tablesSymboles.putVar(id, type);
 	      testEmptyStringErrors(type, id);
-	      return pushIOrFZero(type) + storeGOrL(id); 
+	      return pushIOrFZero(type) /*+ storeGOrL(id)*/; 
 	    }
 
 	    //Renvoie le code pour une declaration + assignation suivant le type de l'id

@@ -1,12 +1,4 @@
 int x
+x=42
+write(x) 
 
-int y = 0 
-
-int z = 1
-
-read(x) 
-
-if(y==0){
-write(z)
-}
-else{ write(y)}
