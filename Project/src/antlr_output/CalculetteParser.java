@@ -538,7 +538,7 @@ public class CalculetteParser extends Parser {
 	             + "JUMPF " + falseLabel1Or + "\n" 
 	             + "PUSHI 1\n" 
 	             + "JUMP " + trueLabel1Or + "\n"
-	             + "LABEL " + falseLabel1Or 
+	             + "LABEL " + falseLabel1Or + "\n"
 	             + expr2 
 	             + "LABEL " + trueLabel1Or + "\n";
 	    }
@@ -2110,7 +2110,7 @@ public class CalculetteParser extends Parser {
 			setState(325);
 			((FonctionContext)_localctx).block = block();
 
-			        ((FonctionContext)_localctx).code =  "LABEL " + (((FonctionContext)_localctx).id!=null?((FonctionContext)_localctx).id.getText():null);
+			        ((FonctionContext)_localctx).code =  "LABEL " + (((FonctionContext)_localctx).id!=null?((FonctionContext)_localctx).id.getText():null) + "\n";
 			        _localctx.code += ((FonctionContext)_localctx).block.code;
 			      
 			}

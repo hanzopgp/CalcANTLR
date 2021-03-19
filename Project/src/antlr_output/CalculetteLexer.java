@@ -530,7 +530,7 @@ public class CalculetteLexer extends Lexer {
 	             + "JUMPF " + falseLabel1Or + "\n" 
 	             + "PUSHI 1\n" 
 	             + "JUMP " + trueLabel1Or + "\n"
-	             + "LABEL " + falseLabel1Or 
+	             + "LABEL " + falseLabel1Or + "\n"
 	             + expr2 
 	             + "LABEL " + trueLabel1Or + "\n";
 	    }

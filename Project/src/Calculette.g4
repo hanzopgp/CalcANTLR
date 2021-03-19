@@ -440,7 +440,7 @@ grammar Calculette;
              + "JUMPF " + falseLabel1Or + "\n" 
              + "PUSHI 1\n" 
              + "JUMP " + trueLabel1Or + "\n"
-             + "LABEL " + falseLabel1Or 
+             + "LABEL " + falseLabel1Or + "\n"
              + expr2 
              + "LABEL " + trueLabel1Or + "\n";
     }
@@ -826,7 +826,7 @@ fonction returns [ String code ]            //Prise en charge des fonctions
       { tablesSymboles.newFunction($id.text, $ty.text); }
       block   //On precise block car une instruction sans bracket n'est pas accepte comme avec les branchements et boucles
       {
-        $code = "LABEL " + $id.text;
+        $code = "LABEL " + $id.text + "\n";
         $code += $block.code;
       }
     ;

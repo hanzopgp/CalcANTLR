@@ -1,17 +1,9 @@
-int x = 1
-int y = 3
-if (x==1) x=x+1
-if (x==3) x=4 
-	else write(x)
-x=1
-if (x==1) { x=x+1
-	if (x==3) x=4
-	} 
-else write(x)
-x=1
-if (x==1) {if (y!=3) write(y) 
-		else y=2*y
-	} 
-	else y=4
-write(y) 
-
+int i = 0
+while ( false || i <= 40) i = i + 2
+write(i)
+i = 100
+while (! i == 100 || false) i = i - 2
+write(i)
+i = 42
+while (false || ! true || true  &&  ! i == 42) i = i - 2
+write(i)
