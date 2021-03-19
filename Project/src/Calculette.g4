@@ -27,12 +27,16 @@ grammar Calculette;
 
     private void printFinalDisplay(){
       System.out.println("#mvapStackSize : " + mvapStackSize); //Commentaires hashtag pour eviter erreur compilation de la stack machine
-      System.out.println("#!!! Found " + nbErrorsTotal + " total errors in code !!!"); 
-      System.out.println("#!!! Found " + nbErrorsAddress + " address errors in code !!!"); 
-      System.out.println("#!!! Found " + nbErrorsOperator + " operator errors in code !!!");
-      System.out.println("#!!! Found " + nbErrorsCondition + " condition errors in code !!!");
-      System.out.println("#!!! Found " + nbErrorsCast + " cast errors in code !!!"); 
-      System.out.println("#!!! Found " + nbErrorsAutoCast + " auto-cast errors in code !!!"); 
+      if(nbErrorsTotal > 0){
+        System.out.println("#!!! Found " + nbErrorsTotal + " total errors in code !!!"); 
+        System.out.println("#!!! Found " + nbErrorsAddress + " address errors in code !!!"); 
+        System.out.println("#!!! Found " + nbErrorsOperator + " operator errors in code !!!");
+        System.out.println("#!!! Found " + nbErrorsCondition + " condition errors in code !!!");
+        System.out.println("#!!! Found " + nbErrorsCast + " cast errors in code !!!"); 
+        System.out.println("#!!! Found " + nbErrorsAutoCast + " auto-cast errors in code !!!");
+      }else{
+        System.out.println("#Compilation successful !"); 
+      }
     }
 
     /*private void printErrors(){
@@ -145,25 +149,36 @@ grammar Calculette;
 
     //Renvoie STOREG ou STOREL + l'adresse suivant le type de l'id
     private String storeGOrL(String id){
-      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
+      String res = "";
+      AdresseType at = tablesSymboles.getAdresseType(id);        //Adresses positives : variables globales,
       String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
       mvapStackSize -= 1;
-      String res = (at.getSize(at.type) == 1)                
-                   ? storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
-                   : storer + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
-                            + storer + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //store 2 elements
+      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool"));
+      if(isIntOrBool){
+        res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
+      }else{
+        res = storer + at.adresse + "\n"                                       //Alors que les float ont besoin de deux
+            + storer + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //places il faut donc store 2 elements
+      }
       return res;
     }
 
     //Renvoie PUSHG 0 ou PUSHL 0 suivant le type en entree
     private String pushGOrL(String id){
-      AdresseType at = tablesSymboles.getAdresseType(id);      //Adresses positives : variables globales,
-      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL "; //Adresses negatives : variables locales
+      String res = "";
+      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
+      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL ";  //Adresses negatives : variables locales
       mvapStackSize += 1;
-      String res = (at.getSize(at.type) == 1)                
-                   ? pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Les int et bool ne prennent qu'une place dans la table
-                   : pusher + tablesSymboles.getAdresseType(id).adresse + "\n"                 //Alors que les float ont besoin de deux place il faut donc
-                            + pusher + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //store 2 elements
+      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool"));
+      if(isIntOrBool){
+        res = pusher 
+            + tablesSymboles.getAdresseType(id).adresse + "\n"; //Les int et bool ne prennent qu'une place dans la table
+      }else{
+        res = pusher 
+            + tablesSymboles.getAdresseType(id).adresse + "\n"  //Alors que les float ont besoin de deux place il faut donc
+            + pusher                                            //push deux fois
+            + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n";
+      }
       return res;
     }
 
@@ -254,7 +269,7 @@ grammar Calculette;
     private String evalDeclaration(String type, String id){  
       tablesSymboles.putVar(id, type);
       testEmptyStringErrors(type, id);
-      return pushIOrFZero(type) /*+ storeGOrL(id)*/; 
+      return pushIOrFZero(type) + storeGOrL(id); 
     }
 
     //Renvoie le code pour une declaration + assignation suivant le type de l'id
