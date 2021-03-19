@@ -207,7 +207,7 @@ public class CalculetteLexer extends Lexer {
 	              + "LABEL " + trueLabel + "\n"
 	              + "PUSHI 1\n" 
 	              + "LABEL " + falseLabel + "\n";
-	          mvapStackSize += 3;
+	          mvapStackSize += 1;
 	          break;
 	        default:
 	          triggerCastError(targetType);
@@ -241,11 +241,12 @@ public class CalculetteLexer extends Lexer {
 	      String res = "";
 	      AdresseType at = tablesSymboles.getAdresseType(id);        //Adresses positives : variables globales,
 	      String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
-	      mvapStackSize -= 1;
 	      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool"));
 	      if(isIntOrBool){
+	        mvapStackSize += 1;
 	        res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
 	      }else{
+	        mvapStackSize += 2;
 	        res = storer + at.adresse + "\n"                                       //Alors que les float ont besoin de deux
 	            + storer + (tablesSymboles.getAdresseType(id).adresse + 1) + "\n"; //places il faut donc store 2 elements
 	      }
@@ -257,12 +258,13 @@ public class CalculetteLexer extends Lexer {
 	      String res = "";
 	      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
 	      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL ";  //Adresses negatives : variables locales
-	      mvapStackSize += 1;
 	      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool"));
 	      if(isIntOrBool){
+	        mvapStackSize += 1;
 	        res = pusher 
 	            + tablesSymboles.getAdresseType(id).adresse + "\n"; //Les int et bool ne prennent qu'une place dans la table
 	      }else{
+	        mvapStackSize += 2;
 	        res = pusher 
 	            + tablesSymboles.getAdresseType(id).adresse + "\n"  //Alors que les float ont besoin de deux place il faut donc
 	            + pusher                                            //push deux fois
@@ -314,6 +316,7 @@ public class CalculetteLexer extends Lexer {
 
 	    //Renvoie le code mvap pour chacune des conditions possibles
 	    private String evalCond(String type, String exp1, String cond, String exp2){  
+	      mvapStackSize -= 1;
 	      String res = exp1 + exp2;  
 	      if(type.equals("float")){ //Si type float alors
 	        res += "F";             //FEQUAL FINFEQ ... pour la stack machine
@@ -385,6 +388,7 @@ public class CalculetteLexer extends Lexer {
 	      String startLabelW = getNewLabel();                                     
 	      String endLabelW = getNewLabel();
 	      expr += tradOneElement(exprType, "bool");
+	      mvapStackSize -= 1;
 	      testEmptyStringErrors(exprType, expr, instructions);
 	      return "LABEL " 
 	             + startLabelW + "\n" 
@@ -400,6 +404,7 @@ public class CalculetteLexer extends Lexer {
 	      String startLabelF = getNewLabel();                                                                    
 	      String endLabelF = getNewLabel();
 	      expr += tradOneElement(exprType, "bool");
+	      mvapStackSize -= 1;
 	      testEmptyStringErrors(init, exprType, expr, iteration, instructions);
 	      return init 
 	             + "LABEL " + startLabelF + "\n" 
@@ -415,6 +420,7 @@ public class CalculetteLexer extends Lexer {
 	    private String evalRepeatLoop(String exprType, String expr, String instructions){                                                  
 	      String startLabelR = getNewLabel();
 	      expr += tradOneElement(exprType, "bool"); 
+	      mvapStackSize -= 1;
 	      testEmptyStringErrors(exprType, expr, instructions);
 	      return "LABEL " + startLabelR + "\n" 
 	             + instructions 
@@ -458,7 +464,6 @@ public class CalculetteLexer extends Lexer {
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-	      mvapStackSize += 1;
 	      return expr1 
 	             + "JUMPF " + falseLabel1And + "\n" 
 	             + expr2 
@@ -475,7 +480,6 @@ public class CalculetteLexer extends Lexer {
 	      expr1 += tradOneElement(expr1Type, "bool");
 	      expr2 += tradOneElement(expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
-	      mvapStackSize += 1;
 	      return expr1 
 	             + "JUMPF " + falseLabel1Or + "\n" 
 	             + "PUSHI 1\n" 
@@ -493,6 +497,7 @@ public class CalculetteLexer extends Lexer {
 	      String ifEndLabel = getNewLabel(); 
 	      expr += tradOneElement(exprType, "bool"); 
 	      testEmptyStringErrors(exprType, expr, ifInstructions, elseInstructions);
+	      mvapStackSize -= 1;
 	      return expr 
 	             + "JUMPF " + elseStartLabel +"\n" 
 	             + ifInstructions + "\n" 
@@ -506,7 +511,8 @@ public class CalculetteLexer extends Lexer {
 	    private String evalIf(String exprType, String expr, String ifInstructions){      
 	      String ifEndLabel = getNewLabel();                                           
 	      expr += tradOneElement(exprType, "bool"); 
-	      testEmptyStringErrors(exprType, expr, ifInstructions);                                                     
+	      testEmptyStringErrors(exprType, expr, ifInstructions);  
+	      mvapStackSize -= 1;                                                   
 	      return expr 
 	             + "JUMPF " + ifEndLabel + "\n" 
 	             + ifInstructions 
