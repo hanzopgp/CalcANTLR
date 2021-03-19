@@ -2,6 +2,33 @@ PUSHI 0
 JUMP Main
 LABEL Main
 PUSHI 42
+STOREG 1
+PUSHI 54
+STOREG 2
+READ
+STOREG 0
+PUSHG 0
+WRITE
+POP
+PUSHI 10
+STOREG 0
+READ
+STOREG 2
+PUSHG 1
+WRITE
+POP
+PUSHG 0
+PUSHI 1
+ADD
+STOREG 1
+PUSHG 1
+WRITE
+POP
+PUSHI 2
+PUSHG 1
+MUL
+PUSHI 20
+ADD
 STOREG 0
 PUSHG 0
 WRITE
@@ -10,4 +37,9 @@ FREE 1
 HALT 
 
 #mvapStackSize : 1
-#!!! Found 1 errors in code !!!
+#!!! Found 0 total errors in code !!!
+#!!! Found 0 address errors in code !!!
+#!!! Found 0 operator errors in code !!!
+#!!! Found 0 condition errors in code !!!
+#!!! Found 0 cast errors in code !!!
+#!!! Found 0 auto-cast errors in code !!!

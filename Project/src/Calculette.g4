@@ -8,11 +8,32 @@ grammar Calculette;
     private TablesSymboles tablesSymboles = new TablesSymboles(); //On utilise la table de symboles pour garder les
     private int _cur_label = 1;                                   //liens id/type et les valeurs dans les adresses
     private String getNewLabel() { return "B" +(_cur_label++); }  //Generateur de nom d'etiquettes pour les boucles 
-    private int nbErrors = 0;                                     //Compteur d'erreurs a la compilation 
+    
+    private int nbErrorsEmptyString = 0;                          //Comptage des erreurs
+    private int nbErrorsAddress = 0;                              
+    private int nbErrorsOperator = 0;                             
+    private int nbErrorsCondition = 0;                            
+    private int nbErrorsCast = 0;                                 
+    private int nbErrorsAutoCast = 0;   
+    private int nbErrorsTotal                                     
+            = nbErrorsEmptyString + nbErrorsAddress               
+            + nbErrorsOperator + nbErrorsCondition 
+            + nbErrorsCast + nbErrorsAutoCast;  
+
     //private ArrayList<String> errors = new ArrayList();         //Liste des erreurs 
-    private int mvapStackSize = 0;                             
+    private int mvapStackSize = 0;                                //On garde la taille de la pile pour pouvoir la vider 
 
     /****************FONCTIONS DEBUG****************/
+
+    private void printFinalDisplay(){
+      System.out.println("#mvapStackSize : " + mvapStackSize); //Commentaires hashtag pour eviter erreur compilation de la stack machine
+      System.out.println("#!!! Found " + nbErrorsTotal + " total errors in code !!!"); 
+      System.out.println("#!!! Found " + nbErrorsAddress + " address errors in code !!!"); 
+      System.out.println("#!!! Found " + nbErrorsOperator + " operator errors in code !!!");
+      System.out.println("#!!! Found " + nbErrorsCondition + " condition errors in code !!!");
+      System.out.println("#!!! Found " + nbErrorsCast + " cast errors in code !!!"); 
+      System.out.println("#!!! Found " + nbErrorsAutoCast + " auto-cast errors in code !!!"); 
+    }
 
     /*private void printErrors(){
       for(String s : errors){
@@ -23,7 +44,7 @@ grammar Calculette;
     private void testEmptyStringErrors(String ... strings){
       for(String s : strings){
         if(s.isEmpty()){
-          nbErrors++;
+          nbErrorsEmptyString++;
           System.err.println("-->ERROR empty string");
           break;
         }
@@ -31,31 +52,31 @@ grammar Calculette;
     }
 
     private void testAddressNotFound(AdresseType at){
-      nbErrors++;
       //boolean noAddressTest = at.adresse == ???;
       boolean noRightTypeTest = !(at.type.equals("int") || at.type.equals("float") || at.type.equals("bool"));
       if(noRightTypeTest){
+        nbErrorsAddress++;
         System.err.println("-->ERROR address, Address can't be found or is empty : [adress:" + at.adresse + ",type:" + at.type + "]");
       }
     }
 
     private void triggerOperatorError(String op){
-      nbErrors++;
+      nbErrorsOperator++;
       System.err.println("-->ERROR operator, found : " + op + ", expected : '+','-','*','/'");
     }
 
     private void triggerConditionError(String cond){
-      nbErrors++;
+      nbErrorsCondition++;
       System.err.println("-->ERROR condition, found : " + cond + ", expected : '==','<=','>=','<','>','!='");
     }
 
     private void triggerCastError(String targetType){
-      nbErrors++;
+      nbErrorsCast++;
       System.err.println("-->ERROR cast, found : " + targetType + ", expected : 'int','float','bool'");
     }
 
     private void triggerAutoCastError(String type, String type2){
-      nbErrors++;
+      nbErrorsAutoCast++;
       System.err.println("-->ERROR auto-cast, found : [" + type + "," + type2 + "], expected : 'int','float','bool'");
     }
 
@@ -319,7 +340,7 @@ grammar Calculette;
         mvapStackSize -= 1;
       }else{
         res = "WRITEF\nPOP\nPOP\n"; //Double POP si c'est un float car les float 
-        mvapStackSize -= 2;             //prennent plus de place dans la stack machine
+        mvapStackSize -= 2;         //prennent plus de place dans la stack machine
       }                             
       return res;
     }                                      
@@ -414,11 +435,7 @@ start : maincode EOF;
 
 maincode returns [ String code ]
 @init{ $code = new String(); }       //Initialisation de $code qui contiendra le code mvap
-@after{ 
-  System.out.println($code); 
-  System.out.println("#mvapStackSize : " + mvapStackSize);
-  System.out.println("#!!! Found " + nbErrors + " errors in code !!!"); //Commentaire hashtag pour eviter erreur compilation
-}
+@after{ System.out.println($code); printFinalDisplay(); }
     : 
       (declaration { $code += $declaration.code; })* //On commence un fichier de code par les declaration
       { $code += "JUMP " + "Main\n"; }               //Apres les declarations globales on passe au main
