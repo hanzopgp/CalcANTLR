@@ -246,11 +246,11 @@ public class CalculetteLexer extends Lexer {
 	      boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
 	      if(isIntOrBoolOrReturn){
 	        mvapStackSize += 1;
-	        res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
+	        res = storer + at.adresse + "\n";                         //Un store suffit pour les int et bool
 	      }else{
 	        mvapStackSize += 2;
-	        res = storer + (at.adresse + 1) + "\n"                                       //Alors que les float ont besoin de deux
-	            + storer + at.adresse + "\n"; //places il faut donc store 2 elements
+	        res = storer + (at.adresse + 1) + "\n"                    //Alors que les float ont besoin de deux
+	            + storer + at.adresse + "\n";                         //places il faut donc store 2 elements dans l'ordre
 	      }
 	      return res;
 	    }
@@ -422,7 +422,7 @@ public class CalculetteLexer extends Lexer {
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(id, exprType, expr);
-	      return expr + tradOneElement(exprType, at.type) + storeGOrL(id);
+	      return expr /*+ tradOneElement(exprType, at.type)*/ + storeGOrL(id);
 	    }
 
 	    /*******************FONCTIONS BOUCLES*******************/
@@ -574,9 +574,16 @@ public class CalculetteLexer extends Lexer {
 	      AdresseType at = tablesSymboles.getAdresseType("return");
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(exprType, expr);
-	      expr += tradOneElement(exprType, at.type);
+	      //expr += tradOneElement(exprType, at.type);
+	      String storer = "";
+	      if(at.type.equals("float")){
+	        storer = "STOREL " + (at.adresse + 1) + "\n"
+	               + "STOREL " + at.adresse + "\n";
+	      }else{
+	        storer = "STOREL " + at.adresse + "\n";
+	      }
 	      return expr 
-	             + "STOREL " + at.adresse + "\n"
+	             + storer
 	             + "RETURN\n";
 	    }                                                                                               
 

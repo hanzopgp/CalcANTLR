@@ -254,11 +254,11 @@ public class CalculetteParser extends Parser {
 	      boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
 	      if(isIntOrBoolOrReturn){
 	        mvapStackSize += 1;
-	        res = storer + at.adresse + "\n";                                      //Un store suffit pour les int et bool
+	        res = storer + at.adresse + "\n";                         //Un store suffit pour les int et bool
 	      }else{
 	        mvapStackSize += 2;
-	        res = storer + (at.adresse + 1) + "\n"                                       //Alors que les float ont besoin de deux
-	            + storer + at.adresse + "\n"; //places il faut donc store 2 elements
+	        res = storer + (at.adresse + 1) + "\n"                    //Alors que les float ont besoin de deux
+	            + storer + at.adresse + "\n";                         //places il faut donc store 2 elements dans l'ordre
 	      }
 	      return res;
 	    }
@@ -430,7 +430,7 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(id, exprType, expr);
-	      return expr + tradOneElement(exprType, at.type) + storeGOrL(id);
+	      return expr /*+ tradOneElement(exprType, at.type)*/ + storeGOrL(id);
 	    }
 
 	    /*******************FONCTIONS BOUCLES*******************/
@@ -582,9 +582,16 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType("return");
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(exprType, expr);
-	      expr += tradOneElement(exprType, at.type);
+	      //expr += tradOneElement(exprType, at.type);
+	      String storer = "";
+	      if(at.type.equals("float")){
+	        storer = "STOREL " + (at.adresse + 1) + "\n"
+	               + "STOREL " + at.adresse + "\n";
+	      }else{
+	        storer = "STOREL " + at.adresse + "\n";
+	      }
 	      return expr 
-	             + "STOREL " + at.adresse + "\n"
+	             + storer
 	             + "RETURN\n";
 	    }                                                                                               
 
@@ -1736,23 +1743,19 @@ public class CalculetteParser extends Parser {
 				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null));   //Recupere le type de la fonction appelee
 				        String pusher = "";
 				        if(_localctx.type.equals("int")){                        //Push un nombre random pour memoire float ou int
-				          pusher = "PUSHI 667\n";
 				          mvapStackSize += 1;
 				        }else{
-				          pusher = "PUSHF 0.667\n";
 				          mvapStackSize += 2;
 				        }
 				        if(((AtomContext)_localctx).args.nbArgs > 0){                           //Si il y a des arguments
-				          ((AtomContext)_localctx).code =  pusher 
-				                + ((AtomContext)_localctx).args.code 
+				          ((AtomContext)_localctx).code =  ((AtomContext)_localctx).args.code 
 				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code des arguments et du CALL mvap
 				          for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){       //On pop tous les arguments lors du call
 				            _localctx.code += "POP\n";                           //pour les utiliser pendant l'appel de la fonction       
 				          }
 				          mvapStackSize -= ((AtomContext)_localctx).args.nbArgs;                //Chaque pop fait retrecir la taille de 1
 				        }else{                                          //Si pas d'arguments
-				          ((AtomContext)_localctx).code =  pusher 
-				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code et du CALL mvap
+				          ((AtomContext)_localctx).code =  "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code et du CALL mvap
 				        }     
 				      
 				}
