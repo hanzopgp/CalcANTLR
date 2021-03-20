@@ -7,8 +7,8 @@ grammar Calculette;
 @members {
     private TablesSymboles tablesSymboles = new TablesSymboles();           //On utilise la table de symboles pour garder les
     private int _cur_label = 1;                                             //liens id/type et les valeurs dans les adresses
-    //private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
-    private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
+    private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
+    //private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
     
     private int nbErrorsEmptyString = 0;                                     //Comptage des erreurs
     private int nbErrorsAddress = 0;                              
@@ -268,10 +268,14 @@ grammar Calculette;
     }
 
     //Renvoie le code mvap pour chacune des conditions possibles
-    private String evalCond(String type, String exp1, String cond, String exp2){  
+    private String evalCond(String type, String expr1, String cond, String type2, String expr2){  
       mvapStackSize -= 1;
-      String res = exp1 + exp2;  
-      if(type.equals("float")){ //Si type float alors
+      StringBuilder codeRes = new StringBuilder();
+      StringBuilder codeRes2 = new StringBuilder();
+      String typeRes = tradTwoElements(type, expr1, type2, expr2, codeRes); 
+      String typeRes2 = tradTwoElements(type, expr1, type2, expr2, codeRes2);  
+      String res = codeRes.toString() + codeRes2.toString();
+      if(typeRes.equals("float")){ //Si type float alors
         res += "F";             //FEQUAL FINFEQ ... pour la stack machine
         mvapStackSize -= 1;
       }                                   
@@ -635,7 +639,7 @@ expression returns [ String type, String code ]
     | expr1 = expression                                                   //et conditions en general
       cond = COND
       expr2 = expression
-      { $type = "bool"; $code = evalCond($type, $expr1.code, $cond.text, $expr2.code); }
+      { $type = "bool"; $code = evalCond($expr1.type, $expr1.code, $cond.text, $expr2.type, $expr2.code); }
 
     | expr1 = expression                                                   //Prise en charge du && logique
       AND 

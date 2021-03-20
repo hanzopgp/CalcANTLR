@@ -105,8 +105,8 @@ public class CalculetteParser extends Parser {
 
 	    private TablesSymboles tablesSymboles = new TablesSymboles();           //On utilise la table de symboles pour garder les
 	    private int _cur_label = 1;                                             //liens id/type et les valeurs dans les adresses
-	    //private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
-	    private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
+	    private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
+	    //private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
 	    
 	    private int nbErrorsEmptyString = 0;                                     //Comptage des erreurs
 	    private int nbErrorsAddress = 0;                              
@@ -366,10 +366,14 @@ public class CalculetteParser extends Parser {
 	    }
 
 	    //Renvoie le code mvap pour chacune des conditions possibles
-	    private String evalCond(String type, String exp1, String cond, String exp2){  
+	    private String evalCond(String type, String expr1, String cond, String type2, String expr2){  
 	      mvapStackSize -= 1;
-	      String res = exp1 + exp2;  
-	      if(type.equals("float")){ //Si type float alors
+	      StringBuilder codeRes = new StringBuilder();
+	      StringBuilder codeRes2 = new StringBuilder();
+	      String typeRes = tradTwoElements(type, expr1, type2, expr2, codeRes); 
+	      String typeRes2 = tradTwoElements(type, expr1, type2, expr2, codeRes2);  
+	      String res = codeRes.toString() + codeRes2.toString();
+	      if(typeRes.equals("float")){ //Si type float alors
 	        res += "F";             //FEQUAL FINFEQ ... pour la stack machine
 	        mvapStackSize -= 1;
 	      }                                   
@@ -1311,7 +1315,7 @@ public class CalculetteParser extends Parser {
 						((ExpressionContext)_localctx).cond = match(COND);
 						setState(180);
 						((ExpressionContext)_localctx).expr2 = expression(4);
-						 ((ExpressionContext)_localctx).type =  "bool"; ((ExpressionContext)_localctx).code =  evalCond(_localctx.type, ((ExpressionContext)_localctx).expr1.code, (((ExpressionContext)_localctx).cond!=null?((ExpressionContext)_localctx).cond.getText():null), ((ExpressionContext)_localctx).expr2.code); 
+						 ((ExpressionContext)_localctx).type =  "bool"; ((ExpressionContext)_localctx).code =  evalCond(((ExpressionContext)_localctx).expr1.type, ((ExpressionContext)_localctx).expr1.code, (((ExpressionContext)_localctx).cond!=null?((ExpressionContext)_localctx).cond.getText():null), ((ExpressionContext)_localctx).expr2.type, ((ExpressionContext)_localctx).expr2.code); 
 						}
 						break;
 					case 2:
