@@ -283,7 +283,7 @@ public class CalculetteParser extends Parser {
 	      return res;
 	    }
 
-	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
+	    //Renvoie PUSHI ou PUSHF suivant le type en entree
 	    private String pushIOrF(String type){
 	      String res = "";
 	      if(!type.equals("float")){

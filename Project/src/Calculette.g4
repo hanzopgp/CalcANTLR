@@ -185,7 +185,7 @@ grammar Calculette;
       return res;
     }
 
-    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
+    //Renvoie PUSHI ou PUSHF suivant le type en entree
     private String pushIOrF(String type){
       String res = "";
       if(!type.equals("float")){
@@ -525,7 +525,7 @@ maincode returns [ String code ]
       (instruction { $code += $instruction.code; })* //avons les differentes instructions du main
 
 
-      /*{ $code += "FREE " + mvapStackSize + "\n"; }*/ //Ne fonctionne pas dans tous les cas...
+      /*{ $code += "FREE " + mvapStackSize + "\n"; }*/ //Ne fonctionne pas dans toutes les situations...
 
       { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
     ;
