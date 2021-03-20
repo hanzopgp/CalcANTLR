@@ -1,18 +1,13 @@
-int i
-int p
-float r
+int i;
 
-float babylon (float s, int prec) {
-      r=s/2.
-      for(i=1; i < prec; i=i+1) {
-               write(r)
-               r=(r+s/r)/2.
-      }
-      return r
+for(i=1; i < 10; i++) {
+	write(i);
 }
 
-p=10
+int j;
 
-write(babylon(25.,p))
+for(j=10; j > 0; j--) {
+	write(j);
+}
 
-write(babylon(2.,p))
+					

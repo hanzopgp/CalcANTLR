@@ -253,17 +253,15 @@ grammar Calculette;
       String pusher = pushGOrL(id);
       String storer = storeGOrL(id);
       String incrementer = "";
-      if(incr.equals("++")){
+      if(incr.equals("++")){                    
         if(at.type.equals("float")){
-          incrementer = "PUSHF 1.0\nFSUB\n";
-          mvapStackSize += 1;
+          incrementer = "PUSHF 1.0\nFADD\n";
         }else{
-          incrementer = "PUSHI 1\nSUB\n";
+          incrementer = "PUSHI 1\nADD\n";
         }  
       }else if(incr.equals("--")){
         if(at.type.equals("float")){
           incrementer = "PUSHF 1.0\nFSUB\n";
-          mvapStackSize += 1;
         }else{
           incrementer = "PUSHI 1\nSUB\n";
         }   
@@ -876,10 +874,10 @@ args returns [ int nbArgs, String code ]    //Prise en charge des arguments lors
       ( expr = expression
         {
           $nbArgs++;                        //Incrementation du nombre d'arguments
-          $code += $expr.code;              //On empile les arguments
-          if($expr.type.equals("float")){
+          if($expr.type.equals("float")){   //On augmente le nbArgs d'un de plus si c'est un float
             $nbArgs++;
           }
+          $code += $expr.code;              //On empile les arguments
         }
 
         ( 

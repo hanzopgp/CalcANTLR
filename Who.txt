@@ -6,8 +6,9 @@
 fichier g4 : Project/src/Calculette.g4
 fichiers java annexes : Project/src/util
 explication déroulement : README.md
-benchmarks personnels : en cours dans Project/src/tests
-benchmarks univ : ssh down
+benchmarks personnels : Project/src/tests
+benchmarks univ : tous les tests passent
+benchmarks resultat : 140/140
 
 
 
