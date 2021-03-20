@@ -723,20 +723,24 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       {
         $type = tablesSymboles.getFunction($id.text);   //Recupere le type de la fonction appelee
         String pusher = "";
-        if($type.equals("int")){                        //Push un nombre random pour memoire float ou int
-          mvapStackSize += 1;
-        }else{
+        if(!$type.equals("float")){                     //Push un nombre random pour memoire float ou int
+          pusher = "PUSHI 0\n";
           mvapStackSize += 2;
+        }else{
+          pusher = "PUSHF 0.0\n";
+          mvapStackSize += 1;
         }
         if($args.nbArgs > 0){                           //Si il y a des arguments
-          $code = $args.code 
+          $code = pusher
+                + $args.code 
                 + "CALL " + $id.text + "\n";            //Ajout du code des arguments et du CALL mvap
           for (int i = 0; i < $args.nbArgs; i++){       //On pop tous les arguments lors du call
             $code += "POP\n";                           //pour les utiliser pendant l'appel de la fonction       
           }
           mvapStackSize -= $args.nbArgs;                //Chaque pop fait retrecir la taille de 1
         }else{                                          //Si pas d'arguments
-          $code = "CALL " + $id.text + "\n";            //Ajout du code et du CALL mvap
+          $code = pusher 
+                + "CALL " + $id.text + "\n";            //Ajout du code et du CALL mvap
         }     
       }
     ;

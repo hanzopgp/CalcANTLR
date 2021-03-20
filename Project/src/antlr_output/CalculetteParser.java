@@ -1742,20 +1742,24 @@ public class CalculetteParser extends Parser {
 
 				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null));   //Recupere le type de la fonction appelee
 				        String pusher = "";
-				        if(_localctx.type.equals("int")){                        //Push un nombre random pour memoire float ou int
-				          mvapStackSize += 1;
-				        }else{
+				        if(!_localctx.type.equals("float")){                     //Push un nombre random pour memoire float ou int
+				          pusher = "PUSHI 0\n";
 				          mvapStackSize += 2;
+				        }else{
+				          pusher = "PUSHF 0.0\n";
+				          mvapStackSize += 1;
 				        }
 				        if(((AtomContext)_localctx).args.nbArgs > 0){                           //Si il y a des arguments
-				          ((AtomContext)_localctx).code =  ((AtomContext)_localctx).args.code 
+				          ((AtomContext)_localctx).code =  pusher
+				                + ((AtomContext)_localctx).args.code 
 				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code des arguments et du CALL mvap
 				          for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){       //On pop tous les arguments lors du call
 				            _localctx.code += "POP\n";                           //pour les utiliser pendant l'appel de la fonction       
 				          }
 				          mvapStackSize -= ((AtomContext)_localctx).args.nbArgs;                //Chaque pop fait retrecir la taille de 1
 				        }else{                                          //Si pas d'arguments
-				          ((AtomContext)_localctx).code =  "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code et du CALL mvap
+				          ((AtomContext)_localctx).code =  pusher 
+				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code et du CALL mvap
 				        }     
 				      
 				}
