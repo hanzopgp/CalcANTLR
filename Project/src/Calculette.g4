@@ -155,10 +155,10 @@ grammar Calculette;
       String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
       boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
       if(isIntOrBoolOrReturn){
-        mvapStackSize += 1;
+        mvapStackSize -= 1;
         res = storer + at.adresse + "\n";                         //Un store suffit pour les int et bool
       }else{
-        mvapStackSize += 2;
+        mvapStackSize -= 2;
         res = storer + (at.adresse + 1) + "\n"                    //Alors que les float ont besoin de deux
             + storer + at.adresse + "\n";                         //places il faut donc store 2 elements dans l'ordre
       }
@@ -489,9 +489,12 @@ grammar Calculette;
       if(at.type.equals("float")){
         storer = "STOREL " + (at.adresse + 1) + "\n"
                + "STOREL " + at.adresse + "\n";
+        mvapStackSize -= 2;
       }else{
         storer = "STOREL " + at.adresse + "\n";
+        mvapStackSize -= 1;
       }
+      mvapStackSize -= 1;
       return expr 
              + storer
              + "RETURN\n";
@@ -525,7 +528,7 @@ maincode returns [ String code ]
       (instruction { $code += $instruction.code; })* //avons les differentes instructions du main
 
 
-      /*{ $code += "FREE " + mvapStackSize + "\n"; }*/ //Ne fonctionne pas dans toutes les situations...
+      { $code += "FREE " + mvapStackSize + "\n"; }   //Ne fonctionne pas dans toutes les situations...
 
       { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
     ;

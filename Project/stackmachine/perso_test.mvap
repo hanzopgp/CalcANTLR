@@ -77,7 +77,8 @@ POP
 WRITEF
 POP
 POP
+FREE 2
 HALT 
 
-#mvapStackSize : 19
+#mvapStackSize : 2
 #Compilation successful !

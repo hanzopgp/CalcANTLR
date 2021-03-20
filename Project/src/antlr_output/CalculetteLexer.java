@@ -245,10 +245,10 @@ public class CalculetteLexer extends Lexer {
 	      String storer = (at.adresse >= 0) ? "STOREG " : "STOREL "; //Adresses negatives : variables locales
 	      boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
 	      if(isIntOrBoolOrReturn){
-	        mvapStackSize += 1;
+	        mvapStackSize -= 1;
 	        res = storer + at.adresse + "\n";                         //Un store suffit pour les int et bool
 	      }else{
-	        mvapStackSize += 2;
+	        mvapStackSize -= 2;
 	        res = storer + (at.adresse + 1) + "\n"                    //Alors que les float ont besoin de deux
 	            + storer + at.adresse + "\n";                         //places il faut donc store 2 elements dans l'ordre
 	      }
@@ -579,9 +579,12 @@ public class CalculetteLexer extends Lexer {
 	      if(at.type.equals("float")){
 	        storer = "STOREL " + (at.adresse + 1) + "\n"
 	               + "STOREL " + at.adresse + "\n";
+	        mvapStackSize -= 2;
 	      }else{
 	        storer = "STOREL " + at.adresse + "\n";
+	        mvapStackSize -= 1;
 	      }
+	      mvapStackSize -= 1;
 	      return expr 
 	             + storer
 	             + "RETURN\n";
