@@ -53,10 +53,10 @@ STOREL -6
 STOREL -7
 RETURN
 LABEL Main
-PUSHI 10
+PUSHI 2
 STOREG 1
 PUSHF 0.0
-PUSHF 25.
+PUSHF 4.
 PUSHG 1
 CALL babylon
 POP
@@ -79,5 +79,5 @@ POP
 POP
 HALT 
 
-#mvapStackSize : 17
+#mvapStackSize : 19
 #Compilation successful !

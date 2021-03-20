@@ -725,10 +725,11 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
         String pusher = "";
         if(!$type.equals("float")){                     //Push un nombre random pour memoire float ou int
           pusher = "PUSHI 0\n";
-          mvapStackSize += 2;
+          mvapStackSize += 1;
         }else{
           pusher = "PUSHF 0.0\n";
-          mvapStackSize += 1;
+          pusher = "PUSHF 0.0\n";
+          mvapStackSize += 2;
         }
         if($args.nbArgs > 0){                           //Si il y a des arguments
           $code = pusher

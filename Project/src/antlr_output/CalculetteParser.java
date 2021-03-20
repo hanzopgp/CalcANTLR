@@ -1744,10 +1744,11 @@ public class CalculetteParser extends Parser {
 				        String pusher = "";
 				        if(!_localctx.type.equals("float")){                     //Push un nombre random pour memoire float ou int
 				          pusher = "PUSHI 0\n";
-				          mvapStackSize += 2;
+				          mvapStackSize += 1;
 				        }else{
 				          pusher = "PUSHF 0.0\n";
-				          mvapStackSize += 1;
+				          pusher = "PUSHF 0.0\n";
+				          mvapStackSize += 2;
 				        }
 				        if(((AtomContext)_localctx).args.nbArgs > 0){                           //Si il y a des arguments
 				          ((AtomContext)_localctx).code =  pusher

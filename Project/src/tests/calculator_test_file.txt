@@ -11,8 +11,8 @@ float babylon (float s, int prec) {
       return r
 }
 
-p=10
+p=2
 
-write(babylon(25.,p))
+write(babylon(4.,p))
 
 write(babylon(2.,p))
