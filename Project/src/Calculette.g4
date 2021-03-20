@@ -340,7 +340,7 @@ grammar Calculette;
       AdresseType at = tablesSymboles.getAdresseType(id);
       testAddressNotFound(at);
       testEmptyStringErrors(id, exprType, expr);
-      return expr /*+ tradOneElement(false, exprType, at.type)*/ + storeGOrL(id);
+      return expr + tradOneElement(false, exprType, at.type) + storeGOrL(id);
     }
 
     /*******************FONCTIONS BOUCLES*******************/
@@ -366,7 +366,7 @@ grammar Calculette;
 
       String startLabelF = getNewLabel("startFor");                                                                    
       String endLabelF = getNewLabel("endFor");
-      //expr += tradOneElement(false, exprType, "bool");
+      expr += tradOneElement(false, exprType, "bool");
       mvapStackSize -= 1;
       testEmptyStringErrors(init, exprType, expr, iteration, instructions);
       return init 
@@ -494,7 +494,7 @@ grammar Calculette;
       AdresseType at = tablesSymboles.getAdresseType("return");
       testAddressNotFound(at);
       testEmptyStringErrors(exprType, expr);
-      //expr += tradOneElement(false, exprType, at.type);
+      expr += tradOneElement(false, exprType, at.type);
       String storer = "";
       if(at.type.equals("float")){
         storer = "STOREL " + (at.adresse + 1) + "\n"

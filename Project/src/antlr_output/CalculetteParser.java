@@ -107,7 +107,7 @@ public class CalculetteParser extends Parser {
 	    private int _cur_label = 1;                                              //liens id/type et les valeurs dans les adresses
 	    private String getNewLabel(String name) { return name +(_cur_label++); } //Retourne un label avec un nom + index pour debug
 	    
-	    private int nbWarningsImplicitCast = 0;                                   //Comptage des avertissements
+	    private int nbWarningsImplicitCast = 0;                                  //Comptage des avertissements
 	    private int nbWarningsTotal = nbWarningsImplicitCast;
 
 	    private int nbErrorsEmptyString = 0;                                     //Comptage des erreurs
@@ -121,7 +121,6 @@ public class CalculetteParser extends Parser {
 	            + nbErrorsOperator + nbErrorsCondition 
 	            + nbErrorsCast + nbErrorsAutoCast;  
 
-	    //private ArrayList<String> errors = new ArrayList();                    //Liste des erreurs 
 	    private int mvapStackSize = 0;                                           //On garde la taille de la pile pour pouvoir la vider 
 
 	    /****************FONCTIONS DEBUG****************/
@@ -145,12 +144,6 @@ public class CalculetteParser extends Parser {
 	      }
 	    }
 
-	    /*private void printErrors(){
-	      for(String s : errors){
-	        System.out.println(s);
-	      }
-	    }*/
-
 	    private void testEmptyStringErrors(String ... strings){
 	      for(String s : strings){
 	        if(s.isEmpty()){
@@ -162,7 +155,6 @@ public class CalculetteParser extends Parser {
 	    }
 
 	    private void testAddressNotFound(AdresseType at){
-	      //boolean noAddressTest = at.adresse == ???;
 	      boolean noRightTypeTest = !(at.type.equals("int") || at.type.equals("float") || at.type.equals("bool") || at.type.equals("return"));
 	      if(noRightTypeTest){
 	        nbErrorsAddress++;
@@ -446,7 +438,7 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(id, exprType, expr);
-	      return expr /*+ tradOneElement(false, exprType, at.type)*/ + storeGOrL(id);
+	      return expr + tradOneElement(false, exprType, at.type) + storeGOrL(id);
 	    }
 
 	    /*******************FONCTIONS BOUCLES*******************/
@@ -472,7 +464,7 @@ public class CalculetteParser extends Parser {
 
 	      String startLabelF = getNewLabel("startFor");                                                                    
 	      String endLabelF = getNewLabel("endFor");
-	      //expr += tradOneElement(false, exprType, "bool");
+	      expr += tradOneElement(false, exprType, "bool");
 	      mvapStackSize -= 1;
 	      testEmptyStringErrors(init, exprType, expr, iteration, instructions);
 	      return init 
@@ -600,7 +592,7 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType("return");
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(exprType, expr);
-	      //expr += tradOneElement(false, exprType, at.type);
+	      expr += tradOneElement(false, exprType, at.type);
 	      String storer = "";
 	      if(at.type.equals("float")){
 	        storer = "STOREL " + (at.adresse + 1) + "\n"
