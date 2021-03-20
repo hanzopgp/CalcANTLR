@@ -1747,7 +1747,7 @@ public class CalculetteParser extends Parser {
 				          mvapStackSize += 1;
 				        }else{
 				          pusher = "PUSHF 0.0\n";
-				          pusher = "PUSHF 0.0\n";
+				          pusher += "PUSHF 0.0\n";
 				          mvapStackSize += 2;
 				        }
 				        if(((AtomContext)_localctx).args.nbArgs > 0){                           //Si il y a des arguments

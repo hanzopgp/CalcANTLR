@@ -728,7 +728,7 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
           mvapStackSize += 1;
         }else{
           pusher = "PUSHF 0.0\n";
-          pusher = "PUSHF 0.0\n";
+          pusher += "PUSHF 0.0\n";
           mvapStackSize += 2;
         }
         if($args.nbArgs > 0){                           //Si il y a des arguments
