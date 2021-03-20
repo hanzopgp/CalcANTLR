@@ -156,7 +156,7 @@ public class CalculetteParser extends Parser {
 
 	    private void testAddressNotFound(AdresseType at){
 	      //boolean noAddressTest = at.adresse == ???;
-	      boolean noRightTypeTest = !(at.type.equals("int") || at.type.equals("float") || at.type.equals("bool"));
+	      boolean noRightTypeTest = !(at.type.equals("int") || at.type.equals("float") || at.type.equals("bool") || at.type.equals("return"));
 	      if(noRightTypeTest){
 	        nbErrorsAddress++;
 	        System.err.println("-->ERROR address, Address can't be found or is empty : [adress:" + at.adresse + ",type:" + at.type + "]");
@@ -268,7 +268,7 @@ public class CalculetteParser extends Parser {
 	      String res = "";
 	      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
 	      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL ";  //Adresses negatives : variables locales
-	      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool"));
+	      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
 	      if(isIntOrBool){
 	        mvapStackSize += 1;
 	        res = pusher 
@@ -286,7 +286,7 @@ public class CalculetteParser extends Parser {
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrF(String type){
 	      String res = "";
-	      if(type.equals("int") || type.equals("bool")){
+	      if(!type.equals("float")){
 	        mvapStackSize += 1;
 	        res = "PUSHI ";
 	      }else{
@@ -299,7 +299,7 @@ public class CalculetteParser extends Parser {
 	    //Renvoie PUSHI 0 ou PUSHF 0.0 suivant le type en entree
 	    private String pushIOrFZero(String type){
 	      String res = "";
-	      if(type.equals("int") || type.equals("bool")){
+	      if(!type.equals("float")){
 	        res = "PUSHI 0\n";
 	        mvapStackSize += 1;
 	      }else{
@@ -488,7 +488,7 @@ public class CalculetteParser extends Parser {
 	    private String evalInput(String id){
 	      mvapStackSize += 1;
 	      AdresseType at = tablesSymboles.getAdresseType(id);
-	      String reader = at.type.equals("int") ? "READ\n" : "READF\n";
+	      String reader = (!at.type.equals("float")) ? "READ\n" : "READF\n";
 	      String storer = storeGOrL(id);
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(id, reader, storer);
@@ -499,7 +499,7 @@ public class CalculetteParser extends Parser {
 	    private String evalOutput(String type){
 	      testEmptyStringErrors(type);
 	      String res = "";
-	      if(type.equals("int") || (type.equals("bool"))){
+	      if(!type.equals("float")){
 	        res = "WRITE\nPOP\n";       //Un seul POP normal pour l'output
 	        mvapStackSize -= 1;
 	      }else{
@@ -1747,7 +1747,6 @@ public class CalculetteParser extends Parser {
 				          mvapStackSize += 1;
 				        }else{
 				          pusher = "PUSHF 0.0\n";
-				          pusher += "PUSHF 0.0\n";
 				          mvapStackSize += 2;
 				        }
 				        if(((AtomContext)_localctx).args.nbArgs > 0){                           //Si il y a des arguments
