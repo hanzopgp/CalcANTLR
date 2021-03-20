@@ -602,7 +602,32 @@ public class CalculetteParser extends Parser {
 	      return expr 
 	             + storer
 	             + "RETURN\n";
-	    }                                                                                               
+	    }      
+
+	    private String evalFunctionCall(String type, String id, int nbArgs, String args){
+	      String res = "";
+	      String pusher = "";
+	      if(!type.equals("float")){                    //Push un nombre random pour memoire float ou int
+	        pusher = "PUSHI 0\n";
+	        mvapStackSize += 1;
+	      }else{
+	        pusher = "PUSHF 0.0\n";
+	        mvapStackSize += 2;
+	      }
+	      if(nbArgs > 0){                               //Si il y a des arguments
+	        res = pusher
+	            + args 
+	            + "CALL " + id + "\n";                  //Ajout du code des arguments et du CALL mvap
+	        for (int i = 0; i < nbArgs; i++){           //On pop tous les arguments lors du CALL      
+	            res += "POP\n";
+	            mvapStackSize -= 1;
+	        }
+	      }else{                                        //Si pas d'arguments
+	        res = pusher 
+	            + "CALL " + id + "\n";                  //Ajout du code et du CALL mvap
+	      }
+	      return res;    
+	    }                                                                                         
 
 	public CalculetteParser(TokenStream input) {
 		super(input);
@@ -1748,34 +1773,7 @@ public class CalculetteParser extends Parser {
 				((AtomContext)_localctx).args = args();
 				setState(256);
 				match(T__5);
-
-				        ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null));   //Recupere le type de la fonction appelee
-				        String pusher = "";
-				        if(!_localctx.type.equals("float")){                     //Push un nombre random pour memoire float ou int
-				          pusher = "PUSHI 0\n";
-				          mvapStackSize += 1;
-				        }else{
-				          pusher = "PUSHF 0.0\n";
-				          mvapStackSize += 2;
-				        }
-				        if(((AtomContext)_localctx).args.nbArgs > 0){                           //Si il y a des arguments
-				          ((AtomContext)_localctx).code =  pusher
-				                + ((AtomContext)_localctx).args.code 
-				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code des arguments et du CALL mvap
-				          for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){   //On pop tous les arguments lors du CALL      
-				            if(((AtomContext)_localctx).args.type.equals("float")){             //pour les utiliser pendant l'appel de la fonction
-				              _localctx.code += "POP\nPOP\n";
-				              mvapStackSize -= 2;
-				            }else{
-				              _localctx.code += "POP\n";
-				              mvapStackSize -= 1;
-				            }
-				          }
-				        }else{                                          //Si pas d'arguments
-				          ((AtomContext)_localctx).code =  pusher 
-				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code et du CALL mvap
-				        }     
-				      
+				 ((AtomContext)_localctx).type =  tablesSymboles.getFunction((((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null)); ((AtomContext)_localctx).code =  evalFunctionCall(_localctx.type, (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null), ((AtomContext)_localctx).args.nbArgs, ((AtomContext)_localctx).args.code); 
 				}
 				break;
 			}
@@ -2238,7 +2236,6 @@ public class CalculetteParser extends Parser {
 
 	public static class ArgsContext extends ParserRuleContext {
 		public int nbArgs;
-		public String type;
 		public String code;
 		public ExpressionContext expr;
 		public ExpressionContext expr2;
@@ -2282,9 +2279,8 @@ public class CalculetteParser extends Parser {
 				setState(343);
 				((ArgsContext)_localctx).expr = expression(0);
 
-				          ((ArgsContext)_localctx).type =  ((ArgsContext)_localctx).expr.type;
-				          _localctx.nbArgs++;                                     //Incrementation du nombre d'arguments
-				          _localctx.code += ((ArgsContext)_localctx).expr.code;                           //On empile les arguments
+				          _localctx.nbArgs++;                        //Incrementation du nombre d'arguments
+				          _localctx.code += ((ArgsContext)_localctx).expr.code;              //On empile les arguments
 				          if(((ArgsContext)_localctx).expr.type.equals("float")){
 				            _localctx.nbArgs++;
 				          }
@@ -2300,9 +2296,8 @@ public class CalculetteParser extends Parser {
 					setState(346);
 					((ArgsContext)_localctx).expr2 = expression(0);
 
-					            ((ArgsContext)_localctx).type =  ((ArgsContext)_localctx).expr.type;
 					            _localctx.nbArgs++;
-					            if(_localctx.type.equals("float")){
+					            if(((ArgsContext)_localctx).expr2.type.equals("float")){
 					              _localctx.nbArgs++;
 					            }
 					            _localctx.code += ((ArgsContext)_localctx).expr2.code;    

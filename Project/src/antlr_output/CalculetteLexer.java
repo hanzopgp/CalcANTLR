@@ -594,7 +594,32 @@ public class CalculetteLexer extends Lexer {
 	      return expr 
 	             + storer
 	             + "RETURN\n";
-	    }                                                                                               
+	    }      
+
+	    private String evalFunctionCall(String type, String id, int nbArgs, String args){
+	      String res = "";
+	      String pusher = "";
+	      if(!type.equals("float")){                    //Push un nombre random pour memoire float ou int
+	        pusher = "PUSHI 0\n";
+	        mvapStackSize += 1;
+	      }else{
+	        pusher = "PUSHF 0.0\n";
+	        mvapStackSize += 2;
+	      }
+	      if(nbArgs > 0){                               //Si il y a des arguments
+	        res = pusher
+	            + args 
+	            + "CALL " + id + "\n";                  //Ajout du code des arguments et du CALL mvap
+	        for (int i = 0; i < nbArgs; i++){           //On pop tous les arguments lors du CALL      
+	            res += "POP\n";
+	            mvapStackSize -= 1;
+	        }
+	      }else{                                        //Si pas d'arguments
+	        res = pusher 
+	            + "CALL " + id + "\n";                  //Ajout du code et du CALL mvap
+	      }
+	      return res;    
+	    }                                                                                         
 
 
 	public CalculetteLexer(CharStream input) {

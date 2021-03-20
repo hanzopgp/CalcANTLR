@@ -504,7 +504,32 @@ grammar Calculette;
       return expr 
              + storer
              + "RETURN\n";
-    }                                                                                               
+    }      
+
+    private String evalFunctionCall(String type, String id, int nbArgs, String args){
+      String res = "";
+      String pusher = "";
+      if(!type.equals("float")){                    //Push un nombre random pour memoire float ou int
+        pusher = "PUSHI 0\n";
+        mvapStackSize += 1;
+      }else{
+        pusher = "PUSHF 0.0\n";
+        mvapStackSize += 2;
+      }
+      if(nbArgs > 0){                               //Si il y a des arguments
+        res = pusher
+            + args 
+            + "CALL " + id + "\n";                  //Ajout du code des arguments et du CALL mvap
+        for (int i = 0; i < nbArgs; i++){           //On pop tous les arguments lors du CALL      
+            res += "POP\n";
+            mvapStackSize -= 1;
+        }
+      }else{                                        //Si pas d'arguments
+        res = pusher 
+            + "CALL " + id + "\n";                  //Ajout du code et du CALL mvap
+      }
+      return res;    
+    }                                                                                         
 }
 
 /*==================================================
@@ -729,34 +754,7 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
       '('
       args
       ')'
-      {
-        $type = tablesSymboles.getFunction($id.text);   //Recupere le type de la fonction appelee
-        String pusher = "";
-        if(!$type.equals("float")){                     //Push un nombre random pour memoire float ou int
-          pusher = "PUSHI 0\n";
-          mvapStackSize += 1;
-        }else{
-          pusher = "PUSHF 0.0\n";
-          mvapStackSize += 2;
-        }
-        if($args.nbArgs > 0){                           //Si il y a des arguments
-          $code = pusher
-                + $args.code 
-                + "CALL " + $id.text + "\n";            //Ajout du code des arguments et du CALL mvap
-          for (int i = 0; i < $args.nbArgs; i++){   //On pop tous les arguments lors du CALL      
-            if($args.type.equals("float")){             //pour les utiliser pendant l'appel de la fonction
-              $code += "POP\nPOP\n";
-              mvapStackSize -= 2;
-            }else{
-              $code += "POP\n";
-              mvapStackSize -= 1;
-            }
-          }
-        }else{                                          //Si pas d'arguments
-          $code = pusher 
-                + "CALL " + $id.text + "\n";            //Ajout du code et du CALL mvap
-        }     
-      }
+      { $type = tablesSymboles.getFunction($id.text); $code = evalFunctionCall($type, $id.text, $args.nbArgs, $args.code); }
     ;
 
 /*==================================================
@@ -872,14 +870,13 @@ params //Prise en charge des parametres de la fonction, pas de retour car simple
       )* //Il peut y avoir plusieurs parametres
     ;
 
-args returns [ int nbArgs, String type, String code ]    //Prise en charge des arguments lors de l'appel d'une fonction
-@init{ $nbArgs = 0; $code = new String(); }              //On a besoin d'un compteur d'arguments pour pouvoir depiler 
+args returns [ int nbArgs, String code ]    //Prise en charge des arguments lors de l'appel d'une fonction
+@init{ $nbArgs = 0; $code = new String(); } //On a besoin d'un compteur d'arguments pour pouvoir depiler 
     : 
       ( expr = expression
         {
-          $type = $expr.type;
-          $nbArgs++;                                     //Incrementation du nombre d'arguments
-          $code += $expr.code;                           //On empile les arguments
+          $nbArgs++;                        //Incrementation du nombre d'arguments
+          $code += $expr.code;              //On empile les arguments
           if($expr.type.equals("float")){
             $nbArgs++;
           }
@@ -889,9 +886,8 @@ args returns [ int nbArgs, String type, String code ]    //Prise en charge des a
           COMMA 
           expr2 = expression
           {
-            $type = $expr.type;
             $nbArgs++;
-            if($type.equals("float")){
+            if($expr2.type.equals("float")){
               $nbArgs++;
             }
             $code += $expr2.code;    
