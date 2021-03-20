@@ -16,4 +16,3 @@ p=10
 write(babylon(25.,p))
 
 write(babylon(2.,p))
-

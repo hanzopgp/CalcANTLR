@@ -7,8 +7,8 @@ grammar Calculette;
 @members {
     private TablesSymboles tablesSymboles = new TablesSymboles();           //On utilise la table de symboles pour garder les
     private int _cur_label = 1;                                             //liens id/type et les valeurs dans les adresses
-    private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
-    //private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
+    //private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
+    private String getNewLabel(String name) { return name +(_cur_label++); } //Enlever commentaire seulement pour debug 
     
     private int nbErrorsEmptyString = 0;                                     //Comptage des erreurs
     private int nbErrorsAddress = 0;                              
@@ -27,7 +27,8 @@ grammar Calculette;
     /****************FONCTIONS DEBUG****************/
 
     private void printFinalDisplay(){
-      System.out.println("#mvapStackSize : " + mvapStackSize);              //Commentaires hashtag pour eviter erreur compilation de la stack machine
+      //Commentaires hashtag pour eviter erreur compilation de la stack machine
+      System.out.println("#mvapStackSize before freeing memory : " + mvapStackSize);
       if(nbErrorsTotal > 0){
         System.out.println("#!!! Found " + nbErrorsTotal + " total errors in code !!!"); 
         System.out.println("#!!! Found " + nbErrorsAddress + " address errors in code !!!"); 
@@ -90,6 +91,9 @@ grammar Calculette;
     //Renvoie le code pour un cast simple d'un type a un autre
     private String tradOneElement(String currentType, String targetType){ 
       String res = "";
+      if(currentType.equals(targetType)){     //Inutile si le type est deja du
+        return "";                            //meme type que le type cible
+      }
       switch(targetType){
         case "int":                           
           if(currentType.equals("float")){    //Passage de float ===> int
@@ -170,8 +174,8 @@ grammar Calculette;
       String res = "";
       AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
       String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL ";  //Adresses negatives : variables locales
-      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
-      if(isIntOrBool){
+      boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
+      if(isIntOrBoolOrReturn){
         mvapStackSize += 1;
         res = pusher 
             + tablesSymboles.getAdresseType(id).adresse + "\n"; //Les int et bool ne prennent qu'une place dans la table
@@ -353,10 +357,12 @@ grammar Calculette;
     }
 
     //Fonction renvoyant le code mvap pour creer une boucle for
-    private String evalForLoop(String init, String exprType, String expr, String iteration, String instructions){  
+    private String evalForLoop(String init, String exprType, String expr, String iteration, String instructions){
+      System.err.println("exprt" + exprType);
+
       String startLabelF = getNewLabel("startFor");                                                                    
       String endLabelF = getNewLabel("endFor");
-      expr += tradOneElement(exprType, "bool");
+      //expr += tradOneElement(exprType, "bool");
       mvapStackSize -= 1;
       testEmptyStringErrors(init, exprType, expr, iteration, instructions);
       return init 
@@ -528,7 +534,7 @@ maincode returns [ String code ]
       (instruction { $code += $instruction.code; })* //avons les differentes instructions du main
 
 
-      { $code += "FREE " + mvapStackSize + "\n"; }   //Ne fonctionne pas dans toutes les situations...
+      /*{ $code += "FREE " + mvapStackSize + "\n"; }*/   //Ne fonctionne pas dans toutes les situations...
 
       { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
     ;
@@ -737,10 +743,12 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
           $code = pusher
                 + $args.code 
                 + "CALL " + $id.text + "\n";            //Ajout du code des arguments et du CALL mvap
-          for (int i = 0; i < $args.nbArgs; i++){       //On pop tous les arguments lors du call
-            $code += "POP\n";                           //pour les utiliser pendant l'appel de la fonction       
+          for (int i = 0; i < $args.nbArgs - 1; i++){   //On pop tous les arguments lors du CALL      
+    
+              $code += "POP\n";
+              mvapStackSize -= 1;
+            
           }
-          mvapStackSize -= $args.nbArgs;                //Chaque pop fait retrecir la taille de 1
         }else{                                          //Si pas d'arguments
           $code = pusher 
                 + "CALL " + $id.text + "\n";            //Ajout du code et du CALL mvap
@@ -861,13 +869,14 @@ params //Prise en charge des parametres de la fonction, pas de retour car simple
       )* //Il peut y avoir plusieurs parametres
     ;
 
-args returns [ int nbArgs, String code ]    //Prise en charge des arguments lors de l'appel d'une fonction
-@init{ $nbArgs = 0; $code = new String(); } //On a besoin d'un compteur d'arguments pour pouvoir depiler 
+args returns [ int nbArgs, String type, String code ]    //Prise en charge des arguments lors de l'appel d'une fonction
+@init{ $nbArgs = 0; $code = new String(); }              //On a besoin d'un compteur d'arguments pour pouvoir depiler 
     : 
       ( expr = expression
         {
-          $nbArgs++;           //Incrementation du nombre d'arguments
-          $code += $expr.code; //On empile les arguments
+          $type = $expr.type;
+          $nbArgs++;                                     //Incrementation du nombre d'arguments
+          $code += $expr.code;                           //On empile les arguments
           if($expr.type.equals("float")){
             $nbArgs++;
           }
@@ -877,8 +886,9 @@ args returns [ int nbArgs, String code ]    //Prise en charge des arguments lors
           COMMA 
           expr2 = expression
           {
+            $type = $expr.type;
             $nbArgs++;
-            if($expr.type.equals("float")){
+            if($type.equals("float")){
               $nbArgs++;
             }
             $code += $expr2.code;    

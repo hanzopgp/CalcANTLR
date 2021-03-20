@@ -97,8 +97,8 @@ public class CalculetteLexer extends Lexer {
 
 	    private TablesSymboles tablesSymboles = new TablesSymboles();           //On utilise la table de symboles pour garder les
 	    private int _cur_label = 1;                                             //liens id/type et les valeurs dans les adresses
-	    private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
-	    //private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
+	    //private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
+	    private String getNewLabel(String name) { return name +(_cur_label++); } //Enlever commentaire seulement pour debug 
 	    
 	    private int nbErrorsEmptyString = 0;                                     //Comptage des erreurs
 	    private int nbErrorsAddress = 0;                              
@@ -117,7 +117,8 @@ public class CalculetteLexer extends Lexer {
 	    /****************FONCTIONS DEBUG****************/
 
 	    private void printFinalDisplay(){
-	      System.out.println("#mvapStackSize : " + mvapStackSize);              //Commentaires hashtag pour eviter erreur compilation de la stack machine
+	      //Commentaires hashtag pour eviter erreur compilation de la stack machine
+	      System.out.println("#mvapStackSize before freeing memory : " + mvapStackSize);
 	      if(nbErrorsTotal > 0){
 	        System.out.println("#!!! Found " + nbErrorsTotal + " total errors in code !!!"); 
 	        System.out.println("#!!! Found " + nbErrorsAddress + " address errors in code !!!"); 
@@ -180,6 +181,9 @@ public class CalculetteLexer extends Lexer {
 	    //Renvoie le code pour un cast simple d'un type a un autre
 	    private String tradOneElement(String currentType, String targetType){ 
 	      String res = "";
+	      if(currentType.equals(targetType)){     //Inutile si le type est deja du
+	        return "";                            //meme type que le type cible
+	      }
 	      switch(targetType){
 	        case "int":                           
 	          if(currentType.equals("float")){    //Passage de float ===> int
@@ -260,8 +264,8 @@ public class CalculetteLexer extends Lexer {
 	      String res = "";
 	      AdresseType at = tablesSymboles.getAdresseType(id);       //Adresses positives : variables globales,
 	      String pusher = (at.adresse >= 0) ? "PUSHG " : "PUSHL ";  //Adresses negatives : variables locales
-	      boolean isIntOrBool = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
-	      if(isIntOrBool){
+	      boolean isIntOrBoolOrReturn = (at.type.equals("int") || at.type.equals("bool") || at.type.equals("return"));
+	      if(isIntOrBoolOrReturn){
 	        mvapStackSize += 1;
 	        res = pusher 
 	            + tablesSymboles.getAdresseType(id).adresse + "\n"; //Les int et bool ne prennent qu'une place dans la table
@@ -443,10 +447,12 @@ public class CalculetteLexer extends Lexer {
 	    }
 
 	    //Fonction renvoyant le code mvap pour creer une boucle for
-	    private String evalForLoop(String init, String exprType, String expr, String iteration, String instructions){  
+	    private String evalForLoop(String init, String exprType, String expr, String iteration, String instructions){
+	      System.err.println("exprt" + exprType);
+
 	      String startLabelF = getNewLabel("startFor");                                                                    
 	      String endLabelF = getNewLabel("endFor");
-	      expr += tradOneElement(exprType, "bool");
+	      //expr += tradOneElement(exprType, "bool");
 	      mvapStackSize -= 1;
 	      testEmptyStringErrors(init, exprType, expr, iteration, instructions);
 	      return init 
