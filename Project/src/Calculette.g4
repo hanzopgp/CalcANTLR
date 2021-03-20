@@ -743,11 +743,14 @@ atom returns [ String type, String code ] //Les atomes de l'expression sont les 
           $code = pusher
                 + $args.code 
                 + "CALL " + $id.text + "\n";            //Ajout du code des arguments et du CALL mvap
-          for (int i = 0; i < $args.nbArgs - 1; i++){   //On pop tous les arguments lors du CALL      
-    
+          for (int i = 0; i < $args.nbArgs; i++){   //On pop tous les arguments lors du CALL      
+            if($args.type.equals("float")){             //pour les utiliser pendant l'appel de la fonction
+              $code += "POP\nPOP\n";
+              mvapStackSize -= 2;
+            }else{
               $code += "POP\n";
               mvapStackSize -= 1;
-            
+            }
           }
         }else{                                          //Si pas d'arguments
           $code = pusher 

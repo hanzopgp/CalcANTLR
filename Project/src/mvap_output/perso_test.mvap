@@ -54,6 +54,11 @@ CALL babylon
 POP
 POP
 POP
+POP
+POP
+POP
+POP
+POP
 WRITEF
 POP
 POP
@@ -64,10 +69,15 @@ CALL babylon
 POP
 POP
 POP
+POP
+POP
+POP
+POP
+POP
 WRITEF
 POP
 POP
 HALT 
 
-#mvapStackSize before freeing memory : 3
+#mvapStackSize before freeing memory : -7
 #Compilation successful !

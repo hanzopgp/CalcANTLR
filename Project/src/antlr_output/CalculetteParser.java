@@ -1762,11 +1762,14 @@ public class CalculetteParser extends Parser {
 				          ((AtomContext)_localctx).code =  pusher
 				                + ((AtomContext)_localctx).args.code 
 				                + "CALL " + (((AtomContext)_localctx).id!=null?((AtomContext)_localctx).id.getText():null) + "\n";            //Ajout du code des arguments et du CALL mvap
-				          for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs - 1; i++){   //On pop tous les arguments lors du CALL      
-				    
+				          for (int i = 0; i < ((AtomContext)_localctx).args.nbArgs; i++){   //On pop tous les arguments lors du CALL      
+				            if(((AtomContext)_localctx).args.type.equals("float")){             //pour les utiliser pendant l'appel de la fonction
+				              _localctx.code += "POP\nPOP\n";
+				              mvapStackSize -= 2;
+				            }else{
 				              _localctx.code += "POP\n";
 				              mvapStackSize -= 1;
-				            
+				            }
 				          }
 				        }else{                                          //Si pas d'arguments
 				          ((AtomContext)_localctx).code =  pusher 
