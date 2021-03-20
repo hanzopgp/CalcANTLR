@@ -89,33 +89,43 @@ CalcANTLR/
 
 ## Details
 
-### ToDo
-
-- Add features
-
-### Doing
-
-- Full float/bool var support
-- Functions
-- General tests
-- Building debugger
-
-### Done
-
 - ANTLR basic use
 - Basic calcul grammar
-- Calcul priority / Negative numbers
-- Parenthesis
+
+- Calcul priority Negative numbers
+- Negative expressions
+- Parenthesis support
 - Integur variables
+
+- Skips all comments
+
 - Write / Read
+
 - While loop
-- Blocks (sequence of instructions)
-- If statement
-- Relational operators
-- Else statement
-- Logical operators
 - For loop
 - Repeat until loop
+
+- Blocks (sequence of instructions)
+
+- If statement
+- Else statement
+- Relational operators
+- Logical operators
+
+- Full float/bool support
+- Functions
+- Global/Local variables
+- Multiple args functions
+
+- Implicit cast
+- Auto cast if needed
+
+- Freeing stack memory at the end
+
+- General tests
+- Starting debugger
+
+- Increments ++ -- 
 
 ## Links
 

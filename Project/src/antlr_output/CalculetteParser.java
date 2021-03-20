@@ -103,11 +103,13 @@ public class CalculetteParser extends Parser {
 	public ATN getATN() { return _ATN; }
 
 
-	    private TablesSymboles tablesSymboles = new TablesSymboles();           //On utilise la table de symboles pour garder les
-	    private int _cur_label = 1;                                             //liens id/type et les valeurs dans les adresses
-	    //private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
-	    private String getNewLabel(String name) { return name +(_cur_label++); } //Enlever commentaire seulement pour debug 
+	    private TablesSymboles tablesSymboles = new TablesSymboles();            //On utilise la table de symboles pour garder les
+	    private int _cur_label = 1;                                              //liens id/type et les valeurs dans les adresses
+	    private String getNewLabel(String name) { return name +(_cur_label++); } //Retourne un label avec un nom + index pour debug
 	    
+	    private int nbWarningsImplicitCast = 0;                                   //Comptage des avertissements
+	    private int nbWarningsTotal = nbWarningsImplicitCast;
+
 	    private int nbErrorsEmptyString = 0;                                     //Comptage des erreurs
 	    private int nbErrorsAddress = 0;                              
 	    private int nbErrorsOperator = 0;                             
@@ -119,14 +121,18 @@ public class CalculetteParser extends Parser {
 	            + nbErrorsOperator + nbErrorsCondition 
 	            + nbErrorsCast + nbErrorsAutoCast;  
 
-	    //private ArrayList<String> errors = new ArrayList();                   //Liste des erreurs 
-	    private int mvapStackSize = 0;                                          //On garde la taille de la pile pour pouvoir la vider 
+	    //private ArrayList<String> errors = new ArrayList();                    //Liste des erreurs 
+	    private int mvapStackSize = 0;                                           //On garde la taille de la pile pour pouvoir la vider 
 
 	    /****************FONCTIONS DEBUG****************/
 
 	    private void printFinalDisplay(){
 	      //Commentaires hashtag pour eviter erreur compilation de la stack machine
 	      System.out.println("#mvapStackSize before freeing memory : " + mvapStackSize);
+	      if(nbWarningsTotal > 0){
+	        System.out.println("#>>> Found " + nbWarningsTotal + " total warnings in code <<<"); 
+	        System.out.println("#>>> Found " + nbWarningsImplicitCast + " implicit cast warning in code <<<"); 
+	      }
 	      if(nbErrorsTotal > 0){
 	        System.out.println("#!!! Found " + nbErrorsTotal + " total errors in code !!!"); 
 	        System.out.println("#!!! Found " + nbErrorsAddress + " address errors in code !!!"); 
@@ -184,10 +190,18 @@ public class CalculetteParser extends Parser {
 	      System.err.println("-->ERROR auto-cast, found : [" + type + "," + type2 + "], expected : 'int','float','bool'");
 	    }
 
+	    private void triggerImplicitCastWarning(String type, String targetType){
+	      nbWarningsImplicitCast++;
+	      System.err.println("-->WARNING implicit cast, found : (" + type + "===>" + targetType + ")");
+	    }
+
 	    /****************FONCTIONS CAST****************/
 
 	    //Renvoie le code pour un cast simple d'un type a un autre
-	    private String tradOneElement(String currentType, String targetType){ 
+	    private String tradOneElement(boolean implicit, String currentType, String targetType){ 
+	      if(implicit){
+	        triggerImplicitCastWarning(currentType, targetType);
+	      }
 	      String res = "";
 	      if(currentType.equals(targetType)){     //Inutile si le type est deja du
 	        return "";                            //meme type que le type cible
@@ -432,7 +446,7 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType(id);
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(id, exprType, expr);
-	      return expr /*+ tradOneElement(exprType, at.type)*/ + storeGOrL(id);
+	      return expr /*+ tradOneElement(false, exprType, at.type)*/ + storeGOrL(id);
 	    }
 
 	    /*******************FONCTIONS BOUCLES*******************/
@@ -441,7 +455,7 @@ public class CalculetteParser extends Parser {
 	    private String evalWhileLoop(String exprType, String expr, String instructions){ 
 	      String startLabelW = getNewLabel("startWhile");                                     
 	      String endLabelW = getNewLabel("endWhile");
-	      expr += tradOneElement(exprType, "bool");
+	      expr += tradOneElement(false, exprType, "bool");
 	      mvapStackSize -= 1;
 	      testEmptyStringErrors(exprType, expr, instructions);
 	      return "LABEL " + startLabelW + "\n" 
@@ -458,7 +472,7 @@ public class CalculetteParser extends Parser {
 
 	      String startLabelF = getNewLabel("startFor");                                                                    
 	      String endLabelF = getNewLabel("endFor");
-	      //expr += tradOneElement(exprType, "bool");
+	      //expr += tradOneElement(false, exprType, "bool");
 	      mvapStackSize -= 1;
 	      testEmptyStringErrors(init, exprType, expr, iteration, instructions);
 	      return init 
@@ -475,7 +489,7 @@ public class CalculetteParser extends Parser {
 	    private String evalRepeatLoop(String exprType, String expr, String instructions){                                                  
 	      String startLabelR = getNewLabel("startRepeat");
 	      String endLabelR = getNewLabel("endRepeat");
-	      expr += tradOneElement(exprType, "bool"); 
+	      expr += tradOneElement(false, exprType, "bool"); 
 	      mvapStackSize -= 1;
 	      testEmptyStringErrors(exprType, expr, instructions);
 	      return "LABEL " + startLabelR + "\n" 
@@ -519,8 +533,8 @@ public class CalculetteParser extends Parser {
 	    private String evalAnd(String expr1Type, String expr1, String expr2Type, String expr2){                  
 	      String falseLabel1And = getNewLabel("false1And");
 	      String trueLabel2And = getNewLabel("true2And");
-	      expr1 += tradOneElement(expr1Type, "bool");
-	      expr2 += tradOneElement(expr2Type, "bool"); 
+	      expr1 += tradOneElement(false, expr1Type, "bool");
+	      expr2 += tradOneElement(false, expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
 	      return expr1 
 	             + "JUMPF " + falseLabel1And + "\n" 
@@ -535,8 +549,8 @@ public class CalculetteParser extends Parser {
 	    private String evalOr(String expr1Type, String expr1, String expr2Type, String expr2){                    
 	      String falseLabel1Or = getNewLabel("false1Or");
 	      String trueLabel1Or = getNewLabel("true1Or");
-	      expr1 += tradOneElement(expr1Type, "bool");
-	      expr2 += tradOneElement(expr2Type, "bool"); 
+	      expr1 += tradOneElement(false, expr1Type, "bool");
+	      expr2 += tradOneElement(false, expr2Type, "bool"); 
 	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
 	      return expr1 
 	             + "JUMPF " + falseLabel1Or + "\n" 
@@ -553,7 +567,7 @@ public class CalculetteParser extends Parser {
 	    private String evalIfElse(String exprType, String expr, String ifInstructions, String elseInstructions){                                                                                 
 	      String elseStartLabel = getNewLabel("startIfElse");                                                                   
 	      String ifEndLabel = getNewLabel("endIfElse"); 
-	      expr += tradOneElement(exprType, "bool"); 
+	      expr += tradOneElement(false, exprType, "bool"); 
 	      testEmptyStringErrors(exprType, expr, ifInstructions, elseInstructions);
 	      mvapStackSize -= 1;
 	      return expr 
@@ -569,7 +583,7 @@ public class CalculetteParser extends Parser {
 	    //Fonction renvoyant le code mvap pour un branchement compose d'un seul if
 	    private String evalIf(String exprType, String expr, String ifInstructions){      
 	      String ifEndLabel = getNewLabel("ifOnly");                                           
-	      expr += tradOneElement(exprType, "bool"); 
+	      expr += tradOneElement(false, exprType, "bool"); 
 	      testEmptyStringErrors(exprType, expr, ifInstructions);  
 	      mvapStackSize -= 1;                                                   
 	      return expr 
@@ -586,7 +600,7 @@ public class CalculetteParser extends Parser {
 	      AdresseType at = tablesSymboles.getAdresseType("return");
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(exprType, expr);
-	      //expr += tradOneElement(exprType, at.type);
+	      //expr += tradOneElement(false, exprType, at.type);
 	      String storer = "";
 	      if(at.type.equals("float")){
 	        storer = "STOREL " + (at.adresse + 1) + "\n"
@@ -1564,7 +1578,7 @@ public class CalculetteParser extends Parser {
 			match(T__5);
 			setState(220);
 			((CastContext)_localctx).expr = expression(0);
-			 ((CastContext)_localctx).type =  (((CastContext)_localctx).ty!=null?((CastContext)_localctx).ty.getText():null); ((CastContext)_localctx).code =  ((CastContext)_localctx).expr.code + tradOneElement(((CastContext)_localctx).expr.type, (((CastContext)_localctx).ty!=null?((CastContext)_localctx).ty.getText():null)); 
+			 ((CastContext)_localctx).type =  (((CastContext)_localctx).ty!=null?((CastContext)_localctx).ty.getText():null); ((CastContext)_localctx).code =  ((CastContext)_localctx).expr.code + tradOneElement(true ,((CastContext)_localctx).expr.type, (((CastContext)_localctx).ty!=null?((CastContext)_localctx).ty.getText():null)); 
 			}
 		}
 		catch (RecognitionException re) {
@@ -1658,7 +1672,7 @@ public class CalculetteParser extends Parser {
 				((PreparenthesisContext)_localctx).expr = expression(0);
 				 ((PreparenthesisContext)_localctx).type =  "bool"; ((PreparenthesisContext)_localctx).code =  "PUSHI 1\n" 
 				                              + ((PreparenthesisContext)_localctx).expr.code 
-				                              + tradOneElement(((PreparenthesisContext)_localctx).expr.type, _localctx.type) 
+				                              + tradOneElement(false, ((PreparenthesisContext)_localctx).expr.type, _localctx.type) 
 				                              + "SUB\n"; 
 				}
 				break;
