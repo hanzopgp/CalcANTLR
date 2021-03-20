@@ -105,8 +105,8 @@ public class CalculetteParser extends Parser {
 
 	    private TablesSymboles tablesSymboles = new TablesSymboles();           //On utilise la table de symboles pour garder les
 	    private int _cur_label = 1;                                             //liens id/type et les valeurs dans les adresses
-	    private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
-	    //private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
+	    //private String getNewLabel(String name) { return "B" +(_cur_label++); } //Generateur de nom d'etiquettes pour les boucles 
+	    private String getNewLabel(String name) { return ("B " + name); }     //Enlever commentaire seulement pour debug 
 	    
 	    private int nbErrorsEmptyString = 0;                                     //Comptage des erreurs
 	    private int nbErrorsAddress = 0;                              
