@@ -1,13 +1,14 @@
-float z
-float g(float x) {
-  return x*2.
+int i
+int j
+int x
+int xi=0
+int xj=0
+x=42
+for (i=1;i < x; i=i+1) {
+  xi=xi+i
+  write(i)
+  for (j=1;j < x; j=j+1) {
+    xj=xj+j
+    write(j)	
+  }
 }
-float f(float i, float j) {
-  write(i) 
-  write(j) 
-  while (i < j+1.) i = g(j)
-  write(i) 
-  return i
-}
-z=f(3., 5.)
-write(z)

@@ -360,13 +360,14 @@ public class CalculetteLexer extends Lexer {
 	    //Renvoie le code mvap pour chacune des conditions possibles
 	    private String evalCond(String type, String expr1, String cond, String type2, String expr2){  
 	      mvapStackSize -= 1;
-	      StringBuilder codeRes = new StringBuilder();
-	      StringBuilder codeRes2 = new StringBuilder();
-	      String typeRes = tradTwoElements(type, expr1, type2, expr2, codeRes); 
-	      String typeRes2 = tradTwoElements(type, expr1, type2, expr2, codeRes2);  
-	      String res = codeRes.toString() + codeRes2.toString();
-	      if(typeRes.equals("float")){ //Si type float alors
-	        res += "F";             //FEQUAL FINFEQ ... pour la stack machine
+	      //StringBuilder codeRes = new StringBuilder();
+	      //StringBuilder codeRes2 = new StringBuilder();
+	      //String typeRes = tradTwoElements(type, expr1, type2, expr2, codeRes); 
+	      //String typeRes2 = tradTwoElements(type, expr1, type2, expr2, codeRes2);  
+	      //String res = codeRes.toString() + codeRes2.toString();
+	      String res = expr1 + expr2;
+	      if(type.equals("float")){ //Si type float alors
+	        res += "F";                                      //FEQUAL FINFEQ ... pour la stack machine
 	        mvapStackSize -= 1;
 	      }                                   
 	      switch(cond){
