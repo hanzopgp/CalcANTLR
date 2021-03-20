@@ -363,7 +363,6 @@ grammar Calculette;
     //Fonction renvoyant le code mvap pour creer une boucle for
     private String evalForLoop(String init, String exprType, String expr, String iteration, String instructions){
       System.err.println("exprt" + exprType);
-
       String startLabelF = getNewLabel("startFor");                                                                    
       String endLabelF = getNewLabel("endFor");
       expr += tradOneElement(false, exprType, "bool");
@@ -398,9 +397,15 @@ grammar Calculette;
 
     //Fonction renvoyant le code mvap pour utiliser read suivant le type de l'id
     private String evalInput(String id){
-      mvapStackSize += 1;
       AdresseType at = tablesSymboles.getAdresseType(id);
-      String reader = (!at.type.equals("float")) ? "READ\n" : "READF\n";
+      String reader = "";
+      if(!at.type.equals("float")){
+        reader = "READ\n";
+        mvapStackSize += 1;
+      }else{
+        reader = "READF\n";
+        mvapStackSize += 2;
+      }
       String storer = storeGOrL(id);
       testAddressNotFound(at);
       testEmptyStringErrors(id, reader, storer);

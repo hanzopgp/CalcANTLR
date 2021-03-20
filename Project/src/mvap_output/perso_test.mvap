@@ -102,7 +102,8 @@ POP
 WRITEF
 POP
 POP
+FREE -1
 HALT 
 
-#mvapStackSize before freeing memory : 1
+#mvapStackSize before freeing memory : -1
 #Compilation successful !
