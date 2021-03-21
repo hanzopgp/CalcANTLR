@@ -528,7 +528,7 @@ public class CalculetteLexer extends Lexer {
 	      String trueLabel2And = getNewLabel("true2And");
 	      expr1 += tradOneElement(false, expr1Type, "bool");
 	      expr2 += tradOneElement(false, expr2Type, "bool"); 
-	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);;
+	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
 	      return expr1 
 	             + "JUMPF " + falseLabel1And + "\n" 
 	             + expr2 

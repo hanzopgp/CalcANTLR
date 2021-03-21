@@ -438,7 +438,7 @@ grammar Calculette;
       String trueLabel2And = getNewLabel("true2And");
       expr1 += tradOneElement(false, expr1Type, "bool");
       expr2 += tradOneElement(false, expr2Type, "bool"); 
-      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);;
+      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
       return expr1 
              + "JUMPF " + falseLabel1And + "\n" 
              + expr2 
@@ -570,8 +570,12 @@ maincode returns [ String code ]
       { $code += "LABEL " + "Main\n"; }              //Apres les declarations nous arrivons au main ou nous
       (instruction { $code += $instruction.code; })* //avons les differentes instructions du main
 
-
-      { $code += "FREE " + mvapStackSize + "\n"; }   //Ne fonctionne pas dans toutes les situations...
+      //Ne fonctionne pas dans toutes les situations. Le probleme vient du fait
+      //que lorsqu'une condition de JUMPF n'est pas activee, le mvapStackSize
+      //compte les variations de taille de la pile a l'interieur de JUMPF
+      //alors qu'il devrait les ignorer donc lorsqu'une condition est fausse
+      //des le premier cas il y a une erreur de FREE.
+      //{ $code += "FREE " + mvapStackSize + "\n"; }   
 
       { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
     ;
