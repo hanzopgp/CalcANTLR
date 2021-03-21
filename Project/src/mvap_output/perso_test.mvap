@@ -3,12 +3,20 @@ JUMP Main
 LABEL Main
 LABEL startWhile1
 PUSHG 0
-PUSHI 3
-INF
+PUSHI 4
+ADD
+PUSHI 0
+EQUAL
+JUMPF true3
+PUSHI 0
+JUMP false4
+LABEL true3
+PUSHI 1
+LABEL false4
 JUMPF endWhile2
 JUMP startWhile1
 LABEL endWhile2
 HALT 
 
-#mvapStackSize before freeing memory : 1
+#mvapStackSize before freeing memory : 2
 #Compilation successful !

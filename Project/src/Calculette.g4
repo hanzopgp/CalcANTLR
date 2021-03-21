@@ -681,6 +681,7 @@ expression returns [ String type, String code ]
     | cast                                                                 //Changement de type
       { $type = $cast.type; $code = $cast.code; }
 
+      //Les conditions font maintenant partie des expression ce qui est pratique pour les casts etc
     | 'true' { $type = "bool"; $code = "PUSHI 1\n"; mvapStackSize += 1; }  //Differentes conditions dont true
     | 'false' { $type = "bool"; $code = "PUSHI 0\n"; mvapStackSize += 1; } //et false
     | expr1 = expression                                                   //et conditions en general
@@ -818,7 +819,7 @@ loopInstr returns [ String code ] //Prise en charge des boucles en mvap
       SEMICOLON 
       iteration = assignation 
       ')' 
-      instruction     
+      instruction   
       { $code = evalForLoop($init.code, $expression.type, $expression.code, $iteration.code, $instruction.code); }
 
     | 'repeat'   //Boucle repeat until instruction                                                                    
