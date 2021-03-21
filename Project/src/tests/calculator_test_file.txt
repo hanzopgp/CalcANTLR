@@ -21,4 +21,4 @@ float pi (int prec) {
 
 write(pi(10))
 write(pi(100))
-write(pi(1000))
+

@@ -193,11 +193,13 @@ public class CalculetteLexer extends Lexer {
 	      switch(targetType){
 	        case "int":                           
 	          if(currentType.equals("float")){    //Passage de float ===> int
-	            res += "FTOI\n";   
+	            res += "FTOI\n";
+	            mvapStackSize -= 1;   
 	          }
 	          break;  
 	        case "float":                         
 	          res += "ITOF\n";                    //Passage de int ===> float
+	          mvapStackSize += 1;
 	          break;                             
 	        case "bool":                          
 	          String trueLabel = getNewLabel("true");
@@ -237,8 +239,10 @@ public class CalculetteLexer extends Lexer {
 	      }else if(type.equals("float")){       //Passage de float + int ===> float
 	        typeRes = "float";
 	        exprRes.append(expr + expr2 + "ITOF\n");
+	        mvapStackSize += 1;
 	      }else if(type2.equals("float")){      //Passage de int + float ===> float
 	        typeRes = "float";
+	        mvapStackSize += 1;
 	        exprRes.append(expr + "ITOF\n" + expr2);
 	      }else{
 	        triggerAutoCastError(type, type2);
@@ -413,7 +417,7 @@ public class CalculetteLexer extends Lexer {
 	    private String evalDeclaration(String type, String id){  
 	      tablesSymboles.putVar(id, type);
 	      testEmptyStringErrors(type, id);
-	      return pushIOrFZero(type) /*+ storeGOrL(id)*/; 
+	      return pushIOrFZero(type); 
 	    }
 
 	    //Renvoie le code pour une declaration + assignation suivant le type de l'id
@@ -422,7 +426,7 @@ public class CalculetteLexer extends Lexer {
 	      AdresseType at = tablesSymboles.getAdresseType(id); 
 	      testAddressNotFound(at);
 	      testEmptyStringErrors(type, id, exprType, expr);
-	      return expr /*+ storeGOrL(id)*/;
+	      return expr;
 	    }
 
 	    //Renvoie le code pour une assignation suivant le type de l'id
@@ -524,7 +528,7 @@ public class CalculetteLexer extends Lexer {
 	      String trueLabel2And = getNewLabel("true2And");
 	      expr1 += tradOneElement(false, expr1Type, "bool");
 	      expr2 += tradOneElement(false, expr2Type, "bool"); 
-	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);
+	      testEmptyStringErrors(expr1Type, expr1, expr2Type, expr2);;
 	      return expr1 
 	             + "JUMPF " + falseLabel1And + "\n" 
 	             + expr2 
@@ -594,10 +598,10 @@ public class CalculetteLexer extends Lexer {
 	      if(at.type.equals("float")){
 	        storer = "STOREL " + (at.adresse + 1) + "\n"
 	               + "STOREL " + at.adresse + "\n";
-	        mvapStackSize -= 4;
+	        mvapStackSize -= 4; //2 store et un return float
 	      }else{
 	        storer = "STOREL " + at.adresse + "\n";
-	        mvapStackSize -= 2;
+	        mvapStackSize -= 3;
 	      }
 	      return expr 
 	             + storer
@@ -609,10 +613,10 @@ public class CalculetteLexer extends Lexer {
 	      String pusher = "";
 	      if(!type.equals("float")){                    //Push un nombre random pour memoire float ou int
 	        pusher = "PUSHI 0\n";
-	        mvapStackSize += 1;
+	        mvapStackSize += 3;
 	      }else{
 	        pusher = "PUSHF 0.0\n";
-	        mvapStackSize += 2;
+	        mvapStackSize += 4;                         //PUSHF 2 + CALL float 2
 	      }
 	      if(nbArgs > 0){                               //Si il y a des arguments
 	        res = pusher

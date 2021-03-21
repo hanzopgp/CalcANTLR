@@ -95,15 +95,8 @@ POP
 WRITEF
 POP
 POP
-PUSHF 0.0
-PUSHI 1000
-CALL pi
-POP
-WRITEF
-POP
-POP
-FREE -1
+FREE 6
 HALT 
 
-#mvapStackSize before freeing memory : -1
+#mvapStackSize before freeing memory : 6
 #Compilation successful !
