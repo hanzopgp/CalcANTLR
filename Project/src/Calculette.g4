@@ -574,7 +574,8 @@ maincode returns [ String code ]
       //que lorsqu'une condition de JUMPF n'est pas activee, le mvapStackSize
       //compte les variations de taille de la pile a l'interieur de JUMPF
       //alors qu'il devrait les ignorer donc lorsqu'une condition est fausse
-      //des le premier cas il y a une erreur de FREE.
+      //des le premier cas il y a une erreur de FREE. Une solution serait
+      //probablement de ne tracker que les variables globales
       //{ $code += "FREE " + mvapStackSize + "\n"; }   
 
       { $code += "HALT \n"; }                        //Et enfin on finit le code mvap pour un HALT
