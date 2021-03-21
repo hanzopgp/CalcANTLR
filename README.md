@@ -91,40 +91,30 @@ CalcANTLR/
 
 - ANTLR basic use
 - Basic calcul grammar
-
-- Calcul priority Negative numbers
+- Calcul priority 
+- Negative numbers
 - Negative expressions
 - Parenthesis support
 - Integur variables
-
 - Skips all comments
-
 - Write / Read
-
 - While loop
 - For loop
 - Repeat until loop
-
 - Blocks (sequence of instructions)
-
 - If statement
 - Else statement
 - Relational operators
 - Logical operators
-
 - Full float/bool support
 - Functions
 - Global/Local variables
 - Multiple args functions
-
 - Implicit cast
 - Auto cast if needed
-
 - Freeing stack memory at the end
-
 - General tests
-- Starting debugger
-
+- Errors and warnings
 - Increments ++ -- 
 
 ## Links
