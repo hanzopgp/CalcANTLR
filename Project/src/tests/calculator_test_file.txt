@@ -1,4 +1,9 @@
-int i = 0
-while ( i+4 ) 
+int i;
 
+for(i = 0; i < 5; i++){
+	write(i);
+}
 
+for(i = 5; i > 0; i--){
+	write(i);
+}

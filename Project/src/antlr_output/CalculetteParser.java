@@ -451,11 +451,8 @@ public class CalculetteParser extends Parser {
 	    private String evalWhileLoop(String exprType, String expr, String instructions){ 
 	      String startLabelW = getNewLabel("startWhile");                                     
 	      String endLabelW = getNewLabel("endWhile");
-	      System.err.println(exprType);
-	      System.err.println(expr);
 	      expr += tradOneElement(false, exprType, "bool");
 	      mvapStackSize -= 1;
-	      System.err.println("lol: "+expr);
 	      testEmptyStringErrors(exprType, expr, instructions);
 	      return "LABEL " + startLabelW + "\n" 
 	             + expr 
