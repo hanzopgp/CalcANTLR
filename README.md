@@ -11,7 +11,7 @@
 
 ## Presentation
 
->This is a calculator language compiler done with ANTLR and a custom stack machine.
+>This is a calculator language compiler done with ANTLR and a custom stack machine.<br>
 >3rd year bachelor degree in computer science, grade : 20/20.
 
 ## How does it work
